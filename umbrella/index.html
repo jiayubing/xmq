@@ -226,29 +226,7 @@
   </div>
 
   <script>
-    /* =========================================================================
-       可自由定制的配置区（想改文案、祝福或时长，只改这里即可）
-       ========================================================================= */
-    const CONFIG = {
-      introDuration: 13.0, // 开场自动完整动画时长（秒）
-
-      // 伞下默认印着的打字机小诗（建议 3~4 行，克制优雅）
-      poemLines: [
-        'Tonight, a local meteor shower',
-        'falls quietly beneath this violet sky —',
-        'for your twenty-seventh year,',
-        'make a gentle wish.'
-      ],
-
-      // 彩蛋：累计触发 3 颗「许愿星」后，伞下诗句轻轻切换为专属祝福
-      wishEasterEggCount: 3,
-      wishEasterEggLines: [
-        '二十七岁，自在如风',
-        '愿你永远拥有这片温柔紫夜，',
-        '所有未说出口的心愿，',
-        '都在今夜悄悄落成星光。'
-      ]
-    };
+    const INTRO_DURATION = 13; // 开场动画时长（秒）
 
     function midiToHz(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
     function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
@@ -627,11 +605,9 @@
     let omega = 0;
     let tiltExtra = 0;
 
-    // 流星雨与彩蛋状态
+    // 流星雨状态
     let rainActive = false;
     let starSpawnAcc = 0;
-    let wishCount = 0;
-    let poemBlend = 0; // 0 = 默认英文诗，1 = 3次许愿后的27岁中文祝福彩蛋
     const stars = [];
     const splashLines = [];
     const puddleRipples = [];
@@ -959,7 +935,6 @@
       const P = getParams();
       spawnStar(getGeo(P), P, true, xHint);
       audio.playWishLaunch();
-      wishCount += 1;
     }
 
     function spawnSplash(x, y, color, isWish, unit) {
@@ -1044,35 +1019,9 @@
       ctx.stroke();
     }
 
-    function drawPoetry(P) {
-      const fs = clamp(9.5 * P.unit, 10, 16);
-      const baseY = P.cy + 36 * P.unit;
-      const lh = fs * 1.58;
-
-      ctx.save();
-      ctx.textAlign = 'center';
-
-      // 默认打字机英文诗
-      const baseAlpha = (1 - poemBlend) * 0.44;
-      if (baseAlpha > 0.01) {
-        ctx.font = `400 ${fs}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
-        ctx.fillStyle = `rgba(216, 180, 254, ${baseAlpha})`;
-        CONFIG.poemLines.forEach((ln, i) => ctx.fillText(ln, P.cx, baseY + i * lh));
-      }
-
-      // 彩蛋：累计 3 颗许愿星后淡入的 27 岁祝福
-      const wishAlpha = poemBlend * 0.62;
-      if (wishAlpha > 0.01) {
-        ctx.font = `300 ${fs * 1.05}px "PingFang SC", "Noto Serif SC", "Songti SC", serif`;
-        ctx.fillStyle = `rgba(253, 230, 138, ${wishAlpha})`;
-        CONFIG.wishEasterEggLines.forEach((ln, i) => ctx.fillText(ln, P.cx, baseY + i * lh));
-      }
-      ctx.restore();
-    }
-
     function updateIntro(dt) {
       introClock += dt;
-      const dur = CONFIG.introDuration;
+      const dur = INTRO_DURATION;
       introProgressFill.style.width = `${clamp((introClock / dur) * 100, 0, 100)}%`;
 
       if (introClock < 1.1) {
@@ -1119,10 +1068,6 @@
       if (!pDown) rot += omega * dt;
       tiltExtra += (clamp(omega * 0.025, -0.12, 0.12) - tiltExtra) * dt * 3;
 
-      // 彩蛋诗句平滑淡换
-      const wantEaster = wishCount >= CONFIG.wishEasterEggCount ? 1 : 0;
-      poemBlend += (wantEaster - poemBlend) * dt * 1.4;
-
       // 驱动连续音频（钢琴夜曲、星雨底噪、转伞风铃）
       audio.updateContinuous({ dt, openVal, omega, rainActive });
 
@@ -1149,10 +1094,7 @@
         ctx.fill();
       });
 
-      // 2. 伞下克制排字（放在星星后方）
-      drawPoetry(P);
-
-      // 3. 与伞同步缩放的极简椭圆水洼
+      // 2. 与伞同步缩放的极简椭圆水洼
       const rx = lerp(9 * P.unit, Math.min(W * 0.40, 96 * P.unit), Math.pow(clamp(openVal, 0, 1), 0.78));
       const ry = rx * 0.165;
       ctx.save();
@@ -1185,7 +1127,7 @@
       }
       ctx.restore();
 
-      // 4. 立体折面版画紫伞 + 伞檐珍珠点链
+      // 3. 立体折面版画紫伞 + 伞檐珍珠点链
       const panels = [];
       for (let i = 0; i < NUM_RIBS; i++) {
         const r1 = geo.ribs[i], r2 = geo.ribs[(i + 1) % NUM_RIBS];
@@ -1239,7 +1181,7 @@
         }
       }
 
-      // 5. 伞下局部流星雨与手绘放射水花
+      // 4. 伞下局部流星雨与手绘放射水花
       if (rainActive && openVal > 0.65) {
         starSpawnAcc += dt * (7.2 + Math.abs(omega) * 2.2);
         while (starSpawnAcc >= 1) {
