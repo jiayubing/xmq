@@ -35,95 +35,6 @@
       cursor: pointer;
     }
 
-    /* 开场轻盈启幕层（用于优雅解锁浏览器声音权限） */
-    #curtain {
-      position: fixed;
-      inset: 0;
-      z-index: 30;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      text-align: center;
-      background: radial-gradient(circle at 50% 45%, rgba(28, 16, 56, 0.56), rgba(14, 7, 30, 0.84));
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      transition: opacity 900ms cubic-bezier(0.22, 1, 0.36, 1), visibility 900ms;
-    }
-
-    #curtain.hidden {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-
-    .curtain-kicker {
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 11px;
-      letter-spacing: 0.32em;
-      text-transform: uppercase;
-      color: rgba(216, 180, 254, 0.72);
-      margin-bottom: 12px;
-    }
-
-    .curtain-title {
-      font-size: clamp(22px, 5vw, 30px);
-      font-weight: 300;
-      letter-spacing: 0.22em;
-      color: #FAF5FF;
-      margin: 0 0 10px;
-      text-shadow: 0 4px 24px rgba(139, 92, 246, 0.45);
-    }
-
-    .curtain-sub {
-      font-size: 13px;
-      font-weight: 300;
-      letter-spacing: 0.12em;
-      color: rgba(233, 213, 255, 0.68);
-      margin: 0 0 32px;
-    }
-
-    .btn-enter {
-      appearance: none;
-      border: 1px solid rgba(221, 214, 254, 0.42);
-      background: linear-gradient(135deg, rgba(124, 58, 237, 0.68), rgba(91, 33, 182, 0.76));
-      color: #FAF5FF;
-      font-size: 14px;
-      letter-spacing: 0.16em;
-      padding: 12px 28px;
-      border-radius: 999px;
-      cursor: pointer;
-      box-shadow: 0 8px 28px rgba(109, 40, 217, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-      transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
-    }
-
-    .btn-enter:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 12px 32px rgba(124, 58, 237, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.28);
-    }
-
-    .btn-enter:active {
-      transform: scale(0.97);
-    }
-
-    .btn-silent {
-      appearance: none;
-      border: none;
-      background: transparent;
-      color: rgba(216, 180, 254, 0.56);
-      font-size: 12px;
-      letter-spacing: 0.12em;
-      margin-top: 16px;
-      padding: 6px 12px;
-      cursor: pointer;
-      transition: color 180ms ease;
-    }
-
-    .btn-silent:hover {
-      color: rgba(243, 232, 255, 0.9);
-    }
-
     /* 顶部极简控制角标 */
     #top-controls {
       position: fixed;
@@ -290,15 +201,6 @@
 <style>.xmq-home{position:fixed;z-index:40;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));display:inline-flex;align-items:center;min-height:36px;padding:0 10px;border:1px solid #e9dcfa66;border-radius:999px;background:#231537bc;color:#f8efff;font:12px/1 system-ui,sans-serif;text-decoration:none;gap:5px}.xmq-home:hover{background:#231537}.xmq-home:focus-visible{outline:2px solid #f8efff;outline-offset:2px}body.zen-mode .xmq-home{display:none}</style></head>
 <body><a class="xmq-home" href="../" aria-label="返回作品首页"><span aria-hidden="true">‹</span> 作品</a>
   <canvas id="stage"></canvas>
-
-  <!-- 轻盈启幕层 -->
-  <div id="curtain">
-    <div class="curtain-kicker">LOCAL METEOR SHOWER · NO. 27</div>
-    <h1 class="curtain-title">今夜，局部紫色流星雨</h1>
-    <p class="curtain-sub">为你撑起一把只落下星光的紫伞</p>
-    <button id="btn-enter" class="btn-enter">开启今夜 · 撑起星雨</button>
-    <button id="btn-silent" class="btn-silent">静音欣赏</button>
-  </div>
 
   <!-- 顶部极简声音与纯净模式按钮 -->
   <div id="top-controls">
@@ -694,9 +596,6 @@
        ========================================================================= */
     const canvas = document.getElementById('stage');
     const ctx = canvas.getContext('2d');
-    const curtain = document.getElementById('curtain');
-    const btnEnter = document.getElementById('btn-enter');
-    const btnSilent = document.getElementById('btn-silent');
     const topControls = document.getElementById('top-controls');
     const btnSound = document.getElementById('btn-sound');
     const btnBgm = document.getElementById('btn-bgm');
@@ -715,8 +614,8 @@
     let dpr = 1;
     let time = 0;
 
-    // 状态机：'curtain' -> 'intro' -> 'interactive'
-    let appState = 'curtain';
+    // 状态机：'idle' -> 'intro' -> 'interactive'
+    let appState = 'idle';
     let introClock = 0;
 
     // 伞力学状态
@@ -788,6 +687,7 @@
     function syncAudioUI() {
       btnSound.textContent = audio.enabled ? '🔊 声音' : '🔇 静音';
       btnSound.classList.toggle('muted', !audio.enabled);
+      btnSound.setAttribute('aria-pressed', String(audio.enabled));
       btnBgm.textContent = audio.musicEnabled ? '钢琴夜曲：开' : '钢琴夜曲：关';
       btnBgm.classList.toggle('muted', !audio.musicEnabled);
     }
@@ -828,20 +728,50 @@
       dockToggle.textContent = targetOpen > 0.5 ? '合伞收池' : '撑伞落星';
     }
 
-    async function launchExperience(withSound) {
-      if (withSound) await audio.enable();
-      else audio.disable();
-      syncAudioUI();
-      curtain.classList.add('hidden');
-      startIntro();
+    let soundRequested = true;
+    let active = false;
+    let frameRequest = 0;
+
+    function trySound() {
+      if (!active || !soundRequested || audio.enabled) return;
+      audio.enable().then(() => {
+        if (!active || !soundRequested) audio.disable();
+        syncAudioUI();
+      }).catch(syncAudioUI);
     }
 
-    btnEnter.addEventListener('click', () => launchExperience(true));
-    btnSilent.addEventListener('click', () => launchExperience(false));
+    function showExperience() {
+      if (active) return;
+      active = true;
+      soundRequested = true;
+      startIntro();
+      resize();
+      last = performance.now();
+      frameRequest = requestAnimationFrame(loop);
+      trySound();
+      syncAudioUI();
+    }
 
-    btnSound.addEventListener('click', async () => {
-      if (audio.enabled) audio.disable();
-      else await audio.enable();
+    function stopExperience() {
+      if (!active) return;
+      active = false;
+      cancelAnimationFrame(frameRequest);
+      audio.disable();
+      if (audio.ctx?.state === 'running') audio.ctx.suspend().catch(() => {});
+      syncAudioUI();
+    }
+
+    function unlockOnGesture(event) {
+      if (event.target === btnSound || event.target.closest?.('.xmq-home')) return;
+      trySound();
+    }
+    document.addEventListener('click', unlockOnGesture, true);
+    document.addEventListener('keydown', unlockOnGesture, true);
+
+    btnSound.addEventListener('click', () => {
+      soundRequested = !audio.enabled;
+      if (soundRequested) trySound();
+      else audio.disable();
       syncAudioUI();
     });
 
@@ -880,7 +810,7 @@
     });
 
     canvas.addEventListener('pointerdown', e => {
-      if (appState === 'curtain') return;
+      if (appState === 'idle') return;
       pDown = true;
       pMoved = false;
       startX = lastX = e.clientX;
@@ -889,7 +819,7 @@
     });
 
     canvas.addEventListener('pointermove', e => {
-      if (!pDown || appState === 'curtain') return;
+      if (!pDown || appState === 'idle') return;
       const dx = e.clientX - lastX;
       lastX = e.clientX;
       if (Math.hypot(e.clientX - startX, e.clientY - startY) > 7) {
@@ -902,7 +832,7 @@
     });
 
     canvas.addEventListener('pointerup', e => {
-      if (!pDown || appState === 'curtain') return;
+      if (!pDown || appState === 'idle') return;
       pDown = false;
       if (!pMoved) {
         if (appState === 'intro') {
@@ -1362,13 +1292,21 @@
       }
       ctx.restore();
 
-      requestAnimationFrame(loop);
+      frameRequest = requestAnimationFrame(loop);
     }
 
     window.addEventListener('resize', resize);
-    resize();
-    syncAudioUI();
-    requestAnimationFrame(loop);
+    const embedded = new URLSearchParams(location.search).has('gallery') && window.parent !== window;
+    if (embedded) {
+      window.xmqRain = { start: showExperience, stop: stopExperience };
+      document.querySelector('.xmq-home').addEventListener('click', event => {
+        if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        window.parent.postMessage('xmq-rain-home', location.origin);
+      });
+    } else {
+      showExperience();
+    }
   </script>
 </body>
 </html>
