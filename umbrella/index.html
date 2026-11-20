@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#160D2D" />
+  <title>今夜，局部紫色流星雨 · 27</title>
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: #160D2D;
+      color: #F3E8FF;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+      cursor: pointer;
+    }
+
+    /* 开场轻盈启幕层（用于优雅解锁浏览器声音权限） */
+    #curtain {
+      position: fixed;
+      inset: 0;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+      background: radial-gradient(circle at 50% 45%, rgba(28, 16, 56, 0.56), rgba(14, 7, 30, 0.84));
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      transition: opacity 900ms cubic-bezier(0.22, 1, 0.36, 1), visibility 900ms;
+    }
+
+    #curtain.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .curtain-kicker {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: rgba(216, 180, 254, 0.72);
+      margin-bottom: 12px;
+    }
+
+    .curtain-title {
+      font-size: clamp(22px, 5vw, 30px);
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      color: #FAF5FF;
+      margin: 0 0 10px;
+      text-shadow: 0 4px 24px rgba(139, 92, 246, 0.45);
+    }
+
+    .curtain-sub {
+      font-size: 13px;
+      font-weight: 300;
+      letter-spacing: 0.12em;
+      color: rgba(233, 213, 255, 0.68);
+      margin: 0 0 32px;
+    }
+
+    .btn-enter {
+      appearance: none;
+      border: 1px solid rgba(221, 214, 254, 0.42);
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.68), rgba(91, 33, 182, 0.76));
+      color: #FAF5FF;
+      font-size: 14px;
+      letter-spacing: 0.16em;
+      padding: 12px 28px;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 8px 28px rgba(109, 40, 217, 0.36), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      transition: transform 200ms ease, box-shadow 200ms ease, background 200ms ease;
+    }
+
+    .btn-enter:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 32px rgba(124, 58, 237, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    }
+
+    .btn-enter:active {
+      transform: scale(0.97);
+    }
+
+    .btn-silent {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: rgba(216, 180, 254, 0.56);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      margin-top: 16px;
+      padding: 6px 12px;
+      cursor: pointer;
+      transition: color 180ms ease;
+    }
+
+    .btn-silent:hover {
+      color: rgba(243, 232, 255, 0.9);
+    }
+
+    /* 顶部极简控制角标 */
+    #top-controls {
+      position: fixed;
+      top: max(16px, env(safe-area-inset-top));
+      right: max(16px, env(safe-area-inset-right));
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 600ms ease;
+    }
+
+    #top-controls.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .icon-pill {
+      appearance: none;
+      border: 1px solid rgba(196, 181, 253, 0.22);
+      background: rgba(18, 10, 38, 0.54);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      color: rgba(233, 213, 255, 0.84);
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 180ms ease, border-color 180ms ease, color 180ms ease, opacity 200ms ease;
+    }
+
+    .icon-pill:hover {
+      background: rgba(91, 33, 182, 0.45);
+      border-color: rgba(216, 180, 254, 0.45);
+      color: #FAF5FF;
+    }
+
+    .icon-pill.muted {
+      color: rgba(216, 180, 254, 0.48);
+    }
+
+    /* 底部自由交互胶囊（仅在开场动画落定后淡入） */
+    #dock {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: max(22px, env(safe-area-inset-bottom));
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: opacity 750ms ease, transform 750ms ease;
+    }
+
+    #dock.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .dock-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 7px;
+      border-radius: 999px;
+      background: rgba(18, 10, 38, 0.66);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(196, 181, 253, 0.26);
+      box-shadow: 0 10px 30px rgba(6, 2, 16, 0.42);
+    }
+
+    .dock-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: rgba(233, 213, 255, 0.88);
+      font-size: 12.5px;
+      letter-spacing: 0.05em;
+      padding: 6px 13px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 180ms ease, color 180ms ease, transform 150ms ease;
+    }
+
+    .dock-btn:hover {
+      background: rgba(139, 92, 246, 0.26);
+      color: #FAF5FF;
+    }
+
+    .dock-btn:active {
+      transform: scale(0.96);
+    }
+
+    .dock-btn.primary {
+      background: rgba(124, 58, 237, 0.72);
+      color: #FAF5FF;
+      font-weight: 500;
+    }
+
+    .dock-btn.primary:hover {
+      background: rgba(139, 92, 246, 0.85);
+    }
+
+    .dock-btn.gold {
+      color: #FDE68A;
+    }
+
+    .dock-hint {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      color: rgba(216, 180, 254, 0.56);
+      text-align: center;
+      pointer-events: none;
+    }
+
+    /* 开场进度极细发丝线 */
+    #intro-progress {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2px;
+      z-index: 25;
+      background: rgba(255, 255, 255, 0.05);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 500ms ease;
+    }
+
+    #intro-progress.visible {
+      opacity: 1;
+    }
+
+    #intro-progress-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, #7C3AED, #C4B5FD, #FDE68A);
+    }
+
+    /* 纯净壁纸模式（隐藏按钮，仅留右上角一个半透明恢复按钮） */
+    body.zen-mode #dock,
+    body.zen-mode #btn-sound,
+    body.zen-mode #btn-bgm {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    body.zen-mode #btn-zen {
+      opacity: 0.35;
+    }
+    body.zen-mode #btn-zen:hover {
+      opacity: 0.9;
+    }
+  </style>
+<style>.xmq-home{position:fixed;z-index:40;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));display:inline-flex;align-items:center;min-height:36px;padding:0 10px;border:1px solid #e9dcfa66;border-radius:999px;background:#231537bc;color:#f8efff;font:12px/1 system-ui,sans-serif;text-decoration:none;gap:5px}.xmq-home:hover{background:#231537}.xmq-home:focus-visible{outline:2px solid #f8efff;outline-offset:2px}body.zen-mode .xmq-home{display:none}</style></head>
+<body><a class="xmq-home" href="../" aria-label="返回作品首页"><span aria-hidden="true">‹</span> 作品</a>
+  <canvas id="stage"></canvas>
+
+  <!-- 轻盈启幕层 -->
+  <div id="curtain">
+    <div class="curtain-kicker">LOCAL METEOR SHOWER · NO. 27</div>
+    <h1 class="curtain-title">今夜，局部紫色流星雨</h1>
+    <p class="curtain-sub">为你撑起一把只落下星光的紫伞</p>
+    <button id="btn-enter" class="btn-enter">开启今夜 · 撑起星雨</button>
+    <button id="btn-silent" class="btn-silent">静音欣赏</button>
+  </div>
+
+  <!-- 顶部极简声音与纯净模式按钮 -->
+  <div id="top-controls">
+    <button id="btn-sound" class="icon-pill">🔊 声音</button>
+    <button id="btn-bgm" class="icon-pill">钢琴夜曲：开</button>
+    <button id="btn-zen" class="icon-pill" title="隐藏界面按钮，纯净欣赏">纯净</button>
+  </div>
+
+  <!-- 底部自由交互胶囊（开场动画结束后自动淡入） -->
+  <div id="dock">
+    <div class="dock-bar">
+      <button id="dock-toggle" class="dock-btn primary">撑伞落星</button>
+      <button id="dock-spin" class="dock-btn">转伞</button>
+      <button id="dock-wish" class="dock-btn gold">许愿星</button>
+      <button id="dock-replay" class="dock-btn">重播</button>
+    </div>
+    <div class="dock-hint">点击开合伞 · 左右滑动拨转 · 轻点水洼落许愿星</div>
+  </div>
+
+  <!-- 开场进度发丝线 -->
+  <div id="intro-progress">
+    <div id="intro-progress-fill"></div>
+  </div>
+
+  <script>
+    /* =========================================================================
+       可自由定制的配置区（想改文案、祝福或时长，只改这里即可）
+       ========================================================================= */
+    const CONFIG = {
+      introDuration: 13.0, // 开场自动完整动画时长（秒）
+
+      // 伞下默认印着的打字机小诗（建议 3~4 行，克制优雅）
+      poemLines: [
+        'Tonight, a local meteor shower',
+        'falls quietly beneath this violet sky —',
+        'for your twenty-seventh year,',
+        'make a gentle wish.'
+      ],
+
+      // 彩蛋：累计触发 3 颗「许愿星」后，伞下诗句轻轻切换为专属祝福
+      wishEasterEggCount: 3,
+      wishEasterEggLines: [
+        '二十七岁，自在如风',
+        '愿你永远拥有这片温柔紫夜，',
+        '所有未说出口的心愿，',
+        '都在今夜悄悄落成星光。'
+      ]
+    };
+
+    function midiToHz(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    /* =========================================================================
+       1. 纯原生 Web Audio 声音引擎（零外部音频文件依赖）
+       ========================================================================= */
+    const SCORE = [
+      // Bar 1: Ebmaj9
+      { step: 0,  notes: [51, 58, 67], vel: 0.42, dur: 3.4, box: false },
+      { step: 2,  notes: [65],         vel: 0.28, dur: 2.2, box: false },
+      { step: 4,  notes: [70],         vel: 0.30, dur: 2.4, box: false },
+      { step: 6,  notes: [74],         vel: 0.34, dur: 2.8, box: true  },
+      { step: 7,  notes: [70],         vel: 0.22, dur: 1.8, box: false },
+      // Bar 2: Cm9
+      { step: 8,  notes: [48, 55, 63], vel: 0.40, dur: 3.4, box: false },
+      { step: 10, notes: [62],         vel: 0.26, dur: 2.2, box: false },
+      { step: 12, notes: [67],         vel: 0.30, dur: 2.4, box: false },
+      { step: 14, notes: [70],         vel: 0.33, dur: 2.8, box: true  },
+      { step: 15, notes: [75],         vel: 0.24, dur: 2.2, box: true  },
+      // Bar 3: Abmaj9
+      { step: 16, notes: [44, 51, 60], vel: 0.42, dur: 3.4, box: false },
+      { step: 18, notes: [58],         vel: 0.26, dur: 2.2, box: false },
+      { step: 20, notes: [67],         vel: 0.30, dur: 2.6, box: false },
+      { step: 22, notes: [72],         vel: 0.32, dur: 2.8, box: true  },
+      { step: 23, notes: [70],         vel: 0.22, dur: 1.9, box: false },
+      // Bar 4: Bb6/9
+      { step: 24, notes: [46, 53, 62], vel: 0.38, dur: 3.4, box: false },
+      { step: 26, notes: [60],         vel: 0.25, dur: 2.2, box: false },
+      { step: 28, notes: [65],         vel: 0.29, dur: 2.6, box: false },
+      { step: 30, notes: [67],         vel: 0.28, dur: 2.8, box: true  },
+      { step: 31, notes: [74],         vel: 0.20, dur: 2.6, box: true  }
+    ];
+    const PENTATONIC_HIGH = [75, 77, 79, 82, 84, 86, 87, 89, 91];
+
+    class VioletAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.enabled = false;
+        this.musicEnabled = true;
+        this.masterVolume = 0.78;
+        this._stepDur = 0.41;
+        this._seqAcc = 0;
+        this._seqStep = 0;
+        this._lastSplashAt = 0;
+        this._lastChimeAt = 0;
+      }
+
+      init() {
+        if (this.ctx) return;
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        const ctx = new AC();
+        this.ctx = ctx;
+
+        const comp = ctx.createDynamicsCompressor();
+        comp.threshold.value = -16;
+        comp.knee.value = 18;
+        comp.ratio.value = 4;
+        comp.attack.value = 0.01;
+        comp.release.value = 0.25;
+
+        this.masterGain = ctx.createGain();
+        this.masterGain.gain.value = 0.0001;
+        comp.connect(this.masterGain);
+        this.masterGain.connect(ctx.destination);
+
+        this.dryBus = ctx.createGain();
+        this.dryBus.gain.value = 0.72;
+        this.dryBus.connect(comp);
+
+        const conv = ctx.createConvolver();
+        conv.buffer = this._createReverbIR(ctx, 2.7, 2.4);
+        const revLP = ctx.createBiquadFilter();
+        revLP.type = 'lowpass';
+        revLP.frequency.value = 3400;
+
+        this.wetBus = ctx.createGain();
+        this.wetBus.gain.value = 0.44;
+        this.wetBus.connect(conv);
+        conv.connect(revLP);
+        revLP.connect(comp);
+
+        this.musicFilter = ctx.createBiquadFilter();
+        this.musicFilter.type = 'lowpass';
+        this.musicFilter.frequency.value = 1600;
+        this.musicFilter.connect(this.dryBus);
+        this.musicFilter.connect(this.wetBus);
+
+        this.noiseBuffer = this._createNoiseBuffer(ctx, 3.0);
+        const rainSrc = ctx.createBufferSource();
+        rainSrc.buffer = this.noiseBuffer;
+        rainSrc.loop = true;
+
+        this.rainFilter = ctx.createBiquadFilter();
+        this.rainFilter.type = 'bandpass';
+        this.rainFilter.frequency.value = 1850;
+        this.rainFilter.Q.value = 0.7;
+
+        this.rainGain = ctx.createGain();
+        this.rainGain.gain.value = 0.0001;
+        rainSrc.connect(this.rainFilter);
+        this.rainFilter.connect(this.rainGain);
+        this.rainGain.connect(this.dryBus);
+        this.rainGain.connect(this.wetBus);
+        rainSrc.start();
+      }
+
+      async enable() {
+        this.init();
+        if (!this.ctx) return false;
+        if (this.ctx.state === 'suspended') await this.ctx.resume();
+        this.enabled = true;
+        const now = this.ctx.currentTime;
+        this.masterGain.gain.cancelScheduledValues(now);
+        this.masterGain.gain.setTargetAtTime(this.masterVolume, now, 0.12);
+        return true;
+      }
+
+      disable() {
+        this.enabled = false;
+        if (!this.ctx || !this.masterGain) return;
+        const now = this.ctx.currentTime;
+        this.masterGain.gain.cancelScheduledValues(now);
+        this.masterGain.gain.setTargetAtTime(0.0001, now, 0.08);
+      }
+
+      resetPhrase() {
+        this._seqStep = 0;
+        this._seqAcc = 0;
+      }
+
+      playOpen() {
+        if (!this.enabled || !this.ctx) return;
+        const ctx = this.ctx, now = ctx.currentTime;
+        const src = ctx.createBufferSource();
+        src.buffer = this.noiseBuffer;
+        const flt = ctx.createBiquadFilter();
+        flt.type = 'bandpass';
+        flt.Q.value = 1.6;
+        flt.frequency.setValueAtTime(340, now);
+        flt.frequency.exponentialRampToValueAtTime(1250, now + 0.34);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.linearRampToValueAtTime(0.11, now + 0.14);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+        src.connect(flt); flt.connect(g); g.connect(this.dryBus); g.connect(this.wetBus);
+        src.start(now); src.stop(now + 0.46);
+
+        this._celesta(midiToHz(82), now + 0.22, 1.3, 0.075, 0);
+        this._celesta(midiToHz(87), now + 0.29, 1.5, 0.06, 0.18);
+      }
+
+      playClose() {
+        if (!this.enabled || !this.ctx) return;
+        const ctx = this.ctx, now = ctx.currentTime;
+        const src = ctx.createBufferSource();
+        src.buffer = this.noiseBuffer;
+        const flt = ctx.createBiquadFilter();
+        flt.type = 'bandpass';
+        flt.Q.value = 1.8;
+        flt.frequency.setValueAtTime(1050, now);
+        flt.frequency.exponentialRampToValueAtTime(240, now + 0.36);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.linearRampToValueAtTime(0.09, now + 0.08);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.40);
+        src.connect(flt); flt.connect(g); g.connect(this.dryBus); g.connect(this.wetBus);
+        src.start(now); src.stop(now + 0.45);
+
+        this._piano(midiToHz(58), now + 0.12, 1.6, 0.07, 0);
+      }
+
+      playStarSplash(pan = 0) {
+        if (!this.enabled || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        if (now - this._lastSplashAt < 0.24 || Math.random() > 0.55) return;
+        this._lastSplashAt = now;
+
+        const hz = midiToHz(PENTATONIC_HIGH[Math.floor(Math.random() * PENTATONIC_HIGH.length)]);
+        const ctx = this.ctx;
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(hz * 0.96, now);
+        osc.frequency.exponentialRampToValueAtTime(hz, now + 0.045);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(0.0001, now);
+        g.gain.linearRampToValueAtTime(0.032, now + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
+        const out = this._panner(ctx, clamp(pan, -0.75, 0.75));
+        osc.connect(g); g.connect(out); out.connect(this.dryBus); out.connect(this.wetBus);
+        osc.start(now); osc.stop(now + 0.46);
+      }
+
+      playWishLaunch() {
+        if (!this.enabled || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        [79, 82, 86, 89].forEach((m, i) => {
+          this._celesta(midiToHz(m), now + i * 0.055, 1.1, 0.055, -0.25 + i * 0.16);
+        });
+      }
+
+      playWishImpact(pan = 0) {
+        if (!this.enabled || !this.ctx) return;
+        const now = this.ctx.currentTime;
+        [67, 70, 74, 77, 82].forEach((m, i) => {
+          this._celesta(
+            midiToHz(m),
+            now + i * 0.032,
+            2.6,
+            0.068 - i * 0.006,
+            clamp(pan + (i - 2) * 0.14, -0.8, 0.8)
+          );
+        });
+      }
+
+      updateContinuous({ dt, openVal, omega, rainActive }) {
+        if (!this.enabled || !this.ctx) return;
+        const now = this.ctx.currentTime;
+
+        const targetRain = rainActive && openVal > 0.35
+          ? clamp(0.022 + Math.abs(omega) * 0.008, 0.02, 0.055)
+          : 0.004;
+        this.rainGain.gain.setTargetAtTime(targetRain, now, 0.25);
+        this.rainFilter.frequency.setTargetAtTime(1500 + Math.abs(omega) * 240, now, 0.2);
+        this.musicFilter.frequency.setTargetAtTime(900 + openVal * 1500, now, 0.22);
+
+        const absW = Math.abs(omega);
+        if (openVal > 0.45 && absW > 1.35 && now - this._lastChimeAt > Math.max(0.11, 0.36 - absW * 0.04)) {
+          this._lastChimeAt = now;
+          const m = PENTATONIC_HIGH[Math.floor(Math.random() * PENTATONIC_HIGH.length)];
+          this._celesta(
+            midiToHz(m),
+            now,
+            1.35,
+            clamp(0.028 + absW * 0.007, 0.028, 0.068),
+            (Math.random() - 0.5) * 1.1
+          );
+        }
+
+        if (this.musicEnabled) {
+          this._seqAcc += dt;
+          while (this._seqAcc >= this._stepDur) {
+            this._seqAcc -= this._stepDur;
+            const evt = SCORE.find(s => s.step === this._seqStep);
+            if (evt) {
+              evt.notes.forEach((m, idx) => {
+                const off = idx * 0.024 + Math.random() * 0.012;
+                const pan = clamp(((m - 62) / 28) * 0.55, -0.55, 0.55);
+                if (evt.box) this._celesta(midiToHz(m), now + off, evt.dur, evt.vel * 0.22, pan);
+                else this._piano(midiToHz(m), now + off, evt.dur, evt.vel * 0.28, pan);
+              });
+            }
+            this._seqStep = (this._seqStep + 1) % 32;
+          }
+        }
+      }
+
+      _piano(hz, t, dur, peak, pan) {
+        const ctx = this.ctx;
+        const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
+        o1.type = 'triangle'; o2.type = 'sine';
+        o1.frequency.setValueAtTime(hz, t); o2.frequency.setValueAtTime(hz * 2, t);
+        const g1 = ctx.createGain(), g2 = ctx.createGain();
+        g1.gain.setValueAtTime(0.0001, t);
+        g1.gain.linearRampToValueAtTime(peak, t + 0.022);
+        g1.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        g2.gain.setValueAtTime(0.0001, t);
+        g2.gain.linearRampToValueAtTime(peak * 0.22, t + 0.018);
+        g2.gain.exponentialRampToValueAtTime(0.0001, t + Math.min(dur * 0.45, 0.9));
+        const lp = ctx.createBiquadFilter();
+        lp.type = 'lowpass';
+        lp.frequency.setValueAtTime(1600, t);
+        lp.frequency.exponentialRampToValueAtTime(520, t + dur * 0.7);
+        const out = this._panner(ctx, pan);
+        o1.connect(g1); o2.connect(g2);
+        g1.connect(lp); g2.connect(lp);
+        lp.connect(out); out.connect(this.musicFilter);
+        o1.start(t); o2.start(t);
+        o1.stop(t + dur + 0.06); o2.stop(t + dur + 0.06);
+      }
+
+      _celesta(hz, t, dur, peak, pan) {
+        const ctx = this.ctx;
+        const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
+        o1.type = 'sine'; o2.type = 'sine';
+        o1.frequency.setValueAtTime(hz, t); o2.frequency.setValueAtTime(hz * 3, t);
+        const g1 = ctx.createGain(), g2 = ctx.createGain();
+        g1.gain.setValueAtTime(0.0001, t);
+        g1.gain.linearRampToValueAtTime(peak, t + 0.01);
+        g1.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        g2.gain.setValueAtTime(0.0001, t);
+        g2.gain.linearRampToValueAtTime(peak * 0.14, t + 0.008);
+        g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
+        const out = this._panner(ctx, pan);
+        o1.connect(g1); o2.connect(g2);
+        g1.connect(out); g2.connect(out);
+        out.connect(this.musicFilter);
+        o1.start(t); o2.start(t);
+        o1.stop(t + dur + 0.06); o2.stop(t + 0.26);
+      }
+
+      _panner(ctx, pan) {
+        if (typeof ctx.createStereoPanner === 'function') {
+          const p = ctx.createStereoPanner();
+          p.pan.value = pan;
+          return p;
+        }
+        return ctx.createGain();
+      }
+
+      _createNoiseBuffer(ctx, sec) {
+        const len = Math.floor(ctx.sampleRate * sec);
+        const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+        for (let c = 0; c < 2; c++) {
+          const d = buf.getChannelData(c);
+          let b0 = 0, b1 = 0, b2 = 0;
+          for (let i = 0; i < len; i++) {
+            const w = Math.random() * 2 - 1;
+            b0 = 0.997 * b0 + w * 0.029;
+            b1 = 0.985 * b1 + w * 0.032;
+            b2 = 0.950 * b2 + w * 0.048;
+            d[i] = (b0 + b1 + b2 + w * 0.12) * 0.45;
+          }
+        }
+        return buf;
+      }
+
+      _createReverbIR(ctx, dur, dec) {
+        const len = Math.floor(ctx.sampleRate * dur);
+        const ir = ctx.createBuffer(2, len, ctx.sampleRate);
+        for (let c = 0; c < 2; c++) {
+          const d = ir.getChannelData(c);
+          for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, dec);
+        }
+        return ir;
+      }
+    }
+
+    const audio = new VioletAudioEngine();
+
+    /* =========================================================================
+       2. 版画风「局部紫色流星雨」画布与交互主循环
+       ========================================================================= */
+    const canvas = document.getElementById('stage');
+    const ctx = canvas.getContext('2d');
+    const curtain = document.getElementById('curtain');
+    const btnEnter = document.getElementById('btn-enter');
+    const btnSilent = document.getElementById('btn-silent');
+    const topControls = document.getElementById('top-controls');
+    const btnSound = document.getElementById('btn-sound');
+    const btnBgm = document.getElementById('btn-bgm');
+    const btnZen = document.getElementById('btn-zen');
+    const dock = document.getElementById('dock');
+    const dockToggle = document.getElementById('dock-toggle');
+    const dockSpin = document.getElementById('dock-spin');
+    const dockWish = document.getElementById('dock-wish');
+    const dockReplay = document.getElementById('dock-replay');
+    const introProgress = document.getElementById('intro-progress');
+    const introProgressFill = document.getElementById('intro-progress-fill');
+
+    const NUM_RIBS = 12;
+    let W = window.innerWidth;
+    let H = window.innerHeight;
+    let dpr = 1;
+    let time = 0;
+
+    // 状态机：'curtain' -> 'intro' -> 'interactive'
+    let appState = 'curtain';
+    let introClock = 0;
+
+    // 伞力学状态
+    let targetOpen = 0;
+    let prevTargetOpen = 0;
+    let openVal = 0;
+    let openVel = 0;
+    let rot = 0.25;
+    let omega = 0;
+    let tiltExtra = 0;
+
+    // 流星雨与彩蛋状态
+    let rainActive = false;
+    let starSpawnAcc = 0;
+    let wishCount = 0;
+    let poemBlend = 0; // 0 = 默认英文诗，1 = 3次许愿后的27岁中文祝福彩蛋
+    const stars = [];
+    const splashLines = [];
+    const puddleRipples = [];
+    const ambientDust = Array.from({ length: 22 }, () => ({
+      x: Math.random(),
+      y: Math.random(),
+      r: 0.6 + Math.random() * 1.3,
+      p: Math.random() * Math.PI * 2,
+      vy: 0.004 + Math.random() * 0.008
+    }));
+
+    // 触控与鼠标交互状态
+    let pDown = false, pMoved = false, startX = 0, startY = 0, lastX = 0;
+
+    // 离屏生成深紫织物棉纸肌理（Risograph 版画海报质感）
+    let paperPattern = null;
+    function buildPaperTexture() {
+      const tc = document.createElement('canvas');
+      tc.width = 180;
+      tc.height = 180;
+      const tctx = tc.getContext('2d');
+
+      tctx.fillStyle = '#160D2D';
+      tctx.fillRect(0, 0, 180, 180);
+
+      for (let y = 0; y < 180; y += 2) {
+        tctx.fillStyle = y % 4 === 0 ? 'rgba(255, 255, 255, 0.024)' : 'rgba(6, 2, 16, 0.14)';
+        tctx.fillRect(0, y, 180, 1);
+      }
+      for (let x = 0; x < 180; x += 2) {
+        tctx.fillStyle = x % 4 === 0 ? 'rgba(216, 180, 254, 0.022)' : 'rgba(6, 2, 16, 0.10)';
+        tctx.fillRect(x, 0, 1, 180);
+      }
+      for (let i = 0; i < 1100; i++) {
+        tctx.fillStyle = Math.random() > 0.5
+          ? `rgba(233, 213, 255, ${Math.random() * 0.042})`
+          : `rgba(5, 2, 14, ${Math.random() * 0.15})`;
+        tctx.fillRect(Math.random() * 180, Math.random() * 180, 1.2, 1.2);
+      }
+      paperPattern = ctx.createPattern(tc, 'repeat');
+    }
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      if (!paperPattern) buildPaperTexture();
+    }
+
+    function syncAudioUI() {
+      btnSound.textContent = audio.enabled ? '🔊 声音' : '🔇 静音';
+      btnSound.classList.toggle('muted', !audio.enabled);
+      btnBgm.textContent = audio.musicEnabled ? '钢琴夜曲：开' : '钢琴夜曲：关';
+      btnBgm.classList.toggle('muted', !audio.musicEnabled);
+    }
+
+    function setTargetOpen(val) {
+      if (val > 0.5 && prevTargetOpen <= 0.5) audio.playOpen();
+      else if (val <= 0.5 && prevTargetOpen > 0.5) audio.playClose();
+      targetOpen = val;
+      prevTargetOpen = val;
+      dockToggle.textContent = targetOpen > 0.5 ? '合伞收池' : '撑伞落星';
+    }
+
+    function startIntro() {
+      appState = 'intro';
+      introClock = 0;
+      targetOpen = 0;
+      prevTargetOpen = 0;
+      openVal = 0;
+      openVel = 0;
+      omega = 0.08;
+      rainActive = false;
+      stars.length = 0;
+      splashLines.length = 0;
+      puddleRipples.length = 0;
+      audio.resetPhrase();
+
+      dock.classList.remove('visible');
+      introProgress.classList.add('visible');
+      introProgressFill.style.width = '0%';
+      topControls.classList.add('visible');
+      dockToggle.textContent = '撑伞落星';
+    }
+
+    function enterInteractive() {
+      appState = 'interactive';
+      dock.classList.add('visible');
+      introProgress.classList.remove('visible');
+      dockToggle.textContent = targetOpen > 0.5 ? '合伞收池' : '撑伞落星';
+    }
+
+    async function launchExperience(withSound) {
+      if (withSound) await audio.enable();
+      else audio.disable();
+      syncAudioUI();
+      curtain.classList.add('hidden');
+      startIntro();
+    }
+
+    btnEnter.addEventListener('click', () => launchExperience(true));
+    btnSilent.addEventListener('click', () => launchExperience(false));
+
+    btnSound.addEventListener('click', async () => {
+      if (audio.enabled) audio.disable();
+      else await audio.enable();
+      syncAudioUI();
+    });
+
+    btnBgm.addEventListener('click', () => {
+      audio.musicEnabled = !audio.musicEnabled;
+      syncAudioUI();
+    });
+
+    btnZen.addEventListener('click', () => {
+      const zen = document.body.classList.toggle('zen-mode');
+      btnZen.textContent = zen ? '显示按钮' : '纯净';
+    });
+
+    dockToggle.addEventListener('click', () => {
+      if (appState !== 'interactive') enterInteractive();
+      const next = targetOpen > 0.5 ? 0 : 1;
+      setTargetOpen(next);
+      rainActive = next > 0.5;
+      if (next > 0.5) omega = 0.45;
+    });
+
+    dockSpin.addEventListener('click', () => {
+      if (appState !== 'interactive') enterInteractive();
+      if (targetOpen < 0.5) { setTargetOpen(1); rainActive = true; }
+      omega = clamp(omega + 3.8, -7.8, 7.8);
+    });
+
+    dockWish.addEventListener('click', () => {
+      if (appState !== 'interactive') enterInteractive();
+      if (targetOpen < 0.5) { setTargetOpen(1); rainActive = true; }
+      spawnWishStar();
+    });
+
+    dockReplay.addEventListener('click', () => {
+      startIntro();
+    });
+
+    canvas.addEventListener('pointerdown', e => {
+      if (appState === 'curtain') return;
+      pDown = true;
+      pMoved = false;
+      startX = lastX = e.clientX;
+      startY = e.clientY;
+      canvas.setPointerCapture(e.pointerId);
+    });
+
+    canvas.addEventListener('pointermove', e => {
+      if (!pDown || appState === 'curtain') return;
+      const dx = e.clientX - lastX;
+      lastX = e.clientX;
+      if (Math.hypot(e.clientX - startX, e.clientY - startY) > 7) {
+        pMoved = true;
+        if (appState === 'intro') enterInteractive();
+        if (targetOpen < 0.5) { setTargetOpen(1); rainActive = true; }
+        omega = clamp(dx * 0.22, -8.2, 8.2);
+        rot += dx * 0.011;
+      }
+    });
+
+    canvas.addEventListener('pointerup', e => {
+      if (!pDown || appState === 'curtain') return;
+      pDown = false;
+      if (!pMoved) {
+        if (appState === 'intro') {
+          enterInteractive();
+          setTargetOpen(1);
+          rainActive = true;
+          return;
+        }
+        const P = getParams();
+        if (openVal > 0.5 && Math.abs(e.clientY - P.puddleY) < Math.max(46, 36 * P.unit)) {
+          spawnWishStar(e.clientX);
+        } else {
+          const next = targetOpen > 0.5 ? 0 : 1;
+          setTargetOpen(next);
+          rainActive = next > 0.5;
+          if (next > 0.5) omega = 0.5;
+        }
+      }
+    });
+
+    canvas.addEventListener('pointercancel', () => { pDown = false; });
+
+    function getParams() {
+      // 同时适配手机竖屏海报比例与电脑宽屏电影比例
+      const unit = Math.min(W / 270, H / 365);
+      const cx = W * 0.5;
+      const cy = H * 0.34;
+      const puddleY = H * 0.785;
+      const pitch = 0.22;
+      const sway = openVal > 0.2 ? Math.sin(time * 1.05) * 0.085 * openVal : Math.sin(time * 0.8) * 0.018;
+      const roll = sway + tiltExtra;
+      return {
+        unit, cx, cy, puddleY,
+        cosP: Math.cos(pitch), sinP: Math.sin(pitch),
+        cosR: Math.cos(roll), sinR: Math.sin(roll)
+      };
+    }
+
+    function proj(lx, ly, lz, P) {
+      const x0 = lx * P.unit, y0 = ly * P.unit, z0 = lz * P.unit;
+      const y1 = y0 * P.cosP - z0 * P.sinP;
+      const z1 = y0 * P.sinP + z0 * P.cosP;
+      const x2 = x0 * P.cosR - y1 * P.sinR;
+      const y2 = x0 * P.sinR + y1 * P.cosR;
+      const cam = 720 * P.unit;
+      const sc = cam / (cam - z1);
+      return { x: P.cx + x2 * sc, y: P.cy - y2 * sc, z: z1 };
+    }
+
+    function getGeo(P) {
+      const e = clamp(openVal, 0, 1);
+      const easeR = Math.pow(e, 0.72);
+      const apexY = 58;
+      const R = lerp(6.5, 96, easeR);
+      const D = lerp(104, 35, easeR);
+
+      const ribs = [];
+      for (let i = 0; i < NUM_RIBS; i++) {
+        const th = rot + (Math.PI * 2 * i) / NUM_RIBS;
+        const ct = Math.cos(th), st = Math.sin(th);
+        const pts = [0, 0.38, 0.74, 1.0].map(t => {
+          const r = R * Math.sin(t * Math.PI * 0.515);
+          const y = apexY - D * Math.pow(t, 1.65);
+          return proj(ct * r, y, st * r, P);
+        });
+        ribs.push({ pts, tip: pts[3] });
+      }
+
+      const ferrule = proj(0, apexY + 13, 0, P);
+      const shaftEnd = proj(0, -70, 0, P);
+      const hookPts = [];
+      for (let k = 0; k <= 10; k++) {
+        const a = (Math.PI * k) / 10;
+        hookPts.push(proj(-9.8 + Math.cos(a) * 9.8, -70 - Math.sin(a) * 9.8, 0, P));
+      }
+
+      let minX = Infinity, maxX = -Infinity, avgRimY = 0;
+      ribs.forEach(rb => {
+        if (rb.tip.x < minX) minX = rb.tip.x;
+        if (rb.tip.x > maxX) maxX = rb.tip.x;
+        avgRimY += rb.tip.y;
+      });
+      return { ribs, ferrule, shaftEnd, hookPts, minX, maxX, avgRimY: avgRimY / NUM_RIBS };
+    }
+
+    function spawnStar(geo, P, isWish, forcedX) {
+      const span = Math.max(24, (geo.maxX - geo.minX) * 0.86);
+      const x = forcedX !== undefined
+        ? clamp(forcedX, geo.minX + 10, geo.maxX - 10)
+        : (P.cx + (Math.random() - 0.5) * span);
+
+      const pal = [
+        { fill: '#FDE68A', tail: 'rgba(253, 230, 138, 0.56)' },
+        { fill: '#FBBF24', tail: 'rgba(251, 191, 36, 0.52)' },
+        { fill: '#FAF5FF', tail: 'rgba(243, 232, 255, 0.58)' },
+        { fill: '#C7D2FE', tail: 'rgba(199, 210, 254, 0.52)' }
+      ];
+      const col = isWish
+        ? { fill: '#FEF08A', tail: 'rgba(254, 240, 138, 0.9)' }
+        : pal[Math.floor(Math.random() * pal.length)];
+
+      const puddleRx = lerp(9 * P.unit, Math.min(W * 0.40, 96 * P.unit), Math.pow(clamp(openVal, 0, 1), 0.78));
+      const relX = clamp((x - P.cx) / Math.max(12, puddleRx), -0.88, 0.88);
+      const maxOffY = Math.sqrt(Math.max(0.05, 1 - relX * relX)) * puddleRx * 0.165;
+
+      stars.push({
+        x,
+        y: geo.avgRimY - 4 + (Math.random() - 0.5) * 14,
+        vx: omega * 7.2 * P.unit + (Math.random() - 0.5) * 6 * P.unit,
+        vy: (isWish ? 115 : (60 + Math.random() * 62)) * P.unit,
+        size: (isWish ? 8.2 : (2.5 + Math.random() * 3.9)) * P.unit,
+        kind: isWish ? 8 : (Math.random() > 0.52 ? 4 : (Math.random() > 0.4 ? 8 : 0)),
+        rot: Math.random() * Math.PI,
+        vrot: (Math.random() - 0.5) * 1.6,
+        color: col.fill,
+        tailColor: col.tail,
+        targetY: P.puddleY + (Math.random() - 0.45) * maxOffY * 1.45,
+        isWish: !!isWish,
+        tp: Math.random() * Math.PI * 2
+      });
+    }
+
+    function spawnWishStar(xHint) {
+      const P = getParams();
+      spawnStar(getGeo(P), P, true, xHint);
+      audio.playWishLaunch();
+      wishCount += 1;
+    }
+
+    function spawnSplash(x, y, color, isWish, unit) {
+      const count = isWish ? 13 : (4 + Math.floor(Math.random() * 4));
+      for (let i = 0; i < count; i++) {
+        const ang = -Math.PI * (0.12 + Math.random() * 0.76);
+        const sp = (isWish ? 56 : 25) + Math.random() * (isWish ? 58 : 36);
+        splashLines.push({
+          x, y, px: x, py: y,
+          vx: Math.cos(ang) * sp * unit,
+          vy: Math.sin(ang) * sp * unit,
+          life: 1,
+          decay: isWish ? 1.4 : (2.0 + Math.random() * 0.9),
+          color: Math.random() > 0.45 ? color : '#E9D5FF'
+        });
+      }
+      puddleRipples.push({
+        x, y,
+        r: 2,
+        maxR: (isWish ? 36 : 16 + Math.random() * 13) * unit,
+        life: 1,
+        color: isWish ? '#FEF08A' : '#DDD6FE'
+      });
+
+      const pan = clamp(((x - W * 0.5) / (W * 0.45)), -0.8, 0.8);
+      if (isWish) audio.playWishImpact(pan);
+      else audio.playStarSplash(pan);
+    }
+
+    function drawStarShape(x, y, r, kind, rotation, color) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.fillStyle = color;
+      if (kind === 0) {
+        ctx.beginPath();
+        ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (kind === 4) {
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const rad = i % 2 === 0 ? r : r * 0.24;
+          const a = (i * Math.PI) / 4;
+          if (i === 0) ctx.moveTo(Math.cos(a) * rad, Math.sin(a) * rad);
+          else ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+        }
+        ctx.closePath();
+        ctx.fill();
+      } else {
+        ctx.beginPath();
+        for (let i = 0; i < 16; i++) {
+          const rad = i % 2 === 0 ? (i % 4 === 0 ? r : r * 0.72) : r * 0.18;
+          const a = (i * Math.PI) / 8;
+          if (i === 0) ctx.moveTo(Math.cos(a) * rad, Math.sin(a) * rad);
+          else ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
+        }
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function drawPanel(r1, r2, isFront, idx) {
+      const p1 = r1.pts, p2 = r2.pts;
+      const rx = (p1[3].x + p2[3].x) * 0.5 + ((p1[0].x - (p1[3].x + p2[3].x) * 0.5) * 0.06 * openVal);
+      const ry = (p1[3].y + p2[3].y) * 0.5 + ((p1[0].y - (p1[3].y + p2[3].y) * 0.5) * 0.06 * openVal);
+
+      ctx.beginPath();
+      ctx.moveTo(p1[0].x, p1[0].y);
+      ctx.bezierCurveTo(p1[1].x, p1[1].y, p1[2].x, p1[2].y, p1[3].x, p1[3].y);
+      ctx.quadraticCurveTo(rx, ry, p2[3].x, p2[3].y);
+      ctx.bezierCurveTo(p2[2].x, p2[2].y, p2[1].x, p2[1].y, p2[0].x, p2[0].y);
+      ctx.closePath();
+
+      ctx.fillStyle = isFront
+        ? (idx % 2 === 0 ? 'rgba(124, 58, 237, 0.85)' : 'rgba(139, 92, 246, 0.78)')
+        : 'rgba(76, 29, 149, 0.86)';
+      ctx.fill();
+
+      ctx.strokeStyle = isFront ? 'rgba(221, 214, 254, 0.45)' : 'rgba(167, 139, 250, 0.22)';
+      ctx.lineWidth = isFront ? 0.85 : 0.6;
+      ctx.stroke();
+    }
+
+    function drawPoetry(P) {
+      const fs = clamp(9.5 * P.unit, 10, 16);
+      const baseY = P.cy + 36 * P.unit;
+      const lh = fs * 1.58;
+
+      ctx.save();
+      ctx.textAlign = 'center';
+
+      // 默认打字机英文诗
+      const baseAlpha = (1 - poemBlend) * 0.44;
+      if (baseAlpha > 0.01) {
+        ctx.font = `400 ${fs}px ui-monospace, SFMono-Regular, Menlo, Consolas, monospace`;
+        ctx.fillStyle = `rgba(216, 180, 254, ${baseAlpha})`;
+        CONFIG.poemLines.forEach((ln, i) => ctx.fillText(ln, P.cx, baseY + i * lh));
+      }
+
+      // 彩蛋：累计 3 颗许愿星后淡入的 27 岁祝福
+      const wishAlpha = poemBlend * 0.62;
+      if (wishAlpha > 0.01) {
+        ctx.font = `300 ${fs * 1.05}px "PingFang SC", "Noto Serif SC", "Songti SC", serif`;
+        ctx.fillStyle = `rgba(253, 230, 138, ${wishAlpha})`;
+        CONFIG.wishEasterEggLines.forEach((ln, i) => ctx.fillText(ln, P.cx, baseY + i * lh));
+      }
+      ctx.restore();
+    }
+
+    function updateIntro(dt) {
+      introClock += dt;
+      const dur = CONFIG.introDuration;
+      introProgressFill.style.width = `${clamp((introClock / dur) * 100, 0, 100)}%`;
+
+      if (introClock < 1.1) {
+        setTargetOpen(0);
+        rainActive = false;
+        omega += (0.05 - omega) * dt * 2;
+      } else if (introClock < 2.8) {
+        setTargetOpen(1);
+        rainActive = introClock > 2.0;
+        omega += (0.35 - omega) * dt * 2.5;
+      } else if (introClock < 10.2) {
+        setTargetOpen(1);
+        rainActive = true;
+        const spinWin = introClock > 5.2 && introClock < 8.6;
+        const targetW = spinWin
+          ? 0.4 + Math.sin(((introClock - 5.2) / 3.4) * Math.PI) * 2.7
+          : 0.35;
+        omega += (targetW - omega) * dt * 2.2;
+      } else if (introClock < dur - 0.35) {
+        rainActive = false;
+        if (introClock > 10.8) setTargetOpen(0);
+        omega += (0.08 - omega) * dt * 2.8;
+      } else {
+        enterInteractive();
+      }
+    }
+
+    let last = performance.now();
+    function loop(now) {
+      const dt = Math.min(0.05, (now - last) / 1000);
+      last = now;
+      time += dt;
+
+      if (appState === 'intro') {
+        updateIntro(dt);
+      } else if (appState === 'interactive' && !pDown) {
+        omega += ((targetOpen > 0.5 ? 0.24 : 0.0) - omega) * dt * 1.1;
+      }
+
+      // 弹簧阻尼开合伞
+      openVel += ((targetOpen - openVal) * 14.0 - openVel * 5.6) * dt;
+      openVal = clamp(openVal + openVel * dt, 0, 1.02);
+
+      if (!pDown) rot += omega * dt;
+      tiltExtra += (clamp(omega * 0.025, -0.12, 0.12) - tiltExtra) * dt * 3;
+
+      // 彩蛋诗句平滑淡换
+      const wantEaster = wishCount >= CONFIG.wishEasterEggCount ? 1 : 0;
+      poemBlend += (wantEaster - poemBlend) * dt * 1.4;
+
+      // 驱动连续音频（钢琴夜曲、星雨底噪、转伞风铃）
+      audio.updateContinuous({ dt, openVal, omega, rainActive });
+
+      const P = getParams();
+      const geo = getGeo(P);
+
+      // 1. 深紫织物棉纸肌理背景
+      ctx.fillStyle = paperPattern || '#160D2D';
+      ctx.fillRect(0, 0, W, H);
+      const vig = ctx.createRadialGradient(W * 0.5, H * 0.45, Math.min(W, H) * 0.22, W * 0.5, H * 0.5, Math.max(W, H) * 0.78);
+      vig.addColorStop(0, 'rgba(139, 92, 246, 0.07)');
+      vig.addColorStop(1, 'rgba(6, 2, 16, 0.38)');
+      ctx.fillStyle = vig;
+      ctx.fillRect(0, 0, W, H);
+
+      // 极淡的氛围微尘
+      ambientDust.forEach(d => {
+        d.y -= d.vy * dt;
+        if (d.y < -0.02) { d.y = 1.02; d.x = Math.random(); }
+        const tw = 0.25 + 0.75 * Math.sin(time * 1.4 + d.p);
+        ctx.fillStyle = `rgba(216, 180, 254, ${0.14 * tw})`;
+        ctx.beginPath();
+        ctx.arc(d.x * W, d.y * H, d.r, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      // 2. 伞下克制排字（放在星星后方）
+      drawPoetry(P);
+
+      // 3. 与伞同步缩放的极简椭圆水洼
+      const rx = lerp(9 * P.unit, Math.min(W * 0.40, 96 * P.unit), Math.pow(clamp(openVal, 0, 1), 0.78));
+      const ry = rx * 0.165;
+      ctx.save();
+      const pg = ctx.createLinearGradient(P.cx - rx, P.puddleY, P.cx + rx, P.puddleY);
+      pg.addColorStop(0, '#5B21B6');
+      pg.addColorStop(0.5, '#7C3AED');
+      pg.addColorStop(1, '#6D28D9');
+      ctx.fillStyle = pg;
+      ctx.beginPath();
+      ctx.ellipse(P.cx, P.puddleY, rx, ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(216, 180, 254, 0.38)';
+      ctx.lineWidth = 0.9;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.ellipse(P.cx, P.puddleY, rx, ry, 0, 0, Math.PI * 2);
+      ctx.clip();
+      for (let i = puddleRipples.length - 1; i >= 0; i--) {
+        const rp = puddleRipples[i];
+        rp.r += dt * 28 * P.unit;
+        rp.life = 1 - rp.r / rp.maxR;
+        if (rp.life <= 0) { puddleRipples.splice(i, 1); continue; }
+        ctx.strokeStyle = rp.color;
+        ctx.globalAlpha = rp.life * 0.65;
+        ctx.lineWidth = 0.9;
+        ctx.beginPath();
+        ctx.ellipse(rp.x, rp.y, rp.r, rp.r * 0.24, 0, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // 4. 立体折面版画紫伞 + 伞檐珍珠点链
+      const panels = [];
+      for (let i = 0; i < NUM_RIBS; i++) {
+        const r1 = geo.ribs[i], r2 = geo.ribs[(i + 1) % NUM_RIBS];
+        panels.push({ r1, r2, idx: i, zAvg: (r1.tip.z + r2.tip.z) * 0.5 });
+      }
+      panels.sort((a, b) => a.zAvg - b.zAvg);
+
+      panels.filter(p => p.zAvg < 0).forEach(p => drawPanel(p.r1, p.r2, false, p.idx));
+
+      ctx.save();
+      ctx.strokeStyle = '#8B5CF6';
+      ctx.lineWidth = 2.0 * P.unit;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(geo.ferrule.x, geo.ferrule.y);
+      ctx.lineTo(geo.shaftEnd.x, geo.shaftEnd.y);
+      ctx.stroke();
+
+      ctx.strokeStyle = '#A78BFA';
+      ctx.lineWidth = 2.6 * P.unit;
+      ctx.beginPath();
+      geo.hookPts.forEach((pt, idx) => idx === 0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y));
+      ctx.stroke();
+      ctx.restore();
+
+      panels.filter(p => p.zAvg >= 0).forEach(p => drawPanel(p.r1, p.r2, true, p.idx));
+
+      const beadA = clamp((openVal - 0.55) / 0.4, 0, 1);
+      if (beadA > 0.02) {
+        for (let i = 0; i < NUM_RIBS; i++) {
+          const a = geo.ribs[i].tip, b = geo.ribs[(i + 1) % NUM_RIBS].tip;
+          if (a.z < -8 && b.z < -8) continue;
+          const sag = (7 + 2 * Math.sin(time * 2.2 + i)) * P.unit;
+          for (let k = 1; k < 7; k++) {
+            const t = k / 7;
+            ctx.fillStyle = `rgba(233, 213, 255, ${beadA * 0.58})`;
+            ctx.beginPath();
+            ctx.arc(lerp(a.x, b.x, t), lerp(a.y, b.y, t) + Math.sin(t * Math.PI) * sag, 0.75 * P.unit, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          if (i % 2 === 0 && a.z >= -4) {
+            const hy = a.y + (9 + Math.sin(time * 2.4 + i) * 2) * P.unit;
+            ctx.strokeStyle = `rgba(233, 213, 255, ${beadA * 0.36})`;
+            ctx.lineWidth = 0.55;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(a.x, hy);
+            ctx.stroke();
+            drawStarShape(a.x, hy, 2.2 * P.unit, 4, 0, i % 4 === 0 ? '#FDE68A' : '#FAF5FF');
+          }
+        }
+      }
+
+      // 5. 伞下局部流星雨与手绘放射水花
+      if (rainActive && openVal > 0.65) {
+        starSpawnAcc += dt * (7.2 + Math.abs(omega) * 2.2);
+        while (starSpawnAcc >= 1) {
+          starSpawnAcc -= 1;
+          spawnStar(geo, P, false);
+        }
+      }
+
+      for (let i = stars.length - 1; i >= 0; i--) {
+        const s = stars[i];
+        s.x += s.vx * dt;
+        s.y += s.vy * dt;
+        s.vx *= (1 - dt * 0.6);
+        s.rot += s.vrot * dt;
+
+        const tx = s.x - s.vx * 0.14;
+        const ty = s.y - (s.isWish ? 36 : 17) * P.unit;
+        const tg = ctx.createLinearGradient(s.x, s.y, tx, ty);
+        tg.addColorStop(0, s.tailColor);
+        tg.addColorStop(1, 'rgba(255, 255, 255, 0)');
+        ctx.strokeStyle = tg;
+        ctx.lineWidth = s.isWish ? 1.45 : 0.9;
+        ctx.beginPath();
+        ctx.moveTo(s.x, s.y);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+
+        drawStarShape(s.x, s.y, s.size * (0.85 + 0.18 * Math.sin(time * 6 + s.tp)), s.kind, s.rot, s.color);
+        if (s.y >= s.targetY) {
+          spawnSplash(s.x, s.targetY, s.color, s.isWish, P.unit);
+          stars.splice(i, 1);
+        }
+      }
+
+      ctx.save();
+      for (let i = splashLines.length - 1; i >= 0; i--) {
+        const sp = splashLines[i];
+        sp.px = sp.x; sp.py = sp.y;
+        sp.x += sp.vx * dt; sp.y += sp.vy * dt;
+        sp.vy += 125 * P.unit * dt;
+        sp.life -= dt * sp.decay;
+        if (sp.life <= 0) { splashLines.splice(i, 1); continue; }
+        ctx.strokeStyle = sp.color;
+        ctx.globalAlpha = sp.life * 0.84;
+        ctx.lineWidth = 0.9;
+        ctx.beginPath();
+        ctx.moveTo(sp.px, sp.py);
+        ctx.lineTo(sp.x, sp.y);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      requestAnimationFrame(loop);
+    }
+
+    window.addEventListener('resize', resize);
+    resize();
+    syncAudioUI();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
