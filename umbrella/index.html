@@ -290,7 +290,7 @@
     function lerp(a, b, t) { return a + (b - a) * t; }
 
     // A single audio implementation is kept in violetAudio.js.
-    const audio = new VioletAudioEngine({ masterVolume: 0.62 });
+    const audio = new VioletAudioEngine();
 
     /* =========================================================================
        2. 版画风「局部紫色流星雨」画布与交互主循环
@@ -412,9 +412,10 @@
 
     function syncAudioUI() {
       const playing = audio.enabled && audio.ctx?.state === 'running';
-      btnSound.textContent = !soundRequested ? '🔇 静音' : (playing ? '🔊 声音' : '🔊 轻触开声');
-      btnSound.classList.toggle('muted', !playing);
-      btnSound.setAttribute('aria-pressed', String(playing));
+      btnSound.textContent = soundRequested ? '🔊 声音' : '🔇 静音';
+      btnSound.classList.toggle('muted', !soundRequested);
+      btnSound.setAttribute('aria-pressed', String(soundRequested));
+      btnSound.title = soundRequested && !playing ? '已请求自动播放，若浏览器限制可触摸画面解锁' : '切换声音';
       btnBgm.textContent = audio.musicEnabled ? '钢琴夜曲：开' : '钢琴夜曲：关';
       btnBgm.classList.toggle('muted', !audio.musicEnabled);
       btnBgm.setAttribute('aria-pressed', String(audio.musicEnabled));
@@ -462,39 +463,23 @@
     }
 
     const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let soundRequested = true; // preferred on, unless the user switches it off
-    let soundBusy = false;
+    let soundRequested = true;
     let active = false;
     let frameRequest = 0;
 
+    // Reuse the first version's immediate audio start and retry behavior.
+    // A blocked resume may remain pending; do not lock out another attempt.
     function trySound() {
-      if (!active || !soundRequested || audio.enabled || soundBusy) return;
-      soundBusy = true;
-      audio.enable().then(enabled => {
-        if (!enabled) soundRequested = false;
+      if (!active || !soundRequested || (audio.enabled && audio.ctx?.state === 'running')) return;
+      audio.enable().then(() => {
         if (!active || !soundRequested) audio.disable();
-      }).catch(() => {
-        // Keep the user's "on" preference; a later gesture may unlock audio.
-      }).finally(() => {
-        soundBusy = false;
         syncAudioUI();
-      });
-      syncAudioUI();
+      }).catch(syncAudioUI);
     }
 
     function unlockSoundOnGesture(event) {
-      if (!active || !soundRequested || event?.target === btnSound) return;
-      if (audio.enabled && audio.ctx?.state === 'running') return;
-      if (audio.ctx?.state === 'suspended') {
-        // Called synchronously within a genuine pointer/key gesture.
-        audio.ctx.resume().then(() => {
-          if (!active || !soundRequested) audio.disable();
-          else if (!audio.enabled && !soundBusy) trySound();
-          syncAudioUI();
-        }).catch(syncAudioUI);
-      } else {
-        trySound();
-      }
+      if (event.target === btnSound || event.target.closest?.('.xmq-home')) return;
+      trySound();
     }
 
     function showExperience() {
@@ -546,28 +531,20 @@
       }
     });
 
+    document.addEventListener('click', unlockSoundOnGesture, true);
+    document.addEventListener('keydown', unlockSoundOnGesture, true);
     document.addEventListener('pointerdown', unlockSoundOnGesture, { capture: true, passive: true });
     document.addEventListener('keydown', unlockSoundOnGesture, true);
 
     btnSound.addEventListener('click', () => {
-      if (audio.enabled && soundRequested) {
+      if (soundRequested && audio.enabled && audio.ctx?.state === 'running') {
         soundRequested = false;
         audio.disable();
-        syncAudioUI();
       } else {
         soundRequested = true;
-        // Explicit tap on the audio control is always an allowed user gesture.
-        if (audio.ctx?.state === 'suspended') {
-          audio.ctx.resume().then(() => {
-            if (!audio.enabled && !soundBusy) trySound();
-            if (!soundRequested) audio.disable();
-            syncAudioUI();
-          }).catch(syncAudioUI);
-        } else {
-          trySound();
-        }
-        syncAudioUI();
+        trySound();
       }
+      syncAudioUI();
     });
 
     btnBgm.addEventListener('click', () => {
