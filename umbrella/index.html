@@ -290,7 +290,7 @@
     function lerp(a, b, t) { return a + (b - a) * t; }
 
     // A single audio implementation is kept in violetAudio.js.
-    const audio = new VioletAudioEngine();
+    const audio = new VioletAudioEngine({ masterVolume: 0.62 });
 
     /* =========================================================================
        2. 版画风「局部紫色流星雨」画布与交互主循环
@@ -328,6 +328,7 @@
     let omega = 0;
     let tiltExtra = 0;
     let ornamentSwing = 0;
+    let handleRot = rot;
 
     // 流星雨状态
     let rainActive = false;
@@ -410,9 +411,10 @@
     }
 
     function syncAudioUI() {
-      btnSound.textContent = audio.enabled ? '🔊 声音' : '🔇 静音';
-      btnSound.classList.toggle('muted', !audio.enabled);
-      btnSound.setAttribute('aria-pressed', String(audio.enabled));
+      const playing = audio.enabled && audio.ctx?.state === 'running';
+      btnSound.textContent = !soundRequested ? '🔇 静音' : (playing ? '🔊 声音' : '🔊 轻触开声');
+      btnSound.classList.toggle('muted', !playing);
+      btnSound.setAttribute('aria-pressed', String(playing));
       btnBgm.textContent = audio.musicEnabled ? '钢琴夜曲：开' : '钢琴夜曲：关';
       btnBgm.classList.toggle('muted', !audio.musicEnabled);
       btnBgm.setAttribute('aria-pressed', String(audio.musicEnabled));
@@ -435,6 +437,7 @@
       openVel = 0;
       omega = 0.08;
       ornamentSwing = 0;
+      handleRot = rot;
       starSpawnAcc = 0;
       rainActive = false;
       stars.length = 0;
@@ -459,30 +462,45 @@
     }
 
     const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let soundRequested = false;
+    let soundRequested = true; // preferred on, unless the user switches it off
     let soundBusy = false;
     let active = false;
     let frameRequest = 0;
 
-    async function trySound() {
+    function trySound() {
       if (!active || !soundRequested || audio.enabled || soundBusy) return;
       soundBusy = true;
-      try {
-        const enabled = await audio.enable();
+      audio.enable().then(enabled => {
         if (!enabled) soundRequested = false;
         if (!active || !soundRequested) audio.disable();
-      } catch (_) {
-        soundRequested = false;
-        audio.disable();
-      } finally {
+      }).catch(() => {
+        // Keep the user's "on" preference; a later gesture may unlock audio.
+      }).finally(() => {
         soundBusy = false;
         syncAudioUI();
+      });
+      syncAudioUI();
+    }
+
+    function unlockSoundOnGesture(event) {
+      if (!active || !soundRequested || event?.target === btnSound) return;
+      if (audio.enabled && audio.ctx?.state === 'running') return;
+      if (audio.ctx?.state === 'suspended') {
+        // Called synchronously within a genuine pointer/key gesture.
+        audio.ctx.resume().then(() => {
+          if (!active || !soundRequested) audio.disable();
+          else if (!audio.enabled && !soundBusy) trySound();
+          syncAudioUI();
+        }).catch(syncAudioUI);
+      } else {
+        trySound();
       }
     }
 
     function showExperience() {
       if (active) return;
       active = true;
+      soundRequested = true;
       startIntro();
       resize();
       if (motionPreference.matches) {
@@ -494,6 +512,7 @@
       }
       last = performance.now();
       frameRequest = document.hidden ? 0 : requestAnimationFrame(loop);
+      trySound(); // autoplay when browser permits; otherwise first touch unlocks
       syncAudioUI();
     }
 
@@ -514,24 +533,41 @@
         cancelAnimationFrame(frameRequest);
         frameRequest = 0;
         if (audio.ctx?.state === 'running') audio.ctx.suspend().catch(() => {});
+        syncAudioUI();
       } else {
-        if (frameRequest) return;
-        last = performance.now();
-        frameRequest = requestAnimationFrame(loop);
-        if (soundRequested && audio.enabled && audio.ctx?.state === 'suspended') {
-          audio.ctx.resume().catch(() => {
-            soundRequested = false;
-            audio.disable();
-            syncAudioUI();
-          });
+        if (!frameRequest) {
+          last = performance.now();
+          frameRequest = requestAnimationFrame(loop);
         }
+        if (soundRequested && audio.enabled && audio.ctx?.state === 'suspended') {
+          audio.ctx.resume().then(syncAudioUI).catch(syncAudioUI);
+        }
+        syncAudioUI();
       }
     });
 
+    document.addEventListener('pointerdown', unlockSoundOnGesture, { capture: true, passive: true });
+    document.addEventListener('keydown', unlockSoundOnGesture, true);
+
     btnSound.addEventListener('click', () => {
-      soundRequested = !soundRequested;
-      if (soundRequested) trySound();
-      else { audio.disable(); syncAudioUI(); }
+      if (audio.enabled && soundRequested) {
+        soundRequested = false;
+        audio.disable();
+        syncAudioUI();
+      } else {
+        soundRequested = true;
+        // Explicit tap on the audio control is always an allowed user gesture.
+        if (audio.ctx?.state === 'suspended') {
+          audio.ctx.resume().then(() => {
+            if (!audio.enabled && !soundBusy) trySound();
+            if (!soundRequested) audio.disable();
+            syncAudioUI();
+          }).catch(syncAudioUI);
+        } else {
+          trySound();
+        }
+        syncAudioUI();
+      }
     });
 
     btnBgm.addEventListener('click', () => {
@@ -615,11 +651,13 @@
     canvas.addEventListener('pointercancel', () => { pDown = false; });
 
     function getParams() {
-      // 同时适配手机竖屏海报比例与电脑宽屏电影比例
-      const unit = Math.min(W / 270, H / 365);
+      // On portrait phones the canopy spans roughly 80% of the usable screen.
+      // Desktop remains on the original scale.
+      const portrait = H > W * 1.2 && W <= 600;
+      const unit = portrait ? Math.min(W / 236, H / 390) : Math.min(W / 270, H / 365);
       const cx = W * 0.5;
-      const cy = H * (H < 500 ? 0.30 : 0.34);
-      const puddleY = H * (H < 500 ? 0.69 : 0.785);
+      const cy = H * (portrait ? 0.345 : (H < 500 ? 0.30 : 0.34));
+      const puddleY = H * (portrait ? 0.755 : (H < 500 ? 0.69 : 0.785));
       const pitch = 0.22;
       const sway = openVal > 0.2 ? Math.sin(time * 1.05) * 0.085 * openVal : Math.sin(time * 0.8) * 0.018;
       const roll = sway + tiltExtra;
@@ -665,7 +703,14 @@
       const hookPts = [];
       for (let k = 0; k <= 10; k++) {
         const a = (Math.PI * k) / 10;
-        hookPts.push(proj(-9.8 + Math.cos(a) * 9.8, -70 - Math.sin(a) * 9.8, 0, P));
+        const hookX = -9.8 + Math.cos(a) * 9.8;
+        // A three-dimensional J-hook attached to the rotating shaft.
+        hookPts.push(proj(
+          hookX * Math.cos(handleRot),
+          -70 - Math.sin(a) * 9.8,
+          hookX * Math.sin(handleRot),
+          P
+        ));
       }
 
       let minX = Infinity, maxX = -Infinity, avgRimY = 0;
@@ -684,19 +729,20 @@
         : (P.cx + (Math.random() - 0.5) * span);
 
       const pal = [
-        { fill: '#FDE68A', tail: 'rgba(253, 230, 138, 0.56)' },
-        { fill: '#FBBF24', tail: 'rgba(251, 191, 36, 0.52)' },
-        { fill: '#FAF5FF', tail: 'rgba(243, 232, 255, 0.58)' },
-        { fill: '#C7D2FE', tail: 'rgba(199, 210, 254, 0.52)' }
+        { fill: '#F9F6FF', tail: 'rgba(244, 239, 255, 0.53)' },
+        { fill: '#E7DAFF', tail: 'rgba(224, 211, 255, 0.48)' },
+        { fill: '#F5D65C', tail: 'rgba(245, 214, 92, 0.50)' },
+        { fill: '#C5D4FF', tail: 'rgba(197, 212, 255, 0.48)' }
       ];
+      const colorRoll = Math.random();
       const col = isWish
-        ? { fill: '#FEF08A', tail: 'rgba(254, 240, 138, 0.9)' }
-        : pal[Math.floor(Math.random() * pal.length)];
+        ? { fill: '#FFE48A', tail: 'rgba(255, 228, 138, 0.85)' }
+        : pal[colorRoll < 0.35 ? 0 : colorRoll < 0.60 ? 1 : colorRoll < 0.85 ? 2 : 3];
       const depthRoll = Math.random();
       const depth = isWish ? 1.12 : (depthRoll < 0.22 ? 0.65 : depthRoll < 0.88 ? 0.93 : 1.17);
       const alpha = isWish ? 1 : (depth < 0.8 ? 0.43 : depth > 1.1 ? 0.88 : 0.72);
 
-      const puddleRx = lerp(9 * P.unit, Math.min(W * 0.40, 96 * P.unit), Math.pow(clamp(openVal, 0, 1), 0.78));
+      const puddleRx = lerp(9 * P.unit, Math.min(W * 0.42, 100 * P.unit), Math.pow(clamp(openVal, 0, 1), 0.78));
       const relX = clamp((x - P.cx) / Math.max(12, puddleRx), -0.88, 0.88);
       const maxOffY = Math.sqrt(Math.max(0.05, 1 - relX * relX)) * puddleRx * 0.165;
 
@@ -707,7 +753,7 @@
         vy: (isWish ? 115 : (60 + Math.random() * 62)) * P.unit * depth,
         size: (isWish ? 8.2 : (2.5 + Math.random() * 3.9)) * P.unit * depth,
         alpha,
-        kind: isWish ? 8 : (Math.random() > 0.52 ? 4 : (Math.random() > 0.4 ? 8 : 0)),
+        kind: isWish ? 8 : (Math.random() < 0.66 ? 4 : (Math.random() < 0.16 ? 8 : 0)),
         rot: Math.random() * Math.PI,
         vrot: (Math.random() - 0.5) * 1.6,
         color: col.fill,
@@ -725,25 +771,25 @@
     }
 
     function spawnSplash(x, y, color, isWish, unit) {
-      const count = isWish ? 13 : (4 + Math.floor(Math.random() * 4));
+      const count = isWish ? 12 : (5 + Math.floor(Math.random() * 4));
       for (let i = 0; i < count; i++) {
-        const ang = -Math.PI * (0.12 + Math.random() * 0.76);
-        const sp = (isWish ? 56 : 25) + Math.random() * (isWish ? 58 : 36);
+        const angle = -Math.PI * (0.10 + Math.random() * 0.80);
+        const speed = (isWish ? 48 : 22) + Math.random() * (isWish ? 52 : 40);
         splashLines.push({
           x, y, px: x, py: y,
-          vx: Math.cos(ang) * sp * unit,
-          vy: Math.sin(ang) * sp * unit,
+          vx: Math.cos(angle) * speed * unit,
+          vy: Math.sin(angle) * speed * unit,
           life: 1,
-          decay: isWish ? 1.4 : (2.0 + Math.random() * 0.9),
-          color: Math.random() > 0.45 ? color : '#E9D5FF'
+          decay: (isWish ? 1.55 : 2.2) + Math.random() * 0.7,
+          width: 0.48 + Math.random() * 0.42,
+          color: Math.random() > 0.70 ? color : '#E7D8FF'
         });
       }
       puddleRipples.push({
-        x, y,
-        r: 2,
-        maxR: (isWish ? 36 : 16 + Math.random() * 13) * unit,
+        x, y, r: 2 * unit,
+        maxR: (isWish ? 35 : 15 + Math.random() * 13) * unit,
         life: 1,
-        color: isWish ? '#FEF08A' : '#DDD6FE'
+        color: isWish ? '#F5DE92' : '#D9C7FF'
       });
 
       const pan = clamp(((x - W * 0.5) / (W * 0.45)), -0.8, 0.8);
@@ -758,28 +804,27 @@
       ctx.fillStyle = color;
       if (kind === 0) {
         ctx.beginPath();
-        ctx.arc(0, 0, r * 0.45, 0, Math.PI * 2);
-        ctx.fill();
-      } else if (kind === 4) {
-        ctx.beginPath();
-        for (let i = 0; i < 8; i++) {
-          const rad = i % 2 === 0 ? r : r * 0.24;
-          const a = (i * Math.PI) / 4;
-          if (i === 0) ctx.moveTo(Math.cos(a) * rad, Math.sin(a) * rad);
-          else ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
-        }
-        ctx.closePath();
+        ctx.arc(0, 0, r * 0.31, 0, Math.PI * 2);
         ctx.fill();
       } else {
+        // Smooth, fine-tipped sparkle: no heavy, jagged polygon outlines.
         ctx.beginPath();
-        for (let i = 0; i < 16; i++) {
-          const rad = i % 2 === 0 ? (i % 4 === 0 ? r : r * 0.72) : r * 0.18;
-          const a = (i * Math.PI) / 8;
-          if (i === 0) ctx.moveTo(Math.cos(a) * rad, Math.sin(a) * rad);
-          else ctx.lineTo(Math.cos(a) * rad, Math.sin(a) * rad);
-        }
+        ctx.moveTo(0, -r);
+        ctx.quadraticCurveTo(r * 0.11, -r * 0.10, r * 0.66, 0);
+        ctx.quadraticCurveTo(r * 0.11, r * 0.10, 0, r);
+        ctx.quadraticCurveTo(-r * 0.11, r * 0.10, -r * 0.66, 0);
+        ctx.quadraticCurveTo(-r * 0.11, -r * 0.10, 0, -r);
         ctx.closePath();
         ctx.fill();
+        if (kind === 8) {
+          ctx.rotate(Math.PI / 4);
+          ctx.globalAlpha *= 0.46;
+          ctx.beginPath();
+          ctx.moveTo(0, -r * 0.52);
+          ctx.quadraticCurveTo(r * 0.055, 0, 0, r * 0.52);
+          ctx.quadraticCurveTo(-r * 0.055, 0, 0, -r * 0.52);
+          ctx.fill();
+        }
       }
       ctx.restore();
     }
@@ -814,9 +859,24 @@
       fabric.addColorStop(1, silkColor([57, 29, 109], edge, frontness));
       ctx.fillStyle = fabric;
       ctx.fill();
-      ctx.strokeStyle = `rgba(221, 214, 254, ${(0.19 + frontness * 0.24).toFixed(3)})`;
-      ctx.lineWidth = 0.75;
+      ctx.strokeStyle = `rgba(232, 218, 255, ${(0.16 + frontness * 0.18).toFixed(3)})`;
+      ctx.lineWidth = 0.68;
       ctx.stroke();
+
+      // A very fine pleat echoes the delicate rib detail in the reference.
+      if (openVal > 0.7) {
+        ctx.strokeStyle = `rgba(236, 224, 255, ${(0.045 + frontness * 0.065).toFixed(3)})`;
+        ctx.lineWidth = 0.55;
+        ctx.beginPath();
+        ctx.moveTo(p1[0].x, p1[0].y);
+        ctx.quadraticCurveTo(
+          lerp(p1[1].x, p2[1].x, 0.42),
+          lerp(p1[1].y, p2[1].y, 0.42),
+          lerp(p1[2].x, p2[2].x, 0.42),
+          lerp(p1[2].y, p2[2].y, 0.42)
+        );
+        ctx.stroke();
+      }
     }
 
     function updateIntro(dt) {
@@ -870,6 +930,8 @@
       openVal = clamp(openVal + openVel * dt, 0, 1.02);
 
       if (!pDown) rot += omega * dt;
+      const handleDelta = Math.atan2(Math.sin(rot - handleRot), Math.cos(rot - handleRot));
+      handleRot += handleDelta * Math.min(1, dt * 8.0);
       tiltExtra += (clamp(omega * 0.025, -0.12, 0.12) - tiltExtra) * dt * 3;
       ornamentSwing += (clamp(omega * 0.25, -1.2, 1.2) - ornamentSwing) * Math.min(1, dt * 2.3);
 
@@ -894,12 +956,12 @@
       });
 
       // 2. 与伞同步缩放的极简椭圆水洼
-      const rx = lerp(9 * P.unit, Math.min(W * 0.40, 96 * P.unit), Math.pow(clamp(openVal, 0, 1), 0.78));
+      const rx = lerp(9 * P.unit, Math.min(W * 0.42, 100 * P.unit), Math.pow(clamp(openVal, 0, 1), 0.78));
       const ry = rx * 0.165;
       ctx.save();
       const pg = ctx.createLinearGradient(P.cx - rx, P.puddleY, P.cx + rx, P.puddleY);
       pg.addColorStop(0, 'rgba(46, 27, 86, 0.98)');
-      pg.addColorStop(0.5, 'rgba(111, 66, 166, 0.90)');
+      pg.addColorStop(0.5, 'rgba(124, 72, 192, 0.91)');
       pg.addColorStop(1, 'rgba(44, 28, 82, 0.98)');
       ctx.fillStyle = pg;
       ctx.beginPath();
@@ -918,11 +980,19 @@
         rp.life = 1 - rp.r / rp.maxR;
         if (rp.life <= 0) { puddleRipples.splice(i, 1); continue; }
         ctx.strokeStyle = rp.color;
-        ctx.globalAlpha = rp.life * 0.65;
-        ctx.lineWidth = 0.9;
+        ctx.globalAlpha = rp.life * 0.58;
+        ctx.lineWidth = 0.75;
         ctx.beginPath();
         ctx.ellipse(rp.x, rp.y, rp.r, rp.r * 0.24, 0, 0, Math.PI * 2);
         ctx.stroke();
+        // Brief reflected point of light at the contact, fading with the ripple.
+        if (rp.life > 0.68) {
+          ctx.globalAlpha = (rp.life - 0.68) * 1.85;
+          ctx.fillStyle = rp.color;
+          ctx.beginPath();
+          ctx.arc(rp.x, rp.y, 1.45 * P.unit, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
       ctx.restore();
 
@@ -984,7 +1054,7 @@
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(hx, hy);
             ctx.stroke();
-            drawStarShape(hx, hy, 2.2 * P.unit, 4, 0, i % 4 === 0 ? '#FDE68A' : '#FAF5FF');
+            drawStarShape(hx, hy, 2.1 * P.unit, 4, 0, i % 4 === 0 ? '#F5D65C' : '#F9F6FF');
           }
           ctx.restore();
         }
@@ -1009,7 +1079,7 @@
         ctx.save();
         ctx.globalAlpha = s.alpha;
         const tx = s.x - s.vx * 0.14;
-        const ty = s.y - (s.isWish ? 36 : 17) * P.unit;
+        const ty = s.y - (s.isWish ? 36 : 20) * P.unit;
         const tg = ctx.createLinearGradient(s.x, s.y, tx, ty);
         tg.addColorStop(0, s.tailColor);
         tg.addColorStop(1, 'rgba(255, 255, 255, 0)');
@@ -1022,7 +1092,7 @@
 
         if (s.isWish) {
           ctx.shadowBlur = 9 * P.unit;
-          ctx.shadowColor = 'rgba(254, 240, 138, 0.35)';
+          ctx.shadowColor = 'rgba(255, 228, 138, 0.30)';
         }
         drawStarShape(s.x, s.y, s.size * (0.85 + 0.18 * Math.sin(time * 6 + s.tp)), s.kind, s.rot, s.color);
         ctx.restore();
@@ -1041,8 +1111,8 @@
         sp.life -= dt * sp.decay;
         if (sp.life <= 0) { splashLines.splice(i, 1); continue; }
         ctx.strokeStyle = sp.color;
-        ctx.globalAlpha = sp.life * 0.84;
-        ctx.lineWidth = 0.9;
+        ctx.globalAlpha = sp.life * 0.72;
+        ctx.lineWidth = sp.width;
         ctx.beginPath();
         ctx.moveTo(sp.px, sp.py);
         ctx.lineTo(sp.x, sp.y);
