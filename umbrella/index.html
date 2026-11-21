@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#160D2D" />
+  <meta name="theme-color" content="#171124" />
   <title>今夜，局部紫色流星雨 · 27</title>
   <meta name="description" content="撑开一把紫伞，让星星轻轻落进水面。一个可以触摸、许愿与安静欣赏的小小动画世界。" />
   <style>
@@ -19,7 +19,7 @@
       height: 100%;
       height: 100dvh;
       overflow: hidden;
-      background-color: #160D2D;
+      background-color: #171124;
       color: #F3E8FF;
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       user-select: none;
@@ -139,17 +139,17 @@
     }
 
     .dock-btn.primary {
-      background: rgba(124, 58, 237, 0.72);
+      background: rgba(112, 82, 152, 0.82);
       color: #FAF5FF;
       font-weight: 500;
     }
 
     .dock-btn.primary:hover {
-      background: rgba(139, 92, 246, 0.85);
+      background: rgba(130, 98, 170, 0.90);
     }
 
     .dock-btn.gold {
-      color: #FDE68A;
+      color: #E6D2A9;
     }
 
     .dock-hint {
@@ -181,7 +181,7 @@
     #intro-progress-fill {
       width: 0%;
       height: 100%;
-      background: linear-gradient(90deg, #7C3AED, #C4B5FD, #FDE68A);
+      background: linear-gradient(90deg, #72569F, #B6A0D5, #E7D4B3);
     }
 
     /* 纯净壁纸模式（隐藏按钮，仅留右上角一个半透明恢复按钮） */
@@ -350,27 +350,19 @@
     let paperTile = null;
     let backgroundLayer = null;
     function buildPaperTexture() {
+      // Fine irregular grain instead of the former 2px crosshatch grid.
       const tc = document.createElement('canvas');
-      tc.width = 180;
-      tc.height = 180;
+      const size = 240;
+      tc.width = tc.height = size;
       const tctx = tc.getContext('2d');
-
-      tctx.fillStyle = '#160D2D';
-      tctx.fillRect(0, 0, 180, 180);
-
-      for (let y = 0; y < 180; y += 2) {
-        tctx.fillStyle = y % 4 === 0 ? 'rgba(255, 255, 255, 0.024)' : 'rgba(6, 2, 16, 0.14)';
-        tctx.fillRect(0, y, 180, 1);
-      }
-      for (let x = 0; x < 180; x += 2) {
-        tctx.fillStyle = x % 4 === 0 ? 'rgba(216, 180, 254, 0.022)' : 'rgba(6, 2, 16, 0.10)';
-        tctx.fillRect(x, 0, 1, 180);
-      }
-      for (let i = 0; i < 1100; i++) {
-        tctx.fillStyle = Math.random() > 0.5
-          ? `rgba(233, 213, 255, ${Math.random() * 0.042})`
-          : `rgba(5, 2, 14, ${Math.random() * 0.15})`;
-        tctx.fillRect(Math.random() * 180, Math.random() * 180, 1.2, 1.2);
+      tctx.fillStyle = '#171124';
+      tctx.fillRect(0, 0, size, size);
+      for (let i = 0; i < 1300; i++) {
+        const light = Math.random() > 0.48;
+        tctx.fillStyle = light
+          ? `rgba(216, 198, 232, ${(Math.random() * 0.028).toFixed(3)})`
+          : `rgba(8, 5, 15, ${(Math.random() * 0.055).toFixed(3)})`;
+        tctx.fillRect(Math.random() * size, Math.random() * size, 1, 1);
       }
       paperTile = tc;
     }
@@ -381,14 +373,26 @@
       bg.height = canvas.height;
       const bctx = bg.getContext('2d');
       bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      bctx.fillStyle = bctx.createPattern(paperTile, 'repeat') || '#160D2D';
+      bctx.fillStyle = bctx.createPattern(paperTile, 'repeat') || '#171124';
       bctx.fillRect(0, 0, W, H);
-      const vignette = bctx.createRadialGradient(
-        W * .5, H * .45, Math.min(W, H) * .22,
-        W * .5, H * .5, Math.max(W, H) * .78
+
+      // Broad diffuse illumination behind the canopy, cached on resize.
+      const ambience = bctx.createRadialGradient(
+        W * 0.50, H * 0.30, 0,
+        W * 0.50, H * 0.37, Math.max(W, H) * 0.62
       );
-      vignette.addColorStop(0, 'rgba(139, 92, 246, 0.07)');
-      vignette.addColorStop(1, 'rgba(6, 2, 16, 0.38)');
+      ambience.addColorStop(0, 'rgba(134, 105, 166, 0.115)');
+      ambience.addColorStop(0.42, 'rgba(88, 67, 126, 0.045)');
+      ambience.addColorStop(1, 'rgba(25, 17, 40, 0)');
+      bctx.fillStyle = ambience;
+      bctx.fillRect(0, 0, W, H);
+
+      const vignette = bctx.createRadialGradient(
+        W * .5, H * .43, Math.min(W, H) * .20,
+        W * .5, H * .49, Math.max(W, H) * .80
+      );
+      vignette.addColorStop(0, 'rgba(37, 23, 53, 0)');
+      vignette.addColorStop(1, 'rgba(5, 3, 10, 0.45)');
       bctx.fillStyle = vignette;
       bctx.fillRect(0, 0, W, H);
       backgroundLayer = bg;
@@ -680,13 +684,13 @@
         : (P.cx + (Math.random() - 0.5) * span);
 
       const pal = [
-        { fill: '#FDE68A', tail: 'rgba(253, 230, 138, 0.56)' },
-        { fill: '#FBBF24', tail: 'rgba(251, 191, 36, 0.52)' },
-        { fill: '#FAF5FF', tail: 'rgba(243, 232, 255, 0.58)' },
-        { fill: '#C7D2FE', tail: 'rgba(199, 210, 254, 0.52)' }
+        { fill: '#E7DFF4', tail: 'rgba(213, 200, 236, 0.38)' },
+        { fill: '#BDAEDC', tail: 'rgba(176, 157, 211, 0.33)' },
+        { fill: '#DDE1EF', tail: 'rgba(198, 204, 230, 0.36)' },
+        { fill: '#D7BF9A', tail: 'rgba(207, 183, 146, 0.36)' }
       ];
       const col = isWish
-        ? { fill: '#FEF08A', tail: 'rgba(254, 240, 138, 0.9)' }
+        ? { fill: '#F2E1B9', tail: 'rgba(238, 212, 173, 0.76)' }
         : pal[Math.floor(Math.random() * pal.length)];
       const depthRoll = Math.random();
       const depth = isWish ? 1.12 : (depthRoll < 0.22 ? 0.65 : depthRoll < 0.88 ? 0.93 : 1.17);
@@ -703,7 +707,7 @@
         vy: (isWish ? 115 : (60 + Math.random() * 62)) * P.unit * depth,
         size: (isWish ? 8.2 : (2.5 + Math.random() * 3.9)) * P.unit * depth,
         alpha,
-        kind: isWish ? 8 : (Math.random() > 0.52 ? 4 : (Math.random() > 0.4 ? 8 : 0)),
+        kind: isWish ? 8 : (Math.random() > 0.76 ? 4 : (Math.random() > 0.9 ? 8 : 0)),
         rot: Math.random() * Math.PI,
         vrot: (Math.random() - 0.5) * 1.6,
         color: col.fill,
@@ -731,7 +735,7 @@
           vy: Math.sin(ang) * sp * unit,
           life: 1,
           decay: isWish ? 1.4 : (2.0 + Math.random() * 0.9),
-          color: Math.random() > 0.45 ? color : '#E9D5FF'
+          color: Math.random() > 0.45 ? color : '#CDBCE0'
         });
       }
       puddleRipples.push({
@@ -739,7 +743,7 @@
         r: 2,
         maxR: (isWish ? 36 : 16 + Math.random() * 13) * unit,
         life: 1,
-        color: isWish ? '#FEF08A' : '#DDD6FE'
+        color: isWish ? '#EBD6B4' : '#C5B4D8'
       });
 
       const pan = clamp(((x - W * 0.5) / (W * 0.45)), -0.8, 0.8);
@@ -780,7 +784,15 @@
       ctx.restore();
     }
 
-    function drawPanel(r1, r2, isFront, idx) {
+    // Rather than switching colors at z=0, interpolate continuously as the
+    // canopy rotates. The old front/back color jump caused the visible flash.
+    function silkColor(dark, light, amount) {
+      return `rgb(${Math.round(lerp(dark[0], light[0], amount))},
+        ${Math.round(lerp(dark[1], light[1], amount))},
+        ${Math.round(lerp(dark[2], light[2], amount))})`;
+    }
+
+    function drawPanel(r1, r2, depth, P) {
       const p1 = r1.pts, p2 = r2.pts;
       const rx = (p1[3].x + p2[3].x) * 0.5 + ((p1[0].x - (p1[3].x + p2[3].x) * 0.5) * 0.06 * openVal);
       const ry = (p1[3].y + p2[3].y) * 0.5 + ((p1[0].y - (p1[3].y + p2[3].y) * 0.5) * 0.06 * openVal);
@@ -792,24 +804,19 @@
       ctx.bezierCurveTo(p2[2].x, p2[2].y, p2[1].x, p2[1].y, p2[0].x, p2[0].y);
       ctx.closePath();
 
+      const frontness = clamp((depth / (96 * P.unit) + 1) * 0.5, 0, 1);
+      const leftLight = clamp((P.cx - (p1[3].x + p2[3].x) * 0.5) / (180 * P.unit), -1, 1);
+      const illumination = clamp(0.17 + frontness * 0.65 + leftLight * 0.075, 0.12, 0.91);
       const fabric = ctx.createLinearGradient(p1[0].x, p1[0].y, rx, ry);
-      if (!isFront) {
-        fabric.addColorStop(0, 'rgba(120, 73, 185, 0.90)');
-        fabric.addColorStop(1, 'rgba(57, 29, 109, 0.97)');
-      } else if (idx % 2 === 0) {
-        fabric.addColorStop(0, 'rgba(168, 117, 238, 0.95)');
-        fabric.addColorStop(0.48, 'rgba(128, 73, 214, 0.94)');
-        fabric.addColorStop(1, 'rgba(91, 43, 162, 0.97)');
-      } else {
-        fabric.addColorStop(0, 'rgba(183, 137, 242, 0.92)');
-        fabric.addColorStop(0.48, 'rgba(141, 91, 217, 0.93)');
-        fabric.addColorStop(1, 'rgba(99, 51, 166, 0.97)');
-      }
+      fabric.addColorStop(0, silkColor([98, 73, 144], [184, 154, 221], illumination));
+      fabric.addColorStop(0.56, silkColor([75, 49, 122], [143, 101, 197], illumination));
+      fabric.addColorStop(1, silkColor([53, 34, 101], [104, 64, 160], illumination));
       ctx.fillStyle = fabric;
       ctx.fill();
 
-      ctx.strokeStyle = isFront ? 'rgba(221, 214, 254, 0.45)' : 'rgba(167, 139, 250, 0.22)';
-      ctx.lineWidth = isFront ? 0.85 : 0.6;
+      // A satin seam, never a sharply glowing white line.
+      ctx.strokeStyle = `rgba(217, 199, 237, ${(0.11 + frontness * 0.10).toFixed(3)})`;
+      ctx.lineWidth = 0.65;
       ctx.stroke();
     }
 
@@ -881,7 +888,7 @@
         if (!motionPreference.matches) d.y -= d.vy * dt;
         if (d.y < -0.02) { d.y = 1.02; d.x = Math.random(); }
         const tw = 0.25 + 0.75 * Math.sin(time * 1.4 + d.p);
-        ctx.fillStyle = `rgba(216, 180, 254, ${0.14 * tw})`;
+        ctx.fillStyle = `rgba(190, 172, 215, ${0.09 * tw})`;
         ctx.beginPath();
         ctx.arc(d.x * W, d.y * H, d.r, 0, Math.PI * 2);
         ctx.fill();
@@ -892,15 +899,15 @@
       const ry = rx * 0.165;
       ctx.save();
       const pg = ctx.createLinearGradient(P.cx - rx, P.puddleY, P.cx + rx, P.puddleY);
-      pg.addColorStop(0, 'rgba(46, 27, 86, 0.98)');
-      pg.addColorStop(0.5, 'rgba(111, 66, 166, 0.90)');
-      pg.addColorStop(1, 'rgba(44, 28, 82, 0.98)');
+      pg.addColorStop(0, 'rgba(36, 28, 55, 0.98)');
+      pg.addColorStop(0.5, 'rgba(92, 74, 133, 0.94)');
+      pg.addColorStop(1, 'rgba(34, 28, 54, 0.98)');
       ctx.fillStyle = pg;
       ctx.beginPath();
       ctx.ellipse(P.cx, P.puddleY, rx, ry, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.strokeStyle = 'rgba(216, 180, 254, 0.38)';
-      ctx.lineWidth = 0.9;
+      ctx.strokeStyle = 'rgba(194, 177, 215, 0.22)';
+      ctx.lineWidth = 0.8;
       ctx.stroke();
 
       ctx.beginPath();
@@ -928,52 +935,59 @@
       }
       panels.sort((a, b) => a.zAvg - b.zAvg);
 
-      panels.filter(p => p.zAvg < 0).forEach(p => drawPanel(p.r1, p.r2, false, p.idx));
+      panels.filter(p => p.zAvg < 0).forEach(p => drawPanel(p.r1, p.r2, p.zAvg, P));
 
       ctx.save();
-      ctx.strokeStyle = '#8B5CF6';
-      ctx.lineWidth = 2.0 * P.unit;
+      ctx.strokeStyle = '#8367A7';
+      ctx.lineWidth = 1.7 * P.unit;
       ctx.lineCap = 'round';
       ctx.beginPath();
       ctx.moveTo(geo.ferrule.x, geo.ferrule.y);
       ctx.lineTo(geo.shaftEnd.x, geo.shaftEnd.y);
       ctx.stroke();
 
-      ctx.strokeStyle = '#A78BFA';
-      ctx.lineWidth = 2.6 * P.unit;
+      ctx.strokeStyle = '#A38ABA';
+      ctx.lineWidth = 2.2 * P.unit;
       ctx.beginPath();
       geo.hookPts.forEach((pt, idx) => idx === 0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y));
       ctx.stroke();
       ctx.restore();
 
-      panels.filter(p => p.zAvg >= 0).forEach(p => drawPanel(p.r1, p.r2, true, p.idx));
+      panels.filter(p => p.zAvg >= 0).forEach(p => drawPanel(p.r1, p.r2, p.zAvg, P));
 
       const beadA = clamp((openVal - 0.55) / 0.4, 0, 1);
       if (beadA > 0.02) {
         for (let i = 0; i < NUM_RIBS; i++) {
           const a = geo.ribs[i].tip, b = geo.ribs[(i + 1) % NUM_RIBS].tip;
-          if (a.z < -8 && b.z < -8) continue;
+          // Soft occlusion fade rather than an on/off visibility threshold.
+          const depth = (a.z + b.z) * 0.5 / P.unit;
+          const tVis = clamp((depth + 35) / 53, 0, 1);
+          const visibility = tVis * tVis * (3 - 2 * tVis);
+          if (visibility < 0.005) continue;
+          ctx.save();
+          ctx.globalAlpha = visibility;
           const sag = (7 + 2 * Math.sin(time * 2.2 + i)) * P.unit;
-          for (let k = 1; k < 7; k++) {
-            const t = k / 7;
-            ctx.fillStyle = `rgba(233, 213, 255, ${beadA * 0.58})`;
+          for (let k = 1; k < 6; k++) {
+            const t = k / 6;
+            ctx.fillStyle = `rgba(219, 206, 237, ${beadA * 0.35})`;
             ctx.beginPath();
             const hang = Math.sin(t * Math.PI);
             ctx.arc(lerp(a.x, b.x, t) + ornamentSwing * 2.1 * P.unit * hang,
-              lerp(a.y, b.y, t) + hang * sag, 0.75 * P.unit, 0, Math.PI * 2);
+              lerp(a.y, b.y, t) + hang * sag, 0.67 * P.unit, 0, Math.PI * 2);
             ctx.fill();
           }
-          if (i % 2 === 0 && a.z >= -4) {
+          if (i % 2 === 0) {
             const hy = a.y + (9 + Math.sin(time * 2.4 + i) * 2) * P.unit;
             const hx = a.x + ornamentSwing * (4 + 1.5 * Math.sin(time * 1.8 + i)) * P.unit;
-            ctx.strokeStyle = `rgba(233, 213, 255, ${beadA * 0.36})`;
+            ctx.strokeStyle = `rgba(217, 204, 233, ${beadA * 0.24})`;
             ctx.lineWidth = 0.55;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
             ctx.lineTo(hx, hy);
             ctx.stroke();
-            drawStarShape(hx, hy, 2.2 * P.unit, 4, 0, i % 4 === 0 ? '#FDE68A' : '#FAF5FF');
+            drawStarShape(hx, hy, 1.9 * P.unit, 4, 0, i % 4 === 0 ? '#D8C19D' : '#DED5EF');
           }
+          ctx.restore();
         }
       }
 
