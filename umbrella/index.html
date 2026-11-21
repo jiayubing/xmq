@@ -184,6 +184,99 @@
       background: linear-gradient(90deg, #7C3AED, #C4B5FD, #FDE68A);
     }
 
+    #entry-gate {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      max-height: none;
+      overflow: auto;
+      overscroll-behavior: contain;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: rgba(27, 13, 48, 0.27);
+      color: inherit;
+      opacity: 0;
+      transition: opacity 420ms ease;
+    }
+
+    #entry-gate[open]:not([data-closing]) {
+      opacity: 1;
+      @starting-style { opacity: 0; }
+    }
+
+    #entry-gate::backdrop {
+      background: transparent;
+      overflow: hidden;
+      overscroll-behavior: contain;
+    }
+
+    .entry-actions {
+      position: absolute;
+      inset: clamp(132px, 68%, calc(100% - 130px)) 16px auto;
+      display: grid;
+      justify-items: center;
+      gap: 9px;
+      text-align: center;
+    }
+
+    #entry-prompt {
+      margin: 0 0 5px;
+      color: #d6c3e8;
+      font-size: 12px;
+      letter-spacing: 0.16em;
+    }
+
+    .entry-sound, .entry-quiet {
+      position: relative;
+      border-radius: 999px;
+      font: inherit;
+      letter-spacing: 0.09em;
+      cursor: pointer;
+    }
+
+    .entry-sound {
+      min-height: 42px;
+      padding: 0 21px;
+      border: 1px solid rgba(228, 200, 255, 0.4);
+      background: rgba(64, 33, 97, 0.72);
+      color: #f7edff;
+      font-size: 13px;
+    }
+
+    .entry-sound:hover { background: rgba(83, 47, 122, 0.88); }
+
+    .entry-quiet {
+      min-height: 28px;
+      padding: 0 10px;
+      border: 0;
+      background: transparent;
+      color: #b49acb;
+      font-size: 11px;
+    }
+
+    .entry-quiet:hover { color: #f3e8ff; }
+
+    @media (prefers-reduced-motion: no-preference) {
+      #entry-gate[open]:not([data-closing]) .entry-sound::after {
+        content: '';
+        position: absolute;
+        inset: -1px;
+        border: 1px solid #d6afff;
+        border-radius: inherit;
+        pointer-events: none;
+        animation: entry-breath 3.6s ease-in-out;
+        opacity: 0;
+      }
+
+      @keyframes entry-breath {
+        0%, 100% { opacity: 0; transform: scale(1); }
+        50% { opacity: 0.36; transform: scale(1.045, 1.12); }
+      }
+    }
+
     /* 纯净壁纸模式（隐藏按钮，仅留右上角一个半透明恢复按钮） */
     body.zen-mode #dock,
     body.zen-mode #btn-sound,
@@ -222,6 +315,10 @@
       outline: 2px solid #f8efff;
       outline-offset: 2px;
     }
+    #entry-gate button:focus-visible {
+      outline: 1px solid #d9bff8;
+      outline-offset: 3px;
+    }
     body.zen-mode .xmq-home { display: none; }
 
     @media (max-width: 420px) {
@@ -243,6 +340,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       #top-controls, #dock, #intro-progress { transition: none; }
+      #entry-gate { transition-duration: 100ms; }
     }
   </style>
 </head>
@@ -251,7 +349,7 @@
   <canvas id="stage" role="img" aria-label="紫夜中一把落下星星的伞。点击开合，左右拖动转伞，可用下方按钮许愿。"></canvas>
 
   <!-- 顶部极简声音与纯净模式按钮 -->
-  <div id="top-controls">
+  <div id="top-controls" inert>
     <button id="btn-sound" class="icon-pill muted" aria-pressed="false" title="开启声音">🔇 静音</button>
     <button id="btn-bgm" class="icon-pill">钢琴夜曲：开</button>
     <button id="btn-zen" class="icon-pill" title="隐藏界面按钮，纯净欣赏">纯净</button>
@@ -272,6 +370,14 @@
   <div id="intro-progress">
     <div id="intro-progress-fill"></div>
   </div>
+
+  <dialog id="entry-gate" aria-labelledby="entry-prompt">
+    <div class="entry-actions">
+      <p id="entry-prompt">星雨在伞下等你。</p>
+      <button type="button" id="entry-sound" class="entry-sound" autofocus>轻触撑伞 · 开启琴音</button>
+      <button type="button" id="entry-quiet" class="entry-quiet">静音进入</button>
+    </div>
+  </dialog>
 
   <script src="./violetAudio.js"></script>
   <script>
@@ -304,21 +410,29 @@
     const dockToggle = document.getElementById('dock-toggle');
     const introProgress = document.getElementById('intro-progress');
     const introProgressFill = document.getElementById('intro-progress-fill');
+    const entryGate = document.getElementById('entry-gate');
     const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
 
     const TAU = Math.PI * 2;
     const NUM_RIBS = 12;
     const RIB_STEP = TAU / NUM_RIBS;
-    const OPEN_PITCH = -0.115;
+    const OPEN_PITCH = -0.15;
     const FOLDED_ROTATION = Math.PI - 0.12;
     const ENAMEL = '#7A56C4';
     const HARDWARE_GLINT = 'rgba(191,166,246,.38)';
     const STAR_COLORS = ['#FDE68A', '#F6CB61', '#F5F3FF', '#DDD6FE'];
     const WISH_COLOR = '#FFE39A';
     const THREADS = [
-      [0, 11.5, 0.9, 0], [2, 17.5, -0.7, 2.55], [4, 11.5, 0.5, 1.52],
-      [5, 19.5, -0.7, 2.85], [7, 12, -0.9, 0], [10, 13, 0.7, 2.12]
-    ];
+      [11.5, 0.042, 0.68, 0, '#E6D4FF'], [15, -0.035, 2.05, 4, '#FFF0BA'],
+      [19, -0.043, 2.55, 8, '#E6D4FF'], [8, 0.026, 1.38, 4, '#E6D4FF'],
+      [13, 0.037, 1.75, 4, '#FDE68A'], [21, -0.028, 2.65, 8, '#FFF0BA'],
+      [16, 0.040, 2.10, 4, '#E6D4FF'], [10.5, -0.047, 0.70, 0, '#E6D4FF'],
+      [18, 0.025, 2.25, 4, '#FDE68A'], [12, -0.035, 1.68, 4, '#E6D4FF'],
+      [14.5, 0.032, 2.15, 8, '#E6D4FF'], [9, -0.040, 0.66, 0, '#FFF0BA']
+    ].map(([length, slant, size, kind, color], i) => ({
+      length, slant, size, kind, color, frequency: 8.4 + (i * 7 % 12) * 0.26,
+      flare: 0, flareVel: 0, lag: 0, lagVel: 0
+    }));
     const background = document.createElement('canvas');
     const inkGrain = document.createElement('canvas');
 
@@ -326,11 +440,12 @@
     let active = false, frameRequest = 0, last = 0, time = 0;
     let appState, introClock = 0;
     let targetOpen = 0, openVal = 0, openVel = 0;
-    let rot = FOLDED_ROTATION, omega = 0, tiltExtra = 0;
+    let rot = FOLDED_ROTATION, omega = 0, previousOmega = 0, angularAccel = 0;
+    let pitchExtra = 0, rollExtra = 0;
     let pointer = null;
 
     let userMuted = false, soundRequested = false, soundUnlocked = false;
-    let soundSuspension = null, pendingCanopySound = null;
+    let soundSuspension = null, pendingCanopySound = null, entryProbeTimer = 0;
 
     let starSpawnAcc = 0, wishCount = 0, poemBlend = 0;
     const stars = [];
@@ -424,7 +539,7 @@
     }
 
     function unlockSoundOnGesture(event) {
-      if (!active || userMuted || audio.enabled || !isActivatingGesture(event)) return;
+      if (!active || appState === 'waiting' || userMuted || audio.enabled || !isActivatingGesture(event)) return;
       const keyboard = event.type === 'keydown';
       if (keyboard) {
         if (event.key === 'Escape' || event.repeat || event.isComposing
@@ -486,12 +601,14 @@
       introClock = time = 0;
       setTargetOpen(reduced ? 1 : 0, false);
       openVal = targetOpen;
-      openVel = tiltExtra = starSpawnAcc = 0;
+      openVel = pitchExtra = rollExtra = starSpawnAcc = 0;
       rot = reduced ? 0 : FOLDED_ROTATION;
-      omega = 0;
+      omega = previousOmega = angularAccel = 0;
+      resetThreads();
       stars.length = impacts.length = 0;
       audio.resetPhrase();
 
+      topControls.inert = false;
       topControls.classList.add('visible');
       if (reduced) {
         const P = getParams();
@@ -530,14 +647,14 @@
     document.getElementById('dock-replay').addEventListener('click', startIntro);
 
     canvas.addEventListener('pointerdown', event => {
-      if (!active || pointer || !event.isPrimary || event.button !== 0) return;
+      if (!active || appState === 'waiting' || pointer || !event.isPrimary || event.button !== 0) return;
       const tookOver = appState === 'intro';
       if (tookOver) {
         enterInteractive();
         setTargetOpen(1);
       }
       pointer = { id: event.pointerId, x: event.clientX, y: event.clientY,
-        lastX: event.clientX, moved: false, tookOver };
+        lastX: event.clientX, spinAt: performance.now(), moved: false, tookOver };
       canvas.setPointerCapture(event.pointerId);
     });
 
@@ -549,8 +666,11 @@
       pointer.moved = true;
       setTargetOpen(1);
       if (dx !== 0) {
-        rot = wrapAngle(rot + dx * 0.011);
-        omega = clamp(dx * 0.16, -6.8, 6.8);
+        const now = performance.now();
+        const delta = dx * 0.011;
+        rot = wrapAngle(rot + delta);
+        omega = clamp(delta / Math.max(0.008, (now - pointer.spinAt) / 1000), -6.8, 6.8);
+        pointer.spinAt = now;
       }
     });
 
@@ -687,14 +807,21 @@
     function getParams() {
       const unit = Math.min(W / 366, H / 400);
       const e = clamp(openVal, 0, 1);
-      const pitch = lerp(0.012, OPEN_PITCH, smoothstep(0, 1, e));
+      const lift = smoothstep(0, 0.9, e);
+      const breathing = motionPreference.matches ? 0 : lift;
+      const pitch = lerp(0.028, OPEN_PITCH, lift) + breathing
+        * (pitchExtra + 0.016 * Math.sin(time * 0.82 + 0.7) + 0.008 * Math.sin(time * 1.71));
+      const roll = (motionPreference.matches ? 0 : -0.029) + breathing
+        * (rollExtra + 0.027 * Math.sin(time * 0.70) + 0.013 * Math.sin(time * 1.43 + 1.1));
+      const float = breathing * (2.4 * Math.sin(time * 0.94 + 0.45) + 0.8 * Math.sin(time * 1.68));
       const spread = Math.pow(e, 0.78);
       return {
-        unit, e, pitch, cx: W * 0.5, apexY: H * 0.1625,
+        unit, e, cx: W * 0.5, apexY: H * 0.1625 + float * unit,
+        cinch: 1 - smoothstep(0, 0.37, e),
         puddleY: H * 0.8175, waterRx: lerp(29, 158, spread) * unit,
         waterRy: lerp(5.7, 23.1, spread) * unit,
         cosP: Math.cos(pitch), sinP: Math.sin(pitch),
-        cosR: Math.cos(tiltExtra), sinR: Math.sin(tiltExtra)
+        cosR: Math.cos(roll), sinR: Math.sin(roll)
       };
     }
 
@@ -755,55 +882,6 @@
       strokePath(linePath(finial), lerp(2, 1.7, P.e) * P.unit, ink);
     }
 
-    function foldedRadius(t) {
-      const pinch = 1 - 0.19 * Math.exp(-(((t - 0.80) / 0.091) ** 2));
-      return (0.46 + 16 * t ** 1.36) * pinch;
-    }
-
-    function drawFoldedCloth(P) {
-      const pleats = Array.from({ length: NUM_RIBS + 1 }, (_, i) => {
-        const u = (i - 6) / 6;
-        const hem = 120 + 5.2 * (1 - u * u) + (i % 2 ? -2.45 : 0.9) + 0.9 * Math.sin(i * 1.8);
-        return Array.from({ length: 25 }, (_, k) => {
-          const t = k / 24;
-          const x = u * foldedRadius(t) + Math.sin(t * 2.7) * 0.55 + (i % 2 ? -0.28 : 0.18) * t;
-          return project(x, t * hem, 0, P);
-        });
-      });
-      const u = P.unit;
-      const endY = P.apexY + 128 * u;
-      for (let i = 0; i < NUM_RIBS; i++) {
-        const path = linePath(pleats[i]);
-        tracePoints(path, pleats[i + 1].slice().reverse(), true);
-        path.closePath();
-        const ink = ctx.createLinearGradient(P.cx - 6 * u, P.apexY + 10 * u, P.cx + 9 * u, endY);
-        ink.addColorStop(0, i < 6 ? '#6D4CB1' : '#57379D');
-        ink.addColorStop(0.70, i % 2 ? '#6642AF' : '#57379D');
-        ink.addColorStop(1, i % 2 ? '#5A399F' : '#4F318C');
-        ctx.fillStyle = ink;
-        ctx.fill(path);
-      }
-      pleats.forEach((points, i) => {
-        const ink = ctx.createLinearGradient(0, P.apexY, 0, endY);
-        ink.addColorStop(0, 'rgba(211,190,253,.08)');
-        ink.addColorStop(0.26, i % 2 ? 'rgba(211,190,253,.39)' : 'rgba(211,190,253,.27)');
-        ink.addColorStop(1, 'rgba(199,176,244,.34)');
-        strokePath(linePath(points), 0.70 * u, ink);
-      });
-      strokePath(linePath(pleats.map(points => points.at(-1))), 0.52 * u, 'rgba(218,194,253,.28)');
-
-      const left = pleats[0][19], right = pleats.at(-1)[19];
-      const y = P.apexY + 97 * u;
-      const band = ctx.createLinearGradient(left.x, 0, right.x, 0);
-      band.addColorStop(0, 'rgba(181,147,235,.56)');
-      band.addColorStop(0.45, 'rgba(222,204,251,.82)');
-      band.addColorStop(1, 'rgba(157,123,215,.44)');
-      const path = new Path2D();
-      path.moveTo(left.x + 0.15 * u, y - 0.50 * u);
-      path.quadraticCurveTo(P.cx, y + 0.85 * u, right.x - 0.15 * u, y - 0.36 * u);
-      strokePath(path, 1.25 * u, band);
-    }
-
     function hemScallop(angle, firstRib) {
       const rib = (angle - firstRib) / RIB_STEP;
       const wave = Math.sin(Math.PI * (rib - Math.floor(rib)));
@@ -816,9 +894,10 @@
       const hemDepth = 5 + 2.2 * sine ** 2 / Math.hypot(sine, 0.16);
       const unfoldedY = 70 * (0.65 * t ** 1.52 + 0.35 * t ** 3.2)
         - sideBlend * hemDepth * scallop * t ** 4;
-      const foldedY = (122 + 2.7 * Math.cos(angle * NUM_RIBS)) * t;
-      const foldedR = (foldedRadius(t) - 0.46) * (1 - 0.10 * scallop);
-      const r = lerp(foldedR, (165 - 2.8 * scallop) * t, P.e);
+      const foldedY = (125 - 3.1 * scallop) * t;
+      const foldedR = 16.4 * t ** 1.36 * (1 - 0.105 * scallop);
+      const pinch = 1 - 0.21 * P.cinch * Math.exp(-(((t - 0.79) / 0.097) ** 2));
+      const r = lerp(foldedR, (165 - 2.8 * scallop) * t, P.e) * pinch;
       return { x: r * Math.cos(angle), y: lerp(foldedY, unfoldedY, P.e), z: r * sine };
     }
 
@@ -861,6 +940,7 @@
         return smoothstep(0, 0.16, Math.min(offset, left - right - offset));
       };
       const rear = [], front = [], ribs = [];
+      const band = P.cinch > 0 ? getCinchBand(right, left, firstRib, P) : null;
 
       for (let i = 0; i < NUM_RIBS; i++) {
         const from = firstRib + i * RIB_STEP;
@@ -892,9 +972,25 @@
       }
       rear.sort((a, b) => a.depth - b.depth);
       front.sort((a, b) => a.depth - b.depth);
-      return { rear, front, ribs, isFront, frontFade };
+      return { rear, front, ribs, band, isFront, frontFade };
     }
 
+    function getCinchBand(right, left, firstRib, P) {
+      const waistY = canopyWorld(0.79, Math.PI / 2, 0.5, P).y;
+      return Array.from({ length: 25 }, (_, i) => {
+        const angle = lerp(right, left, i / 24);
+        const scallop = hemScallop(angle, firstRib);
+        let low = 0.73, high = 0.85;
+        // 沿伞布等高线系束带，布褶的檐尖高度不会投射到带上。
+        for (let j = 0; j < 10; j++) {
+          const t = (low + high) / 2;
+          if (canopyWorld(t, angle, scallop, P).y < waistY) low = t;
+          else high = t;
+        }
+        const point = canopyWorld((low + high) / 2, angle, scallop, P);
+        return project(point.x, point.y, point.z, P);
+      });
+    }
 
     function blendInk(inner, outer, amount) {
       return 'rgb(' + inner.map((channel, i) => Math.round(lerp(channel, outer[i], amount))).join(',') + ')';
@@ -902,22 +998,37 @@
 
     function paintPanels(pieces, P) {
       const u = P.unit;
+      const fold = 1 - smoothstep(0, 0.45, P.e);
       ctx.save();
       ctx.lineJoin = 'round';
       ctx.lineWidth = 0.24 * u;
       for (const { panel, rim, face, side, odd } of pieces) {
-        const ink = ctx.createLinearGradient(P.cx + 46 * side * u, P.apexY - u,
-          P.cx + 26 * side * u, P.apexY + lerp(83, 74, face) * u);
-        ink.addColorStop(0, blendInk([113, 80, 183], [107, 73, 176], face));
-        ink.addColorStop(lerp(0.58, 0.44, face), blendInk([132, 103, 195],
-          odd ? [98, 64, 171] : [85, 53, 153], face));
-        ink.addColorStop(1, blendInk(odd ? [171, 144, 229] : [154, 126, 215],
-          odd ? [91, 58, 156] : [77, 46, 138], face));
+        const ink = ctx.createLinearGradient(P.cx + lerp(46, 5, fold) * side * u, P.apexY - u,
+          P.cx + lerp(26, 4, fold) * side * u, P.apexY + lerp(lerp(83, 74, face), 125, fold) * u);
+        const shade = (lining, fabric, folded) => blendInk(
+          lining.map((channel, i) => lerp(channel, fabric[i], face)), folded, fold);
+        ink.addColorStop(0, shade([113, 80, 183], [107, 73, 176], [105, 72, 173]));
+        ink.addColorStop(lerp(0.58, 0.44, face), shade([132, 103, 195],
+          odd ? [98, 64, 171] : [85, 53, 153], odd ? [111, 77, 179] : [89, 56, 148]));
+        ink.addColorStop(1, shade(odd ? [171, 144, 229] : [154, 126, 215],
+          odd ? [91, 58, 156] : [77, 46, 138], odd ? [93, 62, 158] : [77, 46, 133]));
         ctx.fillStyle = ctx.strokeStyle = ink;
         ctx.fill(panel);
         ctx.stroke(panel);
         strokePath(rim, lerp(0.59, 0.56, face) * u, 'rgba(224,202,253,.43)');
       }
+      ctx.restore();
+    }
+
+    function drawCinch(band, P) {
+      if (!band) return;
+      const ink = ctx.createLinearGradient(band[0].x, 0, band.at(-1).x, 0);
+      ink.addColorStop(0, 'rgba(157,123,215,.27)');
+      ink.addColorStop(0.46, 'rgba(224,205,252,.80)');
+      ink.addColorStop(1, 'rgba(181,147,235,.43)');
+      ctx.save();
+      ctx.globalAlpha = P.cinch;
+      strokePath(linePath(band), 1.18 * P.unit * P.cinch, ink);
       ctx.restore();
     }
 
@@ -943,74 +1054,68 @@
     }
 
     function getDew(canopy, P) {
-      const fade = smoothstep(0.19, 0.98, P.e);
+      const fade = smoothstep(0.19, 0.78, P.e);
       const ornaments = [];
       if (!fade) return ornaments;
-      for (const [i, length, slant, size] of THREADS) {
+      for (const [i, thread] of THREADS.entries()) {
+        const { length, slant, size, kind, color, flare, lag } = thread;
         const { angle, tip } = canopy.ribs[i];
         const world = canopyWorld(1, angle, 0, P);
-        const sway = motionPreference.matches ? 0 : clamp(omega, -3, 3) * 0.85;
-        const xOffset = slant + sway;
-        const end = project(world.x + xOffset, world.y + length, world.z, P);
-        const bend = project(world.x + xOffset * 0.18, world.y + length * 0.54, world.z, P);
+        const radial = length * Math.sin(flare) * Math.cos(lag + slant);
+        const tangential = length * Math.sin(lag + slant);
+        const hang = length * Math.cos(flare) * Math.cos(lag + slant);
+        const cos = Math.cos(angle), sin = Math.sin(angle);
+        const dx = radial * cos - tangential * sin;
+        const dz = radial * sin + tangential * cos;
+        const end = project(world.x + dx, world.y + hang, world.z + dz, P);
+        const bend = project(world.x + dx * 0.44, world.y + hang * 0.55, world.z + dz * 0.44, P);
         const front = canopy.isFront(angle);
-        const pulse = 0.72 + 0.18 * Math.sin(time * 2.4 + i * 2.6);
-        ornaments.push({ tip, bend, end, depth: bend.depth, front, fade });
-        ornaments.push({ end, size, depth: end.depth, front, fade: fade * pulse });
+        const pulse = motionPreference.matches ? 0.86 : 0.83 + 0.15 * Math.sin(time * 2.4 + i * 2.6);
+        ornaments.push({ tip, bend, end, color, depth: bend.depth, front, fade });
+        ornaments.push({ end, size, kind, color, rotation: lag * 0.30, depth: end.depth, front, fade: fade * pulse });
       }
       return ornaments.sort((a, b) => a.depth - b.depth);
     }
 
     function drawDew(ornaments, front, P) {
       ctx.save();
-      for (const { tip, bend, end, size, front: near, fade } of ornaments) {
+      for (const { tip, bend, end, size, kind, color, rotation, front: near, fade } of ornaments) {
         if (front !== near) continue;
         ctx.globalAlpha = fade;
         if (tip) {
           const thread = ctx.createLinearGradient(tip.x, tip.y, end.x, end.y);
           thread.addColorStop(0, 'rgba(229,203,255,.17)');
-          thread.addColorStop(1, 'rgba(225,202,255,.60)');
+          thread.addColorStop(1, color + 'A0');
           const path = new Path2D();
           path.moveTo(tip.x, tip.y);
           path.quadraticCurveTo(bend.x, bend.y, end.x, end.y);
-          strokePath(path, 0.50 * P.unit, thread);
-        } else if (size) {
-          drawStarShape(end.x, end.y, size * P.unit, 4, 0, '#E6D4FF');
+          strokePath(path, 0.48 * P.unit, thread);
         } else {
-          drawEllipse(end.x, end.y, 0.68 * P.unit, 0.83 * P.unit, '#E8D6FF');
+          drawStarShape(end.x, end.y, size * P.unit, kind, rotation, color);
         }
       }
       ctx.restore();
     }
 
     function drawUmbrella(canopy, hardware, P) {
-      const unfolded = smoothstep(0.015, 0.16, P.e);
-      if (canopy) {
-        ctx.save();
-        ctx.globalAlpha = unfolded;
-        paintPanels(canopy.rear, P);
-        drawDew(canopy.dew, false, P);
-        ctx.restore();
-      }
+      paintPanels(canopy.rear, P);
+      drawDew(canopy.dew, false, P);
       drawHardware(hardware, P);
-      if (canopy) {
+      const frameLight = smoothstep(0.02, 0.42, P.e);
+      if (frameLight) {
         ctx.save();
-        ctx.globalAlpha = unfolded;
+        ctx.globalAlpha = frameLight;
         drawFrame(canopy, hardware, P);
-        paintPanels(canopy.front, P);
-        for (const { angle, rail } of canopy.ribs) {
-          const light = canopy.frontFade(angle);
-          if (light) strokePath(linePath(rail), 0.58 * P.unit, 'rgba(220,197,255,' + 0.25 * light + ')');
-        }
-        drawDew(canopy.dew, true, P);
         ctx.restore();
       }
-      if (unfolded < 1) {
-        ctx.save();
-        ctx.globalAlpha = 1 - unfolded;
-        drawFoldedCloth(P);
-        ctx.restore();
+      paintPanels(canopy.front, P);
+      for (const { angle, rail } of canopy.ribs) {
+        const light = canopy.frontFade(angle);
+        if (light) strokePath(linePath(rail), lerp(0.58, 0.73, P.cinch) * P.unit,
+          'rgba(220,197,255,' + lerp(0.25, 0.43, P.cinch) * light + ')');
       }
+      drawCinch(canopy.band, P);
+      drawDew(canopy.dew, true, P);
     }
 
     function posePoetry(P) {
@@ -1048,16 +1153,17 @@
 
     function drawPoetry(P) {
       const { x, y, lineHeight, spacing, english, chinese } = posePoetry(P);
+      const presence = appState === 'intro' ? smoothstep(0.2, 1.65, introClock) : 1;
       ctx.save();
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.letterSpacing = spacing;
       ctx.font = english;
-      ctx.globalAlpha = (1 - smoothstep(0, 0.56, poemBlend)) * 0.51;
+      ctx.globalAlpha = presence * (1 - smoothstep(0, 0.56, poemBlend)) * 0.51;
       ctx.fillStyle = '#DCCAFF';
       if (ctx.globalAlpha) CONFIG.poemLines.forEach((line, i) => ctx.fillText(line, x, y + i * lineHeight));
       ctx.font = chinese;
-      ctx.globalAlpha = smoothstep(0.44, 1, poemBlend) * 0.75;
+      ctx.globalAlpha = presence * smoothstep(0.44, 1, poemBlend) * 0.75;
       ctx.fillStyle = '#F5DDB7';
       if (ctx.globalAlpha) CONFIG.wishEasterEggLines.forEach((line, i) => ctx.fillText(line, x, y + i * lineHeight));
       ctx.restore();
@@ -1346,6 +1452,67 @@
       return targetOpen && !motionPreference.matches ? 0.22 : 0;
     }
 
+    function resetThreads() {
+      for (const thread of THREADS) thread.flare = thread.flareVel = thread.lag = thread.lagVel = 0;
+    }
+
+    function updateThreads(dt) {
+      if (!dt || motionPreference.matches) return;
+      const flareTarget = Math.atan(0.037 * omega ** 2);
+      // 旋转时受到风阻，减速时惯性反向驱动垂丝。
+      const lagTarget = clamp(-0.065 * omega - 0.095 * angularAccel, -1.10, 1.10);
+      const steps = Math.ceil(dt * 120);
+      const step = dt / steps;
+      for (const thread of THREADS) {
+        const f = thread.frequency;
+        const g = f * 0.86;
+        for (let i = 0; i < steps; i++) {
+          thread.flareVel += (f ** 2 * (flareTarget - thread.flare) - 0.88 * f * thread.flareVel) * step;
+          thread.lagVel += (g ** 2 * (lagTarget - thread.lag) - 0.74 * g * thread.lagVel) * step;
+          thread.flare += thread.flareVel * step;
+          thread.lag += thread.lagVel * step;
+        }
+      }
+    }
+
+    function updateUmbrella(dt, elapsed, now) {
+      if (appState === 'intro') {
+        updateIntro(elapsed);
+      } else if (!pointer) {
+        omega = lerp(omega, idleSpin(), 1 - Math.exp(-1.23 * dt));
+        const spin = targetOpen ? 1 : smoothstep(0.012, 0.26, openVal);
+        rot = wrapAngle(rot + omega * spin * dt);
+      } else if (now - pointer.spinAt > 46) {
+        omega *= Math.exp(-9 * dt);
+      }
+
+      // 临界阻尼弹簧的解析解，帧率变化时也保留连续的位移和速度。
+      const rate = targetOpen ? 6.4 : 7.4;
+      const offset = openVal - targetOpen;
+      const slope = openVel + rate * offset;
+      const decay = Math.exp(-rate * dt);
+      openVal = clamp(targetOpen + (offset + slope * dt) * decay, 0, 1);
+      openVel = (openVel - rate * slope * dt) * decay;
+      if (Math.abs(targetOpen - openVal) < 0.00005 && Math.abs(openVel) < 0.0004) {
+        openVal = targetOpen;
+        openVel = 0;
+      }
+      if (!dt) return;
+
+      const acceleration = clamp((omega - previousOmega) / dt, -65, 65);
+      angularAccel = lerp(angularAccel, acceleration, 1 - Math.exp(-18 * dt));
+      previousOmega = omega;
+      updateThreads(dt);
+
+      const turn = clamp(omega / 7.8, -1, 1);
+      const pitchTarget = clamp(-0.044 * openVel, -0.086, 0.086)
+        - 0.046 * Math.abs(turn) + 0.026 * turn * Math.cos(rot);
+      const rollTarget = clamp(-0.016 * openVel, -0.031, 0.031)
+        - 0.11 * turn + 0.035 * turn * Math.sin(rot);
+      pitchExtra = lerp(pitchExtra, pitchTarget, 1 - Math.exp(-5.2 * dt));
+      rollExtra = lerp(rollExtra, rollTarget, 1 - Math.exp(-(pointer ? 7.8 : 4.8) * dt));
+    }
+
     function updateIntro(elapsed) {
       introClock += elapsed;
       introProgressFill.style.width = 100 * clamp(introClock / CONFIG.introDuration, 0, 1) + '%';
@@ -1371,34 +1538,26 @@
       last = now;
       time += dt;
 
-      if (appState === 'intro') {
-        updateIntro(elapsed);
-      } else if (!pointer) {
-        omega = lerp(omega, idleSpin(), 1 - Math.exp(-1.23 * dt));
-        rot = wrapAngle(rot + omega * dt);
-      }
-
-      openVel += ((targetOpen - openVal) * 36 - openVel * 12) * dt;
-      openVal = clamp(openVal + openVel * dt, 0, 1);
-      tiltExtra = lerp(tiltExtra, clamp(omega * 0.005, -0.024, 0.024), 1 - Math.exp(-3 * dt));
+      const waiting = appState === 'waiting';
+      if (!waiting) updateUmbrella(dt, elapsed, now);
 
       const showWish = Number(wishCount >= CONFIG.wishEasterEggCount);
       poemBlend = lerp(poemBlend, showWish, 1 - Math.exp(-1.55 * dt));
       audio.updateContinuous({ dt, openVal, omega, rainActive: targetOpen === 1 });
 
       const P = getParams();
-      const canopy = P.e > 0.015 ? getCanopy(P) : null;
-      if (canopy) canopy.dew = getDew(canopy, P);
+      const canopy = getCanopy(P);
+      canopy.dew = getDew(canopy, P);
       const hardware = getHardware(P);
       updateRain(dt, canopy, P);
       ctx.drawImage(background, 0, 0, W, H);
-      drawPoetry(P);
+      if (!waiting) drawPoetry(P);
       drawPuddle(P);
       drawUmbrella(canopy, hardware, P);
       drawRain(P);
       drawSplashes(P);
       ctx.drawImage(inkGrain, 0, 0, W, H);
-      frameRequest = requestAnimationFrame(loop);
+      if (!waiting) frameRequest = requestAnimationFrame(loop);
     }
 
     function resumeFrame() {
@@ -1414,13 +1573,63 @@
       pointer = null;
     }
 
-    function showExperience() {
+    function finishEntry(muted) {
+      if (appState !== 'waiting') return;
+      clearTimeout(entryProbeTimer);
+      if (muted) {
+        userMuted = true;
+        soundRequested = false;
+        pauseSound();
+      } else if (!soundIsPlaying()) {
+        void enableSound();
+      }
+      startIntro();
+      resumeFrame();
+      if (!entryGate.open) return;
+
+      entryGate.setAttribute('data-closing', '');
+      // 在原生模态层上淡出，再关闭，较早的浏览器也能完整播放过渡。
+      const closing = entryGate.getAnimations();
+      void Promise.allSettled(closing.map(animation => animation.finished)).then(() => {
+        entryGate.close();
+        entryGate.removeAttribute('data-closing');
+      });
+    }
+
+    document.getElementById('entry-sound').addEventListener('click', () => finishEntry(false));
+    document.getElementById('entry-quiet').addEventListener('click', () => finishEntry(true));
+    entryGate.addEventListener('cancel', event => {
+      event.preventDefault();
+      finishEntry(true);
+    });
+
+    function probeDirectEntry() {
+      if (document.hidden) return;
+      void enableSound().then(() => {
+        if (soundIsPlaying()) finishEntry(false);
+      });
+      // 自动播放拦截时 resume() 可能一直挂起，不能让入口等它完成。
+      entryProbeTimer = setTimeout(() => {
+        if (appState !== 'waiting' || document.hidden) return;
+        if (soundIsPlaying()) finishEntry(false);
+        else entryGate.showModal();
+      }, 180);
+    }
+
+    function showExperience(direct = false) {
       if (active) return;
       active = true;
+      if (!direct && !userMuted) void enableSound();
       resize();
-      startIntro();
+      if (direct) {
+        appState = 'waiting';
+        resumeFrame();
+        probeDirectEntry();
+      } else {
+        startIntro();
+        resumeFrame();
+      }
       syncAudioUI();
-      resumeFrame();
     }
 
     function stopExperience() {
@@ -1436,21 +1645,28 @@
       if (!active) return;
       if (document.hidden) {
         pauseFrame();
+        clearTimeout(entryProbeTimer);
         soundRequested = soundUnlocked;
         pendingCanopySound = null;
         pauseSound();
       } else {
         resumeFrame();
-        if (soundUnlocked && !userMuted) void enableSound();
+        if (appState === 'waiting' && !entryGate.open) probeDirectEntry();
+        else if (soundUnlocked && !userMuted) void enableSound();
       }
     });
 
     motionPreference.addEventListener('change', event => {
-      if (!active || !event.matches || appState !== 'intro') return;
-      startIntro();
+      if (!active || !event.matches) return;
+      if (appState === 'intro') startIntro();
+      else resetThreads();
     });
 
-    window.addEventListener('resize', () => { if (active) resize(); });
+    window.addEventListener('resize', () => {
+      if (!active) return;
+      resize();
+      if (appState === 'waiting') resumeFrame();
+    });
     if (window.parent !== window && new URLSearchParams(location.search).has('gallery')) {
       window.xmqRain = { start: showExperience, stop: stopExperience };
       document.querySelector('.xmq-home').addEventListener('click', event => {
@@ -1459,7 +1675,7 @@
         window.parent.postMessage('xmq-rain-home', location.origin);
       });
     } else {
-      showExperience();
+      showExperience(true);
     }
 
   </script>
