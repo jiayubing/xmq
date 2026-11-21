@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="theme-color" content="#160D2D" />
-  <title>今夜，局部紫色流星雨 · 27</title>
-  <meta name="description" content="撑开一把紫伞，让星星轻轻落进水面。一个可以触摸、许愿与安静欣赏的小小动画世界。" />
+  <meta name="theme-color" content="#0A0615" />
+  <title>今夜，局部紫色流星雨</title>
+  <link rel="icon" href="data:," />
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -19,7 +19,7 @@
       height: 100%;
       height: 100dvh;
       overflow: hidden;
-      background-color: #160D2D;
+      background-color: #0A0615;
       color: #F3E8FF;
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       user-select: none;
@@ -199,74 +199,66 @@
       opacity: 0.9;
     }
 
-    /* Navigation and interaction remain visually quiet. */
     .xmq-home {
-      position: fixed; z-index: 40;
+      position: fixed;
+      z-index: 40;
       top: max(12px, env(safe-area-inset-top));
       left: max(12px, env(safe-area-inset-left));
-      display: inline-flex; align-items: center; min-height: 36px;
-      padding: 0 10px; border: 1px solid rgba(233, 220, 250, .4);
-      border-radius: 999px; background: rgba(35, 21, 55, .74);
-      color: #f8efff; font: 12px/1 system-ui, sans-serif;
-      text-decoration: none; gap: 5px;
+      display: inline-flex;
+      align-items: center;
+      min-height: 36px;
+      padding: 0 10px;
+      gap: 5px;
+      border: 1px solid #e9dcfa66;
+      border-radius: 999px;
+      background: #231537bc;
+      color: #f8efff;
+      font: 12px/1 system-ui, sans-serif;
+      text-decoration: none;
     }
+
     .xmq-home:hover { background: #231537; }
     .xmq-home:focus-visible, button:focus-visible {
-      outline: 2px solid #f8efff; outline-offset: 3px;
+      outline: 2px solid #f8efff;
+      outline-offset: 2px;
     }
     body.zen-mode .xmq-home { display: none; }
-    #intro-hint {
-      position: fixed; left: 0; right: 0;
-      bottom: max(30px, env(safe-area-inset-bottom)); z-index: 19;
-      color: rgba(233, 213, 255, .52); text-align: center;
-      font-size: 11px; letter-spacing: .16em;
-      opacity: 0; pointer-events: none; transition: opacity 600ms ease;
-    }
-    #intro-hint.visible { opacity: 1; }
-    body.zen-mode #intro-hint { opacity: 0; }
-    @media (max-width: 480px) {
-      .xmq-home {
-        top: max(10px, env(safe-area-inset-top));
-        left: max(10px, env(safe-area-inset-left));
-        min-height: 34px; font-size: 11px; padding: 0 9px;
-      }
+
+    @media (max-width: 420px) {
+      .xmq-home { top: max(10px, env(safe-area-inset-top)); }
       #top-controls {
         top: max(10px, env(safe-area-inset-top));
-        right: max(10px, env(safe-area-inset-right)); gap: 4px;
+        right: max(10px, env(safe-area-inset-right));
+        gap: 4px;
       }
-      .icon-pill { min-height: 34px; font-size: 11px; padding: 7px 8px; }
-      #dock { bottom: max(16px, env(safe-area-inset-bottom)); padding: 0 10px; }
-      .dock-bar { max-width: calc(100vw - 20px); padding: 4px 5px; gap: 2px; }
-      .dock-btn { min-height: 40px; font-size: 11.5px; padding: 10px 9px; }
-      .dock-hint { max-width: 90vw; font-size: 10px; line-height: 1.5; }
+      .icon-pill { padding: 7px 7px; font-size: 11px; }
+      .dock-bar { gap: 3px; padding: 5px; }
+      .dock-btn { padding: 8px 9px; font-size: 12px; }
     }
-    @media (max-width: 360px) {
-      .icon-pill { font-size: 10px; padding: 7px 6px; }
-      .dock-btn { font-size: 11px; padding: 10px 7px; }
-    }
-    @media (max-height: 500px) {
+
+    @media (max-height: 475px) {
       #dock { bottom: max(8px, env(safe-area-inset-bottom)); }
       .dock-hint { display: none; }
     }
+
     @media (prefers-reduced-motion: reduce) {
-      #top-controls, #dock, #intro-hint, .icon-pill, .dock-btn {
-        transition: none;
-      }
+      #top-controls, #dock, #intro-progress { transition: none; }
     }
   </style>
 </head>
-<body><a class="xmq-home" href="../" aria-label="返回作品首页"><span aria-hidden="true">‹</span> 作品</a>
-  <canvas id="stage" role="img" aria-label="紫色夜空中的一把紫伞，星星从伞下落进水面。点击开合，左右滑动旋转，或者使用下方操作按钮。"></canvas>
+<body>
+  <a class="xmq-home" href="../" aria-label="返回作品首页"><span aria-hidden="true">‹</span> 作品</a>
+  <canvas id="stage" role="img" aria-label="紫夜中一把落下星星的伞。点击开合，左右拖动转伞，可用下方按钮许愿。"></canvas>
 
   <!-- 顶部极简声音与纯净模式按钮 -->
   <div id="top-controls">
-    <button id="btn-sound" class="icon-pill">🔊 声音</button>
+    <button id="btn-sound" class="icon-pill muted" aria-pressed="false" title="开启声音">🔇 静音</button>
     <button id="btn-bgm" class="icon-pill">钢琴夜曲：开</button>
     <button id="btn-zen" class="icon-pill" title="隐藏界面按钮，纯净欣赏">纯净</button>
   </div>
 
   <!-- 底部自由交互胶囊（开场动画结束后自动淡入） -->
-  <div id="dock">
+  <div id="dock" inert>
     <div class="dock-bar">
       <button id="dock-toggle" class="dock-btn primary">撑伞落星</button>
       <button id="dock-spin" class="dock-btn">转伞</button>
@@ -280,288 +272,188 @@
   <div id="intro-progress">
     <div id="intro-progress-fill"></div>
   </div>
-  <div id="intro-hint" aria-hidden="true">轻触画面 · 即可互动</div>
 
   <script src="./violetAudio.js"></script>
   <script>
-    const INTRO_DURATION = 13; // 开场动画时长（秒）
+    const CONFIG = {
+      introDuration: 6.5,
+      closedHold: 0.7,
+      poemLines: [
+        'Keep a quiet wish tonight,',
+        'let the little stars fall slow —',
+        'everything you have been hoping for',
+        'is already on its way.'
+      ],
+      wishEasterEggCount: 3,
+      wishEasterEggLines: [
+        '心里一直惦记着的那些愿望，',
+        '今夜就悄悄替你接住吧。',
+        '愿你天天开心，事事顺心，',
+        '所有想要的，都会慢慢如愿。'
+      ]
+    };
 
-    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
-    function lerp(a, b, t) { return a + (b - a) * t; }
-
-    // A single audio implementation is kept in violetAudio.js.
-    const audio = new VioletAudioEngine();
-
-    /* =========================================================================
-       2. 版画风「局部紫色流星雨」画布与交互主循环
-       ========================================================================= */
     const canvas = document.getElementById('stage');
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: false });
+    const audio = new VioletAudioEngine();
     const topControls = document.getElementById('top-controls');
     const btnSound = document.getElementById('btn-sound');
     const btnBgm = document.getElementById('btn-bgm');
     const btnZen = document.getElementById('btn-zen');
     const dock = document.getElementById('dock');
     const dockToggle = document.getElementById('dock-toggle');
-    const dockSpin = document.getElementById('dock-spin');
-    const dockWish = document.getElementById('dock-wish');
-    const dockReplay = document.getElementById('dock-replay');
     const introProgress = document.getElementById('intro-progress');
     const introProgressFill = document.getElementById('intro-progress-fill');
+    const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
 
+    const TAU = Math.PI * 2;
     const NUM_RIBS = 12;
-    let W = window.innerWidth;
-    let H = window.innerHeight;
-    let dpr = 1;
-    let time = 0;
+    const RIB_STEP = TAU / NUM_RIBS;
+    const OPEN_PITCH = -0.115;
+    const FOLDED_ROTATION = Math.PI - 0.12;
+    const ENAMEL = '#7A56C4';
+    const HARDWARE_GLINT = 'rgba(191,166,246,.38)';
+    const STAR_COLORS = ['#FDE68A', '#F6CB61', '#F5F3FF', '#DDD6FE'];
+    const WISH_COLOR = '#FFE39A';
+    const THREADS = [
+      [0, 11.5, 0.9, 0], [2, 17.5, -0.7, 2.55], [4, 11.5, 0.5, 1.52],
+      [5, 19.5, -0.7, 2.85], [7, 12, -0.9, 0], [10, 13, 0.7, 2.12]
+    ];
+    const background = document.createElement('canvas');
+    const inkGrain = document.createElement('canvas');
 
-    // 状态机：'idle' -> 'intro' -> 'interactive'
-    let appState = 'idle';
-    let introClock = 0;
+    let W = 0, H = 0, dpr = 0, dockCeiling = 0;
+    let active = false, frameRequest = 0, last = 0, time = 0;
+    let appState, introClock = 0;
+    let targetOpen = 0, openVal = 0, openVel = 0;
+    let rot = FOLDED_ROTATION, omega = 0, tiltExtra = 0;
+    let pointer = null;
 
-    // 伞力学状态
-    let targetOpen = 0;
-    let prevTargetOpen = 0;
-    let openVal = 0;
-    let openVel = 0;
-    let rot = 0.25;
-    let omega = 0;
-    let tiltExtra = 0;
-    let ornamentSwing = 0;
-    let handleRot = rot;
+    let userMuted = false, soundRequested = false, soundUnlocked = false;
+    let soundSuspension = null, pendingCanopySound = null;
 
-    // 流星雨状态
-    let rainActive = false;
-    let starSpawnAcc = 0;
+    let starSpawnAcc = 0, wishCount = 0, poemBlend = 0;
     const stars = [];
-    const splashLines = [];
-    const puddleRipples = [];
-    const surfaceStreaks = [];
-    // Tiny reflected lines that make the water visibly alive between impacts.
-    const waterGlints = Array.from({ length: 28 }, () => {
-      const u = Math.random() * 1.8 - 0.9;
-      return {
-        u,
-        v: (Math.random() * 1.35 - 0.675) * Math.sqrt(1 - u * u),
-        angle: -0.65 + Math.random() * 1.3,
-        length: 3.5 + Math.random() * 7.5,
-        phase: Math.random() * Math.PI * 2
+    const impacts = [];
+
+    function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+    function lerp(a, b, t) { return a + (b - a) * t; }
+    function smoothstep(lo, hi, v) {
+      const t = clamp((v - lo) / (hi - lo), 0, 1);
+      return t * t * (3 - 2 * t);
+    }
+    function wrapAngle(angle) { return ((angle % TAU) + TAU) % TAU; }
+
+    function seededRandom(seed) {
+      return () => {
+        seed = (Math.imul(1664525, seed) + 1013904223) >>> 0;
+        return seed / 4294967296;
       };
-    });
-    const ambientDust = Array.from({ length: 22 }, () => ({
-      x: Math.random(),
-      y: Math.random(),
-      r: 0.6 + Math.random() * 1.3,
-      p: Math.random() * Math.PI * 2,
-      vy: 0.004 + Math.random() * 0.008
-    }));
-
-    // 触控与鼠标交互状态
-    let pDown = false, pMoved = false, startX = 0, startY = 0, lastX = 0;
-
-    // 离屏生成深紫织物棉纸肌理（Risograph 版画海报质感）
-    let paperTile = null;
-    let backgroundLayer = null;
-    function buildPaperTexture() {
-      // Fine irregular grain instead of the former 2px crosshatch grid.
-      const tc = document.createElement('canvas');
-      const size = 240;
-      tc.width = tc.height = size;
-      const tctx = tc.getContext('2d');
-      tctx.fillStyle = '#160D2D';
-      tctx.fillRect(0, 0, size, size);
-      for (let i = 0; i < 1300; i++) {
-        const light = Math.random() > 0.48;
-        tctx.fillStyle = light
-          ? `rgba(216, 198, 232, ${(Math.random() * 0.028).toFixed(3)})`
-          : `rgba(8, 5, 15, ${(Math.random() * 0.055).toFixed(3)})`;
-        tctx.fillRect(Math.random() * size, Math.random() * size, 1, 1);
-      }
-      paperTile = tc;
     }
 
-    function buildBackgroundLayer() {
-      const bg = document.createElement('canvas');
-      bg.width = canvas.width;
-      bg.height = canvas.height;
-      const bctx = bg.getContext('2d');
-      bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      bctx.fillStyle = bctx.createPattern(paperTile, 'repeat') || '#160D2D';
-      bctx.fillRect(0, 0, W, H);
-
-      // Broad diffuse illumination behind the canopy, cached on resize.
-      const ambience = bctx.createRadialGradient(
-        W * 0.50, H * 0.30, 0,
-        W * 0.50, H * 0.37, Math.max(W, H) * 0.62
-      );
-      ambience.addColorStop(0, 'rgba(124, 58, 237, 0.10)');
-      ambience.addColorStop(0.42, 'rgba(99, 63, 163, 0.045)');
-      ambience.addColorStop(1, 'rgba(25, 17, 40, 0)');
-      bctx.fillStyle = ambience;
-      bctx.fillRect(0, 0, W, H);
-
-      const vignette = bctx.createRadialGradient(
-        W * .5, H * .43, Math.min(W, H) * .20,
-        W * .5, H * .49, Math.max(W, H) * .80
-      );
-      vignette.addColorStop(0, 'rgba(37, 23, 53, 0)');
-      vignette.addColorStop(1, 'rgba(5, 3, 10, 0.45)');
-      bctx.fillStyle = vignette;
-      bctx.fillRect(0, 0, W, H);
-      backgroundLayer = bg;
-    }
-
-    function resize() {
-      W = Math.max(1, Math.round(canvas.clientWidth || window.innerWidth));
-      H = Math.max(1, Math.round(canvas.clientHeight || window.innerHeight));
-      dpr = Math.min(window.devicePixelRatio || 1, 2);
-      canvas.width = Math.round(W * dpr);
-      canvas.height = Math.round(H * dpr);
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (!paperTile) buildPaperTexture();
-      buildBackgroundLayer();
+    function soundIsPlaying() {
+      return audio.enabled && audio.ctx?.state === 'running';
     }
 
     function syncAudioUI() {
-      const playing = audio.enabled && audio.ctx?.state === 'running';
-      btnSound.textContent = soundRequested ? '🔊 声音' : '🔇 静音';
-      btnSound.classList.toggle('muted', !soundRequested);
-      btnSound.setAttribute('aria-pressed', String(soundRequested));
-      btnSound.title = soundRequested && !playing ? '已请求自动播放，若浏览器限制可触摸画面解锁' : '切换声音';
+      const playing = soundIsPlaying();
+      btnSound.textContent = playing ? '🔊 声音' : '🔇 静音';
+      btnSound.classList.toggle('muted', !playing);
+      btnSound.setAttribute('aria-pressed', String(playing));
+      btnSound.title = playing ? '静音' : '开启声音';
       btnBgm.textContent = audio.musicEnabled ? '钢琴夜曲：开' : '钢琴夜曲：关';
       btnBgm.classList.toggle('muted', !audio.musicEnabled);
-      btnBgm.setAttribute('aria-pressed', String(audio.musicEnabled));
     }
 
-    function setTargetOpen(val) {
-      if (val > 0.5 && prevTargetOpen <= 0.5) audio.playOpen();
-      else if (val <= 0.5 && prevTargetOpen > 0.5) audio.playClose();
-      targetOpen = val;
-      prevTargetOpen = val;
-      dockToggle.textContent = targetOpen > 0.5 ? '合伞收池' : '撑伞落星';
+    function onAudioStateChange() {
+      if (audio.enabled && !soundIsPlaying()) audio.disable();
+      syncAudioUI();
     }
 
-    function startIntro() {
-      appState = 'intro';
-      introClock = 0;
-      targetOpen = 0;
-      prevTargetOpen = 0;
-      openVal = 0;
-      openVel = 0;
-      omega = 0.08;
-      ornamentSwing = 0;
-      handleRot = rot;
-      starSpawnAcc = 0;
-      rainActive = false;
-      stars.length = 0;
-      splashLines.length = 0;
-      puddleRipples.length = 0;
-      surfaceStreaks.length = 0;
-      audio.resetPhrase();
-
-      dock.classList.remove('visible');
-      introProgress.classList.add('visible');
-      introProgressFill.style.width = '0%';
-      topControls.classList.add('visible');
-      document.getElementById('intro-hint').classList.add('visible');
-      dockToggle.textContent = '撑伞落星';
+    function pauseSound() {
+      audio.disable();
+      const context = audio.ctx;
+      if (context && context.state !== 'closed') {
+        const gain = audio.masterGain.gain;
+        gain.cancelScheduledValues(0);
+        gain.value = 0;
+        gain.setValueAtTime(0, context.currentTime);
+        if (!soundSuspension) {
+          soundSuspension = context.suspend().catch(() => {}).finally(() => { soundSuspension = null; });
+        }
+      }
+      syncAudioUI();
     }
 
-    function enterInteractive() {
-      appState = 'interactive';
-      dock.classList.add('visible');
-      introProgress.classList.remove('visible');
-      document.getElementById('intro-hint').classList.remove('visible');
-      dockToggle.textContent = targetOpen > 0.5 ? '合伞收池' : '撑伞落星';
+    function canPlaySound() {
+      return active && !document.hidden && !userMuted && soundRequested;
     }
 
-    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let soundRequested = true;
-    let active = false;
-    let frameRequest = 0;
-
-    // Reuse the first version's immediate audio start and retry behavior.
-    // A blocked resume may remain pending; do not lock out another attempt.
-    function trySound() {
-      if (!active || !soundRequested || (audio.enabled && audio.ctx?.state === 'running')) return;
-      audio.enable().then(() => {
-        if (!active || !soundRequested) audio.disable();
+    async function enableSound() {
+      if (!active || document.hidden || userMuted) return;
+      soundRequested = true;
+      try {
+        const context = audio.ctx;
+        if (context && (soundSuspension || context.state === 'interrupted')) {
+          await context.resume();
+          if (!canPlaySound()) return;
+        }
+        const enabling = audio.enable();
+        if (!context && audio.ctx) audio.ctx.addEventListener('statechange', onAudioStateChange);
+        await enabling;
+      } catch {
+        // 下一次有效手势仍可尝试解锁。
+      } finally {
+        if (!canPlaySound()) {
+          pauseSound();
+        } else if (soundIsPlaying()) {
+          soundUnlocked = true;
+          if (pendingCanopySound && performance.now() <= pendingCanopySound.until) {
+            playCanopySound(pendingCanopySound.open);
+          }
+          pendingCanopySound = null;
+        } else if (audio.enabled) {
+          audio.disable();
+        }
         syncAudioUI();
-      }).catch(syncAudioUI);
+      }
+    }
+
+    function isActivatingGesture(event) {
+      return event.isTrusted && navigator.userActivation?.isActive !== false;
     }
 
     function unlockSoundOnGesture(event) {
-      if (event.target === btnSound || event.target.closest?.('.xmq-home')) return;
-      trySound();
-    }
-
-    function showExperience() {
-      if (active) return;
-      active = true;
-      soundRequested = true;
-      startIntro();
-      resize();
-      if (motionPreference.matches) {
-        setTargetOpen(1);
-        openVal = 1;
-        omega = 0;
-        rainActive = false;
-        enterInteractive();
+      if (!active || userMuted || audio.enabled || !isActivatingGesture(event)) return;
+      const keyboard = event.type === 'keydown';
+      if (keyboard) {
+        if (event.key === 'Escape' || event.repeat || event.isComposing
+          || event.altKey || event.ctrlKey || event.metaKey
+          || ['Alt', 'AltGraph', 'Control', 'Meta', 'Shift'].includes(event.key)) return;
+      } else if (event.button !== 0 || (event.type === 'pointerdown' && event.pointerType !== 'mouse')) {
+        return;
       }
-      last = performance.now();
-      frameRequest = document.hidden ? 0 : requestAnimationFrame(loop);
-      trySound(); // autoplay when browser permits; otherwise first touch unlocks
-      syncAudioUI();
+      if ((!keyboard || event.key === 'Enter' || event.key === ' ') && event.target.closest?.('#btn-sound')) return;
+      void enableSound();
     }
 
-    function stopExperience() {
-      if (!active) return;
-      active = false;
-      cancelAnimationFrame(frameRequest);
-      frameRequest = 0;
-      audio.disable();
-      soundRequested = false;
-      if (audio.ctx?.state === 'running') audio.ctx.suspend().catch(() => {});
-      syncAudioUI();
-    }
-
-    document.addEventListener('visibilitychange', () => {
-      if (!active) return;
-      if (document.hidden) {
-        cancelAnimationFrame(frameRequest);
-        frameRequest = 0;
-        if (audio.ctx?.state === 'running') audio.ctx.suspend().catch(() => {});
-        syncAudioUI();
-      } else {
-        if (!frameRequest) {
-          last = performance.now();
-          frameRequest = requestAnimationFrame(loop);
-        }
-        if (soundRequested && audio.enabled && audio.ctx?.state === 'suspended') {
-          audio.ctx.resume().then(syncAudioUI).catch(syncAudioUI);
-        }
-        syncAudioUI();
-      }
-    });
-
+    document.addEventListener('pointerdown', unlockSoundOnGesture, true);
     document.addEventListener('click', unlockSoundOnGesture, true);
     document.addEventListener('keydown', unlockSoundOnGesture, true);
-    document.addEventListener('pointerdown', unlockSoundOnGesture, { capture: true, passive: true });
-    document.addEventListener('keydown', unlockSoundOnGesture, true);
-
-    btnSound.addEventListener('click', () => {
-      if (soundRequested && audio.enabled && audio.ctx?.state === 'running') {
+    btnSound.addEventListener('click', event => {
+      if (!isActivatingGesture(event)) return;
+      userMuted = soundIsPlaying();
+      if (userMuted) {
         soundRequested = false;
-        audio.disable();
+        pendingCanopySound = null;
+        pauseSound();
       } else {
-        soundRequested = true;
-        trySound();
+        void enableSound();
       }
-      syncAudioUI();
     });
 
     btnBgm.addEventListener('click', () => {
-      audio.musicEnabled = !audio.musicEnabled;
+      audio.setMusicEnabled(!audio.musicEnabled);
       syncAudioUI();
     });
 
@@ -570,604 +462,996 @@
       btnZen.textContent = zen ? '显示按钮' : '纯净';
     });
 
-    dockToggle.addEventListener('click', () => {
-      if (appState !== 'interactive') enterInteractive();
-      const next = targetOpen > 0.5 ? 0 : 1;
-      setTargetOpen(next);
-      rainActive = next > 0.5;
-      if (next > 0.5) omega = 0.45;
-    });
+    function playCanopySound(open) {
+      if (open) audio.playOpen();
+      else audio.playClose();
+    }
 
-    dockSpin.addEventListener('click', () => {
-      if (appState !== 'interactive') enterInteractive();
-      if (targetOpen < 0.5) { setTargetOpen(1); rainActive = true; }
-      omega = clamp(omega + 3.8, -7.8, 7.8);
-    });
+    function setTargetOpen(next, withSound = true) {
+      if (next === targetOpen) return;
+      targetOpen = next;
+      dockToggle.textContent = next ? '合伞收池' : '撑伞落星';
+      if (!withSound) return;
+      if (soundIsPlaying()) {
+        playCanopySound(next);
+      } else if (!userMuted) {
+        // 触屏开伞在点击解锁前发生，保留这一小段音效。
+        pendingCanopySound = { open: next, until: performance.now() + 350 };
+      }
+    }
 
-    dockWish.addEventListener('click', () => {
-      if (appState !== 'interactive') enterInteractive();
-      if (targetOpen < 0.5) { setTargetOpen(1); rainActive = true; }
+    function startIntro() {
+      const reduced = motionPreference.matches;
+      appState = 'intro';
+      introClock = time = 0;
+      setTargetOpen(reduced ? 1 : 0, false);
+      openVal = targetOpen;
+      openVel = tiltExtra = starSpawnAcc = 0;
+      rot = reduced ? 0 : FOLDED_ROTATION;
+      omega = 0;
+      stars.length = impacts.length = 0;
+      audio.resetPhrase();
+
+      topControls.classList.add('visible');
+      if (reduced) {
+        const P = getParams();
+        seedRain(getCanopy(P), P);
+        enterInteractive();
+        return;
+      }
+      addImpact({ u: -0.12, v: -0.08, wish: false }, 0.07, 0.29);
+      dock.inert = true;
+      dock.classList.remove('visible');
+      introProgress.classList.add('visible');
+      introProgressFill.style.width = '0%';
+    }
+
+    function enterInteractive() {
+      appState = 'interactive';
+      dock.inert = false;
+      dock.classList.add('visible');
+      introProgress.classList.remove('visible');
+    }
+
+    function toggleUmbrella() {
+      setTargetOpen(1 - targetOpen);
+      if (targetOpen && !motionPreference.matches) omega = 0.45;
+    }
+
+    dockToggle.addEventListener('click', toggleUmbrella);
+    document.getElementById('dock-spin').addEventListener('click', () => {
+      setTargetOpen(1);
+      omega = clamp(omega + 3.5, -7.8, 7.8);
+    });
+    document.getElementById('dock-wish').addEventListener('click', () => {
+      setTargetOpen(1);
       spawnWishStar();
     });
+    document.getElementById('dock-replay').addEventListener('click', startIntro);
 
-    dockReplay.addEventListener('click', () => {
-      startIntro();
+    canvas.addEventListener('pointerdown', event => {
+      if (!active || pointer || !event.isPrimary || event.button !== 0) return;
+      const tookOver = appState === 'intro';
+      if (tookOver) {
+        enterInteractive();
+        setTargetOpen(1);
+      }
+      pointer = { id: event.pointerId, x: event.clientX, y: event.clientY,
+        lastX: event.clientX, moved: false, tookOver };
+      canvas.setPointerCapture(event.pointerId);
     });
 
-    canvas.addEventListener('pointerdown', e => {
-      if (appState === 'idle') return;
-      pDown = true;
-      pMoved = false;
-      startX = lastX = e.clientX;
-      startY = e.clientY;
-      canvas.setPointerCapture(e.pointerId);
-    });
-
-    canvas.addEventListener('pointermove', e => {
-      if (!pDown || appState === 'idle') return;
-      const dx = e.clientX - lastX;
-      lastX = e.clientX;
-      if (Math.hypot(e.clientX - startX, e.clientY - startY) > 7) {
-        pMoved = true;
-        if (appState === 'intro') enterInteractive();
-        if (targetOpen < 0.5) { setTargetOpen(1); rainActive = true; }
-        omega = clamp(dx * 0.22, -8.2, 8.2);
-        rot += dx * 0.011;
+    canvas.addEventListener('pointermove', event => {
+      if (event.pointerId !== pointer?.id) return;
+      if (!pointer.moved && Math.hypot(event.clientX - pointer.x, event.clientY - pointer.y) <= 7) return;
+      const dx = event.clientX - pointer.lastX;
+      pointer.lastX = event.clientX;
+      pointer.moved = true;
+      setTargetOpen(1);
+      if (dx !== 0) {
+        rot = wrapAngle(rot + dx * 0.011);
+        omega = clamp(dx * 0.16, -6.8, 6.8);
       }
     });
 
-    canvas.addEventListener('pointerup', e => {
-      if (!pDown || appState === 'idle') return;
-      pDown = false;
-      if (!pMoved) {
-        if (appState === 'intro') {
-          enterInteractive();
-          setTargetOpen(1);
-          rainActive = true;
-          return;
-        }
-        const P = getParams();
-        if (openVal > 0.5 && Math.abs(e.clientY - P.puddleY) < Math.max(46, 36 * P.unit)) {
-          spawnWishStar(e.clientX);
-        } else {
-          const next = targetOpen > 0.5 ? 0 : 1;
-          setTargetOpen(next);
-          rainActive = next > 0.5;
-          if (next > 0.5) omega = 0.5;
-        }
+    canvas.addEventListener('pointerup', event => {
+      if (event.pointerId !== pointer?.id) return;
+      const { moved, tookOver } = pointer;
+      pointer = null;
+      if (moved || tookOver) return;
+      const P = getParams();
+      if (openVal > 0.5 && Math.abs(event.clientY - P.puddleY) < Math.max(20, 25 * P.unit)
+        && Math.abs(event.clientX - P.cx) < P.waterRx + 12 * P.unit) {
+        spawnWishStar(event.clientX);
+      } else {
+        toggleUmbrella();
       }
     });
 
-    canvas.addEventListener('pointercancel', () => { pDown = false; });
+    canvas.addEventListener('lostpointercapture', event => {
+      if (event.pointerId === pointer?.id) pointer = null;
+    });
+
+
+    function strokePath(path, width, color) {
+      ctx.save();
+      ctx.lineCap = ctx.lineJoin = 'round';
+      ctx.lineWidth = width;
+      ctx.strokeStyle = color;
+      ctx.stroke(path);
+      ctx.restore();
+    }
+
+    function tracePoints(path, points, join = false) {
+      const first = points[0];
+      if (join) path.lineTo(first.x, first.y);
+      else path.moveTo(first.x, first.y);
+      for (let i = 1; i < points.length; i++) path.lineTo(points[i].x, points[i].y);
+    }
+
+    function linePath(points) {
+      const path = new Path2D();
+      tracePoints(path, points);
+      return path;
+    }
+
+    function drawEllipse(x, y, rx, ry, color) {
+      ctx.beginPath();
+      ctx.ellipse(x, y, rx, ry, 0, 0, TAU);
+      ctx.fillStyle = color;
+      ctx.fill();
+    }
+
+    function resize() {
+      const width = Math.max(1, canvas.clientWidth);
+      const height = Math.max(1, canvas.clientHeight);
+      const density = Math.min(window.devicePixelRatio || 1, 2);
+      dockCeiling = height - dock.offsetHeight - (parseFloat(getComputedStyle(dock).bottom) || 0);
+      if (W === width && H === height && dpr === density) return;
+      W = width;
+      H = height;
+      dpr = density;
+      canvas.width = Math.round(W * dpr);
+      canvas.height = Math.round(H * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      makePaper();
+    }
+
+    function makePaper() {
+      const scale = Math.min(1, 1600 / Math.max(canvas.width, canvas.height));
+      const width = background.width = inkGrain.width = Math.max(1, Math.round(canvas.width * scale));
+      const height = background.height = inkGrain.height = Math.max(1, Math.round(canvas.height * scale));
+      const painter = background.getContext('2d', { alpha: false });
+      const ink = inkGrain.getContext('2d');
+      const paper = painter.createImageData(width, height);
+      const grain = ink.createImageData(width, height);
+      const random = seededRandom(14892);
+      const inkRandom = seededRandom(8093);
+      const warp = Array.from({ length: width }, (_, i) => (
+        1.15 * Math.sin(i * 1.29 + 0.66 * Math.sin(i * 0.047)) + 1.62 * (random() - 0.5)
+      ));
+      const weft = Array.from({ length: height }, (_, i) => (
+        1.15 * Math.sin(i * 1.12 + 0.58 * Math.cos(i * 0.062)) + 1.52 * (random() - 0.5)
+      ));
+      const inkBands = warp.map((_, x) => 0.25 * Math.sin(x * 1.32));
+      for (let y = 0; y < height; y++) {
+        const dy = ((y / height * 400 - 177) / 213) * 0.89;
+        const inkRow = Math.sin(y * 1.07);
+        for (let x = 0; x < width; x++) {
+          const dx = (x / width - 0.5) * (640 / 327);
+          const distanceSquared = dx * dx + dy * dy;
+          const centerLight = Math.exp(-3 * distanceSquared);
+          const vignette = clamp((Math.sqrt(distanceSquared) - 0.46) * 1.18, 0, 1);
+          const threads = warp[x] * (0.58 + 0.42 * Math.sin(y * 0.077 + x * 0.044))
+            + weft[y] * (0.60 + 0.40 * Math.cos(x * 0.065 - y * 0.033));
+          const clouds = 0.65 * Math.sin(x * 0.012 + y * 0.024) * Math.cos(y * 0.012 - x * 0.007)
+            + 0.55 * Math.sin(x * 0.052 + Math.sin(y * 0.032)) * Math.cos(y * 0.093);
+          const value = threads + clouds + (random() - 0.5) * 4.8;
+          const i = (y * width + x) * 4;
+          paper.data[i] = 18 + 10 * centerLight - 8 * vignette + 0.88 * value;
+          paper.data[i + 1] = 12 + 7 * centerLight - 6 * vignette + 0.75 * value;
+          paper.data[i + 2] = 34 + 20 * centerLight - 13 * vignette + 1.17 * value;
+          paper.data[i + 3] = 255;
+
+          const inkValue = inkRandom() * 2 - 1 + inkBands[x] * inkRow;
+          const light = inkValue > 0;
+          grain.data[i] = light ? 225 : 11;
+          grain.data[i + 1] = light ? 205 : 4;
+          grain.data[i + 2] = light ? 250 : 20;
+          grain.data[i + 3] = Math.pow(Math.abs(inkValue), 1.23) * (light ? 6 : 13);
+        }
+      }
+      painter.putImageData(paper, 0, 0);
+      ink.putImageData(grain, 0, 0);
+
+      painter.save();
+      painter.lineCap = 'round';
+      painter.lineWidth = 0.68;
+      const fibers = [new Path2D(), new Path2D()];
+      for (let i = 0; i < 5400; i++) {
+        const x = random() * width;
+        const y = random() * height;
+        const length = 0.44 + random() * 5.2;
+        const upright = random() > 0.53;
+        const path = fibers[Number(i % 3 === 0)];
+        path.moveTo(x, y);
+        path.lineTo(x + (upright ? 0.24 : length), y + (upright ? length : 0.26));
+      }
+      painter.strokeStyle = 'rgba(184,153,232,.027)';
+      painter.stroke(fibers[0]);
+      painter.strokeStyle = 'rgba(4,1,13,.14)';
+      painter.stroke(fibers[1]);
+      painter.restore();
+    }
 
     function getParams() {
-      // On portrait phones the canopy spans roughly 80% of the usable screen.
-      // Desktop remains on the original scale.
-      const portrait = H > W * 1.2 && W <= 600;
-      const unit = portrait ? Math.min(W / 236, H / 390) : Math.min(W / 270, H / 365);
-      const cx = W * 0.5;
-      const cy = H * (portrait ? 0.345 : (H < 500 ? 0.30 : 0.34));
-      const puddleY = H * (portrait ? 0.755 : (H < 500 ? 0.69 : 0.785));
-      const pitch = 0.22;
-      const sway = openVal > 0.2 ? Math.sin(time * 1.05) * 0.085 * openVal : Math.sin(time * 0.8) * 0.018;
-      const roll = sway + tiltExtra;
+      const unit = Math.min(W / 366, H / 400);
+      const e = clamp(openVal, 0, 1);
+      const pitch = lerp(0.012, OPEN_PITCH, smoothstep(0, 1, e));
+      const spread = Math.pow(e, 0.78);
       return {
-        unit, cx, cy, puddleY,
+        unit, e, pitch, cx: W * 0.5, apexY: H * 0.1625,
+        puddleY: H * 0.8175, waterRx: lerp(29, 158, spread) * unit,
+        waterRy: lerp(5.7, 23.1, spread) * unit,
         cosP: Math.cos(pitch), sinP: Math.sin(pitch),
-        cosR: Math.cos(roll), sinR: Math.sin(roll)
+        cosR: Math.cos(tiltExtra), sinR: Math.sin(tiltExtra)
       };
     }
 
-    function proj(lx, ly, lz, P) {
-      const x0 = lx * P.unit, y0 = ly * P.unit, z0 = lz * P.unit;
-      const y1 = y0 * P.cosP - z0 * P.sinP;
-      const z1 = y0 * P.sinP + z0 * P.cosP;
-      const x2 = x0 * P.cosR - y1 * P.sinR;
-      const y2 = x0 * P.sinR + y1 * P.cosR;
-      const cam = 720 * P.unit;
-      const sc = cam / (cam - z1);
-      return { x: P.cx + x2 * sc, y: P.cy - y2 * sc, z: z1 };
+    const FOCAL_LENGTH = 1640;
+
+    function project(x, y, z, P) {
+      const vertical = y * P.cosP + z * P.sinP;
+      const depth = z * P.cosP - y * P.sinP;
+      const scale = P.unit * FOCAL_LENGTH / (FOCAL_LENGTH - depth);
+      return {
+        x: P.cx + (x * P.cosR - vertical * P.sinR) * scale,
+        y: P.apexY + (x * P.sinR + vertical * P.cosR) * scale,
+        depth
+      };
     }
 
-    function getGeo(P) {
-      const e = clamp(openVal, 0, 1);
-      const easeR = Math.pow(e, 0.72);
-      const apexY = 58;
-      const R = lerp(6.5, 96, easeR);
-      const D = lerp(104, 35, easeR);
+    function getHardware(P) {
+      const axis = y => project(0, y, 0, P);
+      const cos = Math.cos(rot), sin = Math.sin(rot);
+      const handlePoint = (x, y) => project(x * cos, y, x * sin, P);
+      const shaftEnd = axis(178);
+      const handle = [axis(176), axis(185)];
+      for (let i = 1; i <= 32; i++) {
+        const a = Math.PI * i / 32;
+        handle.push(handlePoint(12.4 * (1 - Math.cos(a)), 185 + 13.2 * Math.sin(a)));
+      }
+      const toe = handlePoint(24.8, 181.5);
+      handle.push(toe);
+      return {
+        shaft: [axis(lerp(89, 43, P.e)), shaftEnd],
+        finial: [axis(lerp(-17, -13, P.e)), axis(1.1)],
+        runner: axis(lerp(110, 79, P.e)),
+        handle,
+        // 比较钩尖与同高度中杆的相机深度，重叠时近的一侧在上。
+        handleInFront: toe.depth >= axis(181.5).depth
+      };
+    }
 
-      const ribs = [];
-      for (let i = 0; i < NUM_RIBS; i++) {
-        const th = rot + (Math.PI * 2 * i) / NUM_RIBS;
-        const ct = Math.cos(th), st = Math.sin(th);
-        const pts = [0, 0.38, 0.74, 1.0].map(t => {
-          const r = R * Math.sin(t * Math.PI * 0.515);
-          const y = apexY - D * Math.pow(t, 1.65);
-          return proj(ct * r, y, st * r, P);
+    function drawEnamel(points, unit, width) {
+      const path = linePath(points);
+      strokePath(path, width * unit, ENAMEL);
+      ctx.save();
+      ctx.translate(-width * unit * 0.19, -width * unit * 0.04);
+      strokePath(path, width * unit * 0.24, HARDWARE_GLINT);
+      ctx.restore();
+    }
+
+    function drawHardware(geo, P) {
+      const { shaft, finial, handle, handleInFront } = geo;
+      if (!handleInFront) drawEnamel(handle, P.unit, 2.7);
+      drawEnamel(shaft, P.unit, 1.6);
+      if (handleInFront) drawEnamel(handle, P.unit, 2.7);
+      const x = finial[0].x;
+      const ink = ctx.createLinearGradient(x - 1.1 * P.unit, 0, x + 1.1 * P.unit, 0);
+      ink.addColorStop(0, '#66459D');
+      ink.addColorStop(0.43, '#A384D7');
+      ink.addColorStop(1, '#6D4AA7');
+      strokePath(linePath(finial), lerp(2, 1.7, P.e) * P.unit, ink);
+    }
+
+    function foldedRadius(t) {
+      const pinch = 1 - 0.19 * Math.exp(-(((t - 0.80) / 0.091) ** 2));
+      return (0.46 + 16 * t ** 1.36) * pinch;
+    }
+
+    function drawFoldedCloth(P) {
+      const pleats = Array.from({ length: NUM_RIBS + 1 }, (_, i) => {
+        const u = (i - 6) / 6;
+        const hem = 120 + 5.2 * (1 - u * u) + (i % 2 ? -2.45 : 0.9) + 0.9 * Math.sin(i * 1.8);
+        return Array.from({ length: 25 }, (_, k) => {
+          const t = k / 24;
+          const x = u * foldedRadius(t) + Math.sin(t * 2.7) * 0.55 + (i % 2 ? -0.28 : 0.18) * t;
+          return project(x, t * hem, 0, P);
         });
-        ribs.push({ pts, tip: pts[3] });
-      }
-
-      const ferrule = proj(0, apexY + 13, 0, P);
-      const shaftEnd = proj(0, -70, 0, P);
-      const hookPts = [];
-      for (let k = 0; k <= 10; k++) {
-        const a = (Math.PI * k) / 10;
-        const hookX = -9.8 + Math.cos(a) * 9.8;
-        // A three-dimensional J-hook attached to the rotating shaft.
-        hookPts.push(proj(
-          hookX * Math.cos(handleRot),
-          -70 - Math.sin(a) * 9.8,
-          hookX * Math.sin(handleRot),
-          P
-        ));
-      }
-
-      let minX = Infinity, maxX = -Infinity, avgRimY = 0;
-      ribs.forEach(rb => {
-        if (rb.tip.x < minX) minX = rb.tip.x;
-        if (rb.tip.x > maxX) maxX = rb.tip.x;
-        avgRimY += rb.tip.y;
       });
-      return { ribs, ferrule, shaftEnd, hookPts, minX, maxX, avgRimY: avgRimY / NUM_RIBS };
+      const u = P.unit;
+      const endY = P.apexY + 128 * u;
+      for (let i = 0; i < NUM_RIBS; i++) {
+        const path = linePath(pleats[i]);
+        tracePoints(path, pleats[i + 1].slice().reverse(), true);
+        path.closePath();
+        const ink = ctx.createLinearGradient(P.cx - 6 * u, P.apexY + 10 * u, P.cx + 9 * u, endY);
+        ink.addColorStop(0, i < 6 ? '#6D4CB1' : '#57379D');
+        ink.addColorStop(0.70, i % 2 ? '#6642AF' : '#57379D');
+        ink.addColorStop(1, i % 2 ? '#5A399F' : '#4F318C');
+        ctx.fillStyle = ink;
+        ctx.fill(path);
+      }
+      pleats.forEach((points, i) => {
+        const ink = ctx.createLinearGradient(0, P.apexY, 0, endY);
+        ink.addColorStop(0, 'rgba(211,190,253,.08)');
+        ink.addColorStop(0.26, i % 2 ? 'rgba(211,190,253,.39)' : 'rgba(211,190,253,.27)');
+        ink.addColorStop(1, 'rgba(199,176,244,.34)');
+        strokePath(linePath(points), 0.70 * u, ink);
+      });
+      strokePath(linePath(pleats.map(points => points.at(-1))), 0.52 * u, 'rgba(218,194,253,.28)');
+
+      const left = pleats[0][19], right = pleats.at(-1)[19];
+      const y = P.apexY + 97 * u;
+      const band = ctx.createLinearGradient(left.x, 0, right.x, 0);
+      band.addColorStop(0, 'rgba(181,147,235,.56)');
+      band.addColorStop(0.45, 'rgba(222,204,251,.82)');
+      band.addColorStop(1, 'rgba(157,123,215,.44)');
+      const path = new Path2D();
+      path.moveTo(left.x + 0.15 * u, y - 0.50 * u);
+      path.quadraticCurveTo(P.cx, y + 0.85 * u, right.x - 0.15 * u, y - 0.36 * u);
+      strokePath(path, 1.25 * u, band);
     }
 
-    function spawnStar(geo, P, isWish, forcedX) {
-      const span = Math.max(24, (geo.maxX - geo.minX) * 0.86);
-      const x = forcedX !== undefined
-        ? clamp(forcedX, geo.minX + 10, geo.maxX - 10)
-        : (P.cx + (Math.random() - 0.5) * span);
+    function hemScallop(angle, firstRib) {
+      const rib = (angle - firstRib) / RIB_STEP;
+      const wave = Math.sin(Math.PI * (rib - Math.floor(rib)));
+      return wave ** 2 / (0.26 + 0.74 * wave);
+    }
 
-      const pal = [
-        { fill: '#F9F6FF', tail: 'rgba(244, 239, 255, 0.53)' },
-        { fill: '#E7DAFF', tail: 'rgba(224, 211, 255, 0.48)' },
-        { fill: '#F5D65C', tail: 'rgba(245, 214, 92, 0.50)' },
-        { fill: '#C5D4FF', tail: 'rgba(197, 212, 255, 0.48)' }
-      ];
-      const colorRoll = Math.random();
-      const col = isWish
-        ? { fill: '#FFE48A', tail: 'rgba(255, 228, 138, 0.85)' }
-        : pal[colorRoll < 0.35 ? 0 : colorRoll < 0.60 ? 1 : colorRoll < 0.85 ? 2 : 3];
-      const depthRoll = Math.random();
-      const depth = isWish ? 1.12 : (depthRoll < 0.22 ? 0.65 : depthRoll < 0.88 ? 0.93 : 1.17);
-      const alpha = isWish ? 1 : (depth < 0.8 ? 0.43 : depth > 1.1 ? 0.88 : 0.72);
+    function canopyWorld(t, angle, scallop, P) {
+      const sine = Math.sin(angle);
+      const sideBlend = lerp(0.36, 1, smoothstep(0, 0.62, Math.abs(sine)));
+      const hemDepth = 5 + 2.2 * sine ** 2 / Math.hypot(sine, 0.16);
+      const unfoldedY = 70 * (0.65 * t ** 1.52 + 0.35 * t ** 3.2)
+        - sideBlend * hemDepth * scallop * t ** 4;
+      const foldedY = (122 + 2.7 * Math.cos(angle * NUM_RIBS)) * t;
+      const foldedR = (foldedRadius(t) - 0.46) * (1 - 0.10 * scallop);
+      const r = lerp(foldedR, (165 - 2.8 * scallop) * t, P.e);
+      return { x: r * Math.cos(angle), y: lerp(foldedY, unfoldedY, P.e), z: r * sine };
+    }
 
-      const puddleRx = lerp(9 * P.unit, Math.min(W * 0.42, 100 * P.unit), Math.pow(clamp(openVal, 0, 1), 0.78));
-      const relX = clamp((x - P.cx) / Math.max(12, puddleRx), -0.88, 0.88);
-      const maxOffY = Math.sqrt(Math.max(0.05, 1 - relX * relX)) * puddleRx * 0.165;
+    function eyeFacing(angle, P) {
+      const t = 0.74;
+      const point = canopyWorld(t, angle, 1, P);
+      const alongRib = canopyWorld(t + 0.001, angle, 1, P);
+      const aroundRim = canopyWorld(t, angle + 0.001, 1, P);
+      const ax = alongRib.x - point.x, ay = alongRib.y - point.y, az = alongRib.z - point.z;
+      const bx = aroundRim.x - point.x, by = aroundRim.y - point.y, bz = aroundRim.z - point.z;
+      const nx = ay * bz - az * by, ny = az * bx - ax * bz, nz = ax * by - ay * bx;
+      const vx = -point.x, vy = -FOCAL_LENGTH * P.sinP - point.y;
+      const vz = FOCAL_LENGTH * P.cosP - point.z;
+      return (nx * vx + ny * vy + nz * vz) / (Math.hypot(nx, ny, nz) * Math.hypot(vx, vy, vz));
+    }
 
-      stars.push({
-        x,
-        y: geo.avgRimY - 4 + (Math.random() - 0.5) * 14,
-        vx: (omega * 7.2 + (Math.random() - 0.5) * 6) * P.unit * depth,
-        vy: (isWish ? 115 : (60 + Math.random() * 62)) * P.unit * depth,
-        size: (isWish ? 8.2 : (2.5 + Math.random() * 3.9)) * P.unit * depth,
-        alpha,
-        kind: isWish ? 8 : (Math.random() < 0.66 ? 4 : (Math.random() < 0.16 ? 8 : 0)),
-        rot: Math.random() * Math.PI,
-        vrot: (Math.random() - 0.5) * 1.6,
-        color: col.fill,
-        tailColor: col.tail,
-        targetY: P.puddleY + (Math.random() - 0.45) * maxOffY * 1.45,
-        isWish: !!isWish,
-        tp: Math.random() * Math.PI * 2
-      });
+    function hemTurn(sample, angle, sign) {
+      let low = angle - 0.36, high = angle + 0.36;
+      for (let i = 0; i < 17; i++) {
+        const a = (2 * low + high) / 3;
+        const b = (low + 2 * high) / 3;
+        if (sign * sample(1, a).x < sign * sample(1, b).x) low = a;
+        else high = b;
+      }
+      return (low + high) / 2;
+    }
+
+    function getCanopy(P) {
+      const firstRib = rot + 0.15;
+      const sample = (t, angle) => {
+        const point = canopyWorld(t, angle, hemScallop(angle, firstRib), P);
+        return project(point.x, point.y, point.z, P);
+      };
+      // 在伞檐投影折返点拆分扇片，遮挡顺序与曲面着色各自连续。
+      const right = hemTurn(sample, 0, 1);
+      const left = hemTurn(sample, Math.PI, -1);
+      const isFront = angle => wrapAngle(angle - right) < left - right;
+      const frontFade = angle => {
+        const offset = wrapAngle(angle - right);
+        return smoothstep(0, 0.16, Math.min(offset, left - right - offset));
+      };
+      const rear = [], front = [], ribs = [];
+
+      for (let i = 0; i < NUM_RIBS; i++) {
+        const from = firstRib + i * RIB_STEP;
+        const to = from + RIB_STEP;
+        const splits = [from, to];
+        for (const turn of [right, left]) {
+          const seam = turn + TAU * Math.ceil((from - turn) / TAU);
+          if (from < seam && seam < to) splits.splice(1, 0, seam);
+        }
+        const face = smoothstep(-0.24, 0.32, eyeFacing((from + to) / 2, P));
+        const side = Math.cos((from + to) / 2);
+        const rail = Array.from({ length: 19 }, (_, k) => sample(k / 18, from));
+        ribs.push({ angle: from, rail, join: rail[15], tip: rail.at(-1) });
+
+        for (let j = 1; j < splits.length; j++) {
+          const start = splits[j - 1], end = splits[j];
+          const mid = (start + end) / 2;
+          const edge = Array.from({ length: 13 }, (_, k) => sample(1, lerp(start, end, k / 12)));
+          const outward = Array.from({ length: 16 }, (_, k) => sample(k / 15, start));
+          const inward = Array.from({ length: 16 }, (_, k) => sample(1 - k / 15, end));
+          const rim = linePath(edge);
+          const panel = linePath(outward);
+          tracePoints(panel, edge, true);
+          tracePoints(panel, inward, true);
+          panel.closePath();
+          const layer = isFront(mid) ? front : rear;
+          layer.push({ panel, rim, face, side, odd: i % 2, depth: edge[6].depth });
+        }
+      }
+      rear.sort((a, b) => a.depth - b.depth);
+      front.sort((a, b) => a.depth - b.depth);
+      return { rear, front, ribs, isFront, frontFade };
+    }
+
+
+    function blendInk(inner, outer, amount) {
+      return 'rgb(' + inner.map((channel, i) => Math.round(lerp(channel, outer[i], amount))).join(',') + ')';
+    }
+
+    function paintPanels(pieces, P) {
+      const u = P.unit;
+      ctx.save();
+      ctx.lineJoin = 'round';
+      ctx.lineWidth = 0.24 * u;
+      for (const { panel, rim, face, side, odd } of pieces) {
+        const ink = ctx.createLinearGradient(P.cx + 46 * side * u, P.apexY - u,
+          P.cx + 26 * side * u, P.apexY + lerp(83, 74, face) * u);
+        ink.addColorStop(0, blendInk([113, 80, 183], [107, 73, 176], face));
+        ink.addColorStop(lerp(0.58, 0.44, face), blendInk([132, 103, 195],
+          odd ? [98, 64, 171] : [85, 53, 153], face));
+        ink.addColorStop(1, blendInk(odd ? [171, 144, 229] : [154, 126, 215],
+          odd ? [91, 58, 156] : [77, 46, 138], face));
+        ctx.fillStyle = ctx.strokeStyle = ink;
+        ctx.fill(panel);
+        ctx.stroke(panel);
+        strokePath(rim, lerp(0.59, 0.56, face) * u, 'rgba(224,202,253,.43)');
+      }
+      ctx.restore();
+    }
+
+    function drawFrame(canopy, hardware, P) {
+      const { ribs, rear } = canopy;
+      const { runner } = hardware;
+      ctx.save();
+      const lining = new Path2D();
+      for (const { panel } of rear) lining.addPath(panel);
+      ctx.clip(lining);
+      for (const { rail, join, angle } of ribs) {
+        const stay = new Path2D();
+        stay.moveTo(runner.x, runner.y);
+        stay.quadraticCurveTo((runner.x + join.x) / 2,
+          (runner.y + join.y) / 2 - Math.abs(join.x - runner.x) * 0.029, join.x, join.y);
+        strokePath(stay, 0.65 * P.unit, 'rgba(215,196,255,.38)');
+        const light = smoothstep(0, 0.24, Math.abs(Math.sin(angle)));
+        strokePath(linePath(rail), 0.8 * P.unit, 'rgba(232,218,255,' + 0.60 * light + ')');
+      }
+      ctx.restore();
+      drawEnamel([{ x: runner.x, y: runner.y - 1.45 * P.unit },
+        { x: runner.x, y: runner.y + 1.75 * P.unit }], P.unit, 2.7);
+    }
+
+    function getDew(canopy, P) {
+      const fade = smoothstep(0.19, 0.98, P.e);
+      const ornaments = [];
+      if (!fade) return ornaments;
+      for (const [i, length, slant, size] of THREADS) {
+        const { angle, tip } = canopy.ribs[i];
+        const world = canopyWorld(1, angle, 0, P);
+        const sway = motionPreference.matches ? 0 : clamp(omega, -3, 3) * 0.85;
+        const xOffset = slant + sway;
+        const end = project(world.x + xOffset, world.y + length, world.z, P);
+        const bend = project(world.x + xOffset * 0.18, world.y + length * 0.54, world.z, P);
+        const front = canopy.isFront(angle);
+        const pulse = 0.72 + 0.18 * Math.sin(time * 2.4 + i * 2.6);
+        ornaments.push({ tip, bend, end, depth: bend.depth, front, fade });
+        ornaments.push({ end, size, depth: end.depth, front, fade: fade * pulse });
+      }
+      return ornaments.sort((a, b) => a.depth - b.depth);
+    }
+
+    function drawDew(ornaments, front, P) {
+      ctx.save();
+      for (const { tip, bend, end, size, front: near, fade } of ornaments) {
+        if (front !== near) continue;
+        ctx.globalAlpha = fade;
+        if (tip) {
+          const thread = ctx.createLinearGradient(tip.x, tip.y, end.x, end.y);
+          thread.addColorStop(0, 'rgba(229,203,255,.17)');
+          thread.addColorStop(1, 'rgba(225,202,255,.60)');
+          const path = new Path2D();
+          path.moveTo(tip.x, tip.y);
+          path.quadraticCurveTo(bend.x, bend.y, end.x, end.y);
+          strokePath(path, 0.50 * P.unit, thread);
+        } else if (size) {
+          drawStarShape(end.x, end.y, size * P.unit, 4, 0, '#E6D4FF');
+        } else {
+          drawEllipse(end.x, end.y, 0.68 * P.unit, 0.83 * P.unit, '#E8D6FF');
+        }
+      }
+      ctx.restore();
+    }
+
+    function drawUmbrella(canopy, hardware, P) {
+      const unfolded = smoothstep(0.015, 0.16, P.e);
+      if (canopy) {
+        ctx.save();
+        ctx.globalAlpha = unfolded;
+        paintPanels(canopy.rear, P);
+        drawDew(canopy.dew, false, P);
+        ctx.restore();
+      }
+      drawHardware(hardware, P);
+      if (canopy) {
+        ctx.save();
+        ctx.globalAlpha = unfolded;
+        drawFrame(canopy, hardware, P);
+        paintPanels(canopy.front, P);
+        for (const { angle, rail } of canopy.ribs) {
+          const light = canopy.frontFade(angle);
+          if (light) strokePath(linePath(rail), 0.58 * P.unit, 'rgba(220,197,255,' + 0.25 * light + ')');
+        }
+        drawDew(canopy.dew, true, P);
+        ctx.restore();
+      }
+      if (unfolded < 1) {
+        ctx.save();
+        ctx.globalAlpha = 1 - unfolded;
+        drawFoldedCloth(P);
+        ctx.restore();
+      }
+    }
+
+    function posePoetry(P) {
+      const compact = H < 330;
+      const fs = clamp(8.5 * P.unit, compact ? 9 : 10, 19);
+      const english = fs + 'px "Courier New", monospace';
+      const chinese = fs + 'px "Songti SC", "SimSun", "Microsoft YaHei", serif';
+      const lineHeight = fs * 1.24;
+      const spacing = Math.max(0.13, 0.28 * P.unit) + 'px';
+      if (!compact) return { x: P.cx, y: H * 0.48, lineHeight, spacing, english, chinese };
+
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.letterSpacing = spacing;
+      const metrics = [];
+      for (const [font, lines] of [[english, CONFIG.poemLines], [chinese, CONFIG.wishEasterEggLines]]) {
+        ctx.font = font;
+        for (const line of lines) metrics.push(ctx.measureText(line));
+      }
+      ctx.restore();
+
+      const halfWidth = Math.max(...metrics.map(m => Math.max(m.actualBoundingBoxLeft, m.actualBoundingBoxRight)));
+      const ascent = Math.max(...metrics.map(m => m.actualBoundingBoxAscent));
+      const descent = Math.max(...metrics.map(m => m.actualBoundingBoxDescent));
+      const rightOfHandle = P.cx + 34 * P.unit + 10;
+      const onSide = rightOfHandle + 2 * halfWidth + 12 <= W;
+      const top = Math.max(58, P.apexY + (onSide ? 106 : 100) * P.unit);
+      const bottom = Math.min(dockCeiling - 5, P.puddleY - P.waterRy - 5,
+        onSide ? H : P.apexY + 178 * P.unit - 4);
+      const leading = Math.min(lineHeight, Math.max(fs * 0.88, (bottom - top - ascent - descent) / 3));
+      const y = clamp(H * 0.48, top + ascent, Math.max(top + ascent, bottom - descent - leading * 3));
+      return { x: onSide ? rightOfHandle + halfWidth : P.cx, y, lineHeight: leading, spacing, english, chinese };
+    }
+
+    function drawPoetry(P) {
+      const { x, y, lineHeight, spacing, english, chinese } = posePoetry(P);
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.letterSpacing = spacing;
+      ctx.font = english;
+      ctx.globalAlpha = (1 - smoothstep(0, 0.56, poemBlend)) * 0.51;
+      ctx.fillStyle = '#DCCAFF';
+      if (ctx.globalAlpha) CONFIG.poemLines.forEach((line, i) => ctx.fillText(line, x, y + i * lineHeight));
+      ctx.font = chinese;
+      ctx.globalAlpha = smoothstep(0.44, 1, poemBlend) * 0.75;
+      ctx.fillStyle = '#F5DDB7';
+      if (ctx.globalAlpha) CONFIG.wishEasterEggLines.forEach((line, i) => ctx.fillText(line, x, y + i * lineHeight));
+      ctx.restore();
+    }
+
+    function drawStarShape(x, y, size, kind, rotation, color) {
+      if (kind === 0) {
+        drawEllipse(x, y, size * 0.76, size, color);
+        return;
+      }
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(rotation);
+      ctx.beginPath();
+      if (kind === 4) {
+        ctx.moveTo(0, -size);
+        ctx.quadraticCurveTo(size * 0.17, -size * 0.19, size * 0.74, 0);
+        ctx.quadraticCurveTo(size * 0.18, size * 0.18, 0, size);
+        ctx.quadraticCurveTo(-size * 0.17, size * 0.18, -size * 0.74, 0);
+        ctx.quadraticCurveTo(-size * 0.17, -size * 0.19, 0, -size);
+      } else {
+        ctx.moveTo(0, -size);
+        for (let i = 1; i < 16; i++) {
+          const a = i * TAU / 16;
+          const radius = size * (i % 2 ? 0.23 : i % 4 ? 0.62 : 1);
+          ctx.lineTo(Math.sin(a) * radius * 0.83, -Math.cos(a) * radius);
+        }
+      }
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function makeWaterPaint() {
+      const surface = document.createElement('canvas');
+      surface.width = 640;
+      surface.height = 96;
+      const painter = surface.getContext('2d');
+      const random = seededRandom(1426);
+      painter.save();
+      painter.translate(320, 48);
+      painter.scale(318, 46);
+      const wash = painter.createRadialGradient(-0.18, -0.25, 0.1, 0, 0, 1.08);
+      wash.addColorStop(0, '#7A58BE');
+      wash.addColorStop(0.36, '#714BBD');
+      wash.addColorStop(0.73, '#6240AB');
+      wash.addColorStop(1, '#523397');
+      painter.beginPath();
+      painter.arc(0, 0, 1, 0, TAU);
+      painter.fillStyle = wash;
+      painter.fill();
+      painter.clip();
+      for (let i = 0; i < 88; i++) {
+        const x = (random() - 0.5) * 2.3, y = (random() - 0.5) * 2.3;
+        const r = 0.025 + random() * 0.23;
+        const cloud = painter.createRadialGradient(x, y, 0, x, y, r);
+        const tint = i % 3 ? '183,144,248' : '30,14,75';
+        cloud.addColorStop(0, 'rgba(' + tint + ',' + (0.018 + random() * 0.077) + ')');
+        cloud.addColorStop(1, 'rgba(' + tint + ',0)');
+        painter.fillStyle = cloud;
+        painter.fillRect(x - r, y - r, r * 2, r * 2);
+      }
+      for (let i = 0; i < 248; i++) {
+        const angle = random() * TAU, r = Math.sqrt(random()) * 0.95;
+        const opacity = 0.06 + random() * 0.22;
+        painter.beginPath();
+        painter.ellipse(Math.cos(angle) * r, Math.sin(angle) * r,
+          (0.21 + random() * (i % 7 === 0 ? 1.45 : 0.42)) / 158,
+          (0.19 + random() * 0.22) / 23.1, 0, 0, TAU);
+        painter.fillStyle = 'rgba(224,196,255,' + opacity + ')';
+        painter.fill();
+      }
+      painter.restore();
+      return surface;
+    }
+
+    const waterPaint = makeWaterPaint();
+
+    function drawPuddle(P) {
+      const { cx: x, puddleY: y, waterRx: rx, waterRy: ry, unit } = P;
+      ctx.drawImage(waterPaint, x - rx * 320 / 318, y - ry * 48 / 46,
+        rx * 640 / 318, ry * 96 / 46);
+      const outline = new Path2D();
+      outline.ellipse(x, y, rx, ry, 0, 0, TAU);
+      strokePath(outline, 0.53 * unit, 'rgba(212,190,255,.42)');
+      const reflection = new Path2D();
+      reflection.ellipse(x, y + 0.12 * unit, rx - 0.8 * unit, ry - 0.6 * unit, 0, 0.12, 2.78);
+      strokePath(reflection, 0.43 * unit, 'rgba(223,200,255,.19)');
+
+      ctx.save();
+      ctx.clip(outline);
+      for (const impact of impacts) drawRipples(impact, P);
+      ctx.restore();
+    }
+
+
+    function spawnStar(canopy, P, wish, xHint, random = Math.random) {
+      const tips = canopy?.ribs.map(rib => rib.tip);
+      const rimY = tips ? tips.reduce((sum, tip) => sum + tip.y, 0) / NUM_RIBS : P.apexY + 70 * P.unit;
+      const x = xHint === undefined ? (random() * 2 - 1) * 147 : clamp((xHint - P.cx) / P.unit, -147, 147);
+      const drift = clamp(omega * 2, -12, 12) + (random() - 0.5) * 9;
+      const u = clamp((x + drift) / 165, -0.9, 0.9);
+      const kind = wish ? 8 : [0, 4, 4, 4, 8][Math.floor(random() * 5)];
+      const star = {
+        x, u, drift,
+        y: (rimY - P.apexY) / P.unit + 12 + random() * 16,
+        v: (random() - 0.50) * 1.5 * Math.sqrt(1 - u ** 2),
+        elapsed: 0,
+        duration: wish ? 0.96 : 1.62 + random() * 0.50,
+        size: wish ? 6.8 : kind === 0 ? 0.75 + random() * 0.38 : 2.15 + random() * 1.8,
+        tail: wish ? 32 : 13 + random() * 10,
+        kind,
+        phase: random() * TAU,
+        color: wish ? WISH_COLOR : STAR_COLORS[Math.floor(random() * STAR_COLORS.length)],
+        wish
+      };
+      stars.push(star);
+      return star;
+    }
+
+    function seedRain(canopy, P) {
+      const random = seededRandom(2211);
+      for (let i = 0; i < 18; i++) {
+        const star = spawnStar(canopy, P, false, undefined, random);
+        star.elapsed = star.duration * (i + 0.7) / 19;
+      }
     }
 
     function spawnWishStar(xHint) {
       const P = getParams();
-      spawnStar(getGeo(P), P, true, xHint);
+      spawnStar(P.e > 0.45 ? getCanopy(P) : null, P, true, xHint);
+      wishCount++;
       audio.playWishLaunch();
     }
 
-    function spawnSplash(x, y, color, isWish, unit) {
-      const count = isWish ? 12 : (5 + Math.floor(Math.random() * 4));
-      for (let i = 0; i < count; i++) {
-        const angle = -Math.PI * (0.10 + Math.random() * 0.80);
-        const speed = (isWish ? 48 : 22) + Math.random() * (isWish ? 52 : 40);
-        splashLines.push({
-          x, y, px: x, py: y,
-          vx: Math.cos(angle) * speed * unit,
-          vy: Math.sin(angle) * speed * unit,
-          life: 1,
-          decay: (isWish ? 1.20 : 1.55) + Math.random() * 0.40,
-          width: 0.55 + Math.random() * 0.45,
-          color: Math.random() > 0.70 ? color : '#E7D8FF'
-        });
-      }
-      puddleRipples.push({
-        x, y, r: 2 * unit,
-        maxR: (isWish ? 39 : 19 + Math.random() * 16) * unit,
-        life: 1,
-        color: isWish ? '#F5DE92' : '#D9C7FF'
+    function addImpact({ u, v, wish }, elapsed = 0, size = 1) {
+      const rayCount = wish ? 13 : 6;
+      const dropCount = wish ? 16 : 8;
+      const particle = (angle, speed, radius) => ({
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        radius,
+        color: wish && Math.random() > 0.49 ? '#FFE5AC' : Math.random() > 0.44 ? '#F3DEFF' : '#CEAFFE'
       });
-      // Light travels outward along the surface; upward water droplets
-      // are drawn separately, outside the water clipping region.
-      const impactCount = isWish ? 15 : 9 + Math.floor(Math.random() * 4);
-      for (let i = 0; i < impactCount; i++) {
-        surfaceStreaks.push({
-          x, y,
-          angle: i * Math.PI * 2 / impactCount + (Math.random() - 0.5) * 0.38,
-          length: (7 + Math.random() * (isWish ? 16 : 10)) * unit,
-          life: 1,
-          decay: (isWish ? 1.10 : 1.50) + Math.random() * 0.3,
-          color: i % 5 === 0 ? '#F5DE92' : '#E9D5FF'
-        });
-      }
-
-      const pan = clamp(((x - W * 0.5) / (W * 0.45)), -0.8, 0.8);
-      if (isWish) audio.playWishImpact(pan);
-      else audio.playStarSplash(pan);
+      const rays = Array.from({ length: rayCount }, (_, i) => particle(
+        -Math.PI * (0.08 + 0.84 * (i + Math.random()) / rayCount),
+        (wish ? 78 : 58) + Math.random() * (wish ? 69 : 52),
+        (wish ? 10 : 6) + Math.random() * (wish ? 12 : 8)
+      ));
+      const drops = Array.from({ length: dropCount }, () => particle(
+        -Math.PI * (0.12 + Math.random() * 0.76),
+        (wish ? 64 : 35) + Math.random() * (wish ? 73 : 50),
+        (wish ? 0.56 : 0.26) + Math.random() * (wish ? 0.88 : 0.53)
+      ));
+      impacts.push({ u, v, wish, elapsed, size, rays, drops });
     }
 
-    function drawStarShape(x, y, r, kind, rotation, color) {
+    function drawRipples(impact, P) {
+      const { u, v, wish, elapsed, size } = impact;
+      const x = P.cx + u * P.waterRx, y = P.puddleY + v * P.waterRy;
+      const rings = wish ? 4 : 3;
       ctx.save();
-      ctx.translate(x, y);
-      ctx.rotate(rotation);
-      ctx.fillStyle = color;
-      if (kind === 0) {
+      ctx.strokeStyle = wish ? '#FFE9BE' : '#DAC0FE';
+      for (let j = 0; j < rings; j++) {
+        const t = (elapsed - 0.077 * j) / (wish ? 0.77 : 0.64);
+        if (t < 0 || t >= 1) continue;
+        const r = (1.5 + (wish ? 43 : 24) * (1 - (1 - t) ** 1.45)) * P.unit * size;
+        ctx.globalAlpha = (1 - t) ** 1.22 * (wish ? 0.79 : 0.45) * (1 - j * 0.14);
+        ctx.lineWidth = (wish ? 0.70 : 0.48) * P.unit;
         ctx.beginPath();
-        ctx.arc(0, 0, r * 0.31, 0, Math.PI * 2);
-        ctx.fill();
-      } else {
-        // Smooth, fine-tipped sparkle: no heavy, jagged polygon outlines.
-        ctx.beginPath();
-        ctx.moveTo(0, -r);
-        ctx.quadraticCurveTo(r * 0.11, -r * 0.10, r * 0.66, 0);
-        ctx.quadraticCurveTo(r * 0.11, r * 0.10, 0, r);
-        ctx.quadraticCurveTo(-r * 0.11, r * 0.10, -r * 0.66, 0);
-        ctx.quadraticCurveTo(-r * 0.11, -r * 0.10, 0, -r);
-        ctx.closePath();
-        ctx.fill();
-        if (kind === 8) {
-          ctx.rotate(Math.PI / 4);
-          ctx.globalAlpha *= 0.46;
+        ctx.ellipse(x, y, r, r * 0.29, 0, 0, TAU - j * 0.52);
+        ctx.stroke();
+      }
+      if (elapsed < 0.24) {
+        ctx.globalAlpha = (1 - elapsed / 0.24) * (wish ? 0.84 : 0.56);
+        drawEllipse(x, y, (wish ? 4.2 : 1.65) * P.unit * size, 0.52 * P.unit,
+          wish ? '#FFF0BC' : '#F8E7FF');
+      }
+      ctx.restore();
+    }
+
+    function drawSplashes(P) {
+      const gravity = 235;
+      ctx.save();
+      for (const { u, v, wish, elapsed, size, rays, drops } of impacts) {
+        const life = 1 - elapsed / (wish ? 0.78 : 0.58);
+        if (life <= 0) continue;
+        const ox = P.cx + u * P.waterRx, oy = P.puddleY + v * P.waterRy;
+        const scale = size * P.unit;
+        const rise = 0.5 * gravity * elapsed ** 2;
+
+        for (const ray of rays) {
+          const dy = ray.vy * elapsed + rise;
+          if (dy >= 0) continue;
+          const x = ox + ray.vx * elapsed * scale, y = oy + dy * scale;
+          const vy = ray.vy + gravity * elapsed;
+          const speed = Math.hypot(ray.vx, vy);
+          const dx = ray.vx / speed, dyDir = vy / speed;
+          const length = Math.min(ray.radius, elapsed * speed) * scale;
+          const width = (wish ? 1.15 : 0.80) * scale * life;
+          const bx = x - dx * length, by = Math.min(oy, y - dyDir * length);
+          ctx.globalAlpha = life ** 1.25 * (wish ? 0.90 : 0.72);
+          ctx.fillStyle = ray.color;
           ctx.beginPath();
-          ctx.moveTo(0, -r * 0.52);
-          ctx.quadraticCurveTo(r * 0.055, 0, 0, r * 0.52);
-          ctx.quadraticCurveTo(-r * 0.055, 0, 0, -r * 0.52);
+          ctx.moveTo(bx, by);
+          ctx.quadraticCurveTo(lerp(bx, x, 0.38) - dyDir * width, lerp(by, y, 0.38) + dx * width, x, y);
+          ctx.quadraticCurveTo(lerp(bx, x, 0.34) + dyDir * width, lerp(by, y, 0.34) - dx * width, bx, by);
           ctx.fill();
+        }
+
+        for (const drop of drops) {
+          const dy = drop.vy * elapsed + rise;
+          if (dy >= 0) continue;
+          const x = ox + drop.vx * elapsed * scale, y = oy + dy * scale;
+          ctx.globalAlpha = life * (wish ? 0.85 : 0.64);
+          drawEllipse(x, y, drop.radius * scale * 0.74, drop.radius * scale, drop.color);
         }
       }
       ctx.restore();
     }
 
-    // Original vivid purple, with continuous front/back interpolation.
-    // Avoids the z=0 color jump that caused the rotation flash.
-    function silkColor(back, front, amount) {
-      return `rgb(${Math.round(lerp(back[0], front[0], amount))}, ${Math.round(lerp(back[1], front[1], amount))}, ${Math.round(lerp(back[2], front[2], amount))})`;
-    }
-
-    function drawPanel(r1, r2, depth, P, idx) {
-      const p1 = r1.pts, p2 = r2.pts;
-      const rx = (p1[3].x + p2[3].x) * 0.5 + ((p1[0].x - (p1[3].x + p2[3].x) * 0.5) * 0.06 * openVal);
-      const ry = (p1[3].y + p2[3].y) * 0.5 + ((p1[0].y - (p1[3].y + p2[3].y) * 0.5) * 0.06 * openVal);
-
-      ctx.beginPath();
-      ctx.moveTo(p1[0].x, p1[0].y);
-      ctx.bezierCurveTo(p1[1].x, p1[1].y, p1[2].x, p1[2].y, p1[3].x, p1[3].y);
-      ctx.quadraticCurveTo(rx, ry, p2[3].x, p2[3].y);
-      ctx.bezierCurveTo(p2[2].x, p2[2].y, p2[1].x, p2[1].y, p2[0].x, p2[0].y);
-      ctx.closePath();
-
-
-      const depthFactor = clamp((depth / (40 * P.unit) + 1) * 0.5, 0, 1);
-      const frontness = depthFactor * depthFactor * (3 - 2 * depthFactor);
-      const top = idx % 2 === 0 ? [168, 117, 238] : [183, 137, 242];
-      const middle = idx % 2 === 0 ? [128, 73, 214] : [141, 91, 217];
-      const edge = idx % 2 === 0 ? [91, 43, 162] : [99, 51, 166];
-      const fabric = ctx.createLinearGradient(p1[0].x, p1[0].y, rx, ry);
-      fabric.addColorStop(0, silkColor([120, 73, 185], top, frontness));
-      fabric.addColorStop(0.48, silkColor([94, 52, 166], middle, frontness));
-      fabric.addColorStop(1, silkColor([57, 29, 109], edge, frontness));
-      ctx.fillStyle = fabric;
-      ctx.fill();
-      ctx.strokeStyle = `rgba(232, 218, 255, ${(0.16 + frontness * 0.18).toFixed(3)})`;
-      ctx.lineWidth = 0.68;
-      ctx.stroke();
-
-      // A very fine pleat echoes the delicate rib detail in the reference.
-      if (openVal > 0.7) {
-        ctx.strokeStyle = `rgba(236, 224, 255, ${(0.045 + frontness * 0.065).toFixed(3)})`;
-        ctx.lineWidth = 0.55;
-        ctx.beginPath();
-        ctx.moveTo(p1[0].x, p1[0].y);
-        ctx.quadraticCurveTo(
-          lerp(p1[1].x, p2[1].x, 0.42),
-          lerp(p1[1].y, p2[1].y, 0.42),
-          lerp(p1[2].x, p2[2].x, 0.42),
-          lerp(p1[2].y, p2[2].y, 0.42)
-        );
-        ctx.stroke();
+    function updateRain(dt, canopy, P) {
+      for (let i = impacts.length - 1; i >= 0; i--) {
+        impacts[i].elapsed += dt;
+        if (impacts[i].elapsed >= 1) impacts.splice(i, 1);
       }
-    }
 
-    function updateIntro(dt) {
-      introClock += dt;
-      const dur = INTRO_DURATION;
-      introProgressFill.style.width = `${clamp((introClock / dur) * 100, 0, 100)}%`;
-
-      if (introClock < 1.1) {
-        setTargetOpen(0);
-        rainActive = false;
-        omega += (0.05 - omega) * dt * 2;
-      } else if (introClock < 2.8) {
-        setTargetOpen(1);
-        rainActive = introClock > 2.0;
-        omega += (0.35 - omega) * dt * 2.5;
-      } else if (introClock < 10.2) {
-        setTargetOpen(1);
-        rainActive = true;
-        const spinWin = introClock > 5.2 && introClock < 8.6;
-        const targetW = spinWin
-          ? 0.4 + Math.sin(((introClock - 5.2) / 3.4) * Math.PI) * 2.7
-          : 0.35;
-        omega += (targetW - omega) * dt * 2.2;
-      } else if (introClock < dur - 0.35) {
-        // End with the purple umbrella open, not an empty scene.
-        setTargetOpen(1);
-        rainActive = true;
-        omega += (0.18 - omega) * dt * 2.8;
+      if (targetOpen && P.e > 0.59) {
+        starSpawnAcc += dt * (motionPreference.matches ? 8 : 10.2 + Math.abs(omega) * 1.55);
+        while (starSpawnAcc >= 1) {
+          starSpawnAcc--;
+          spawnStar(canopy, P, false);
+        }
       } else {
-        setTargetOpen(1);
-        rainActive = true;
-        enterInteractive();
+        starSpawnAcc = 0;
+      }
+
+      for (let i = stars.length - 1; i >= 0; i--) {
+        const star = stars[i];
+        star.elapsed += dt;
+        if (star.elapsed < star.duration) continue;
+        addImpact(star, 0, lerp(0.28, 1, P.e));
+        const pan = clamp(star.u * 0.8, -0.8, 0.8);
+        if (star.wish) audio.playWishImpact(pan);
+        else audio.playStarSplash(pan);
+        stars.splice(i, 1);
       }
     }
 
-    let last = performance.now();
+    function drawRain(P) {
+      const u = P.unit;
+      ctx.save();
+      ctx.lineCap = 'round';
+      for (const star of stars) {
+        const t = star.elapsed / star.duration;
+        const x = P.cx + lerp(star.x * u, star.u * P.waterRx, t) + Math.sin(Math.PI * t) * star.drift * u;
+        const y = lerp(P.apexY + star.y * u, P.puddleY + star.v * P.waterRy, t * (0.72 + 0.28 * t));
+        const tx = x - star.drift * 0.32 * u;
+        const ty = y - star.tail * u * smoothstep(0, 0.22, t);
+        const pulse = 0.80 + 0.15 * Math.sin(time * 2.4 + star.phase);
+        ctx.globalAlpha = pulse * smoothstep(0, 0.08, t);
+        if (ctx.globalAlpha <= 0.01) continue;
+
+        const tail = ctx.createLinearGradient(x, y, tx, ty);
+        tail.addColorStop(0, star.color + 'A6');
+        tail.addColorStop(0.42, star.color + '26');
+        tail.addColorStop(1, star.color + '00');
+        ctx.strokeStyle = tail;
+        ctx.lineWidth = (star.wish ? 0.93 : star.kind ? 0.58 : 0.46) * u;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(tx, ty);
+        ctx.stroke();
+
+        const radius = Math.max(2.3, star.size * (star.wish ? 2 : 1.62)) * u;
+        const halo = ctx.createRadialGradient(x, y, 0, x, y, radius);
+        halo.addColorStop(0, star.color + (star.wish ? '66' : '38'));
+        halo.addColorStop(1, star.color + '00');
+        drawEllipse(x, y, radius, radius, halo);
+        drawStarShape(x, y, star.size * u, star.kind, Math.sin(star.phase) * 0.16, star.color);
+      }
+      ctx.restore();
+    }
+
+    function idleSpin() {
+      return targetOpen && !motionPreference.matches ? 0.22 : 0;
+    }
+
+    function updateIntro(elapsed) {
+      introClock += elapsed;
+      introProgressFill.style.width = 100 * clamp(introClock / CONFIG.introDuration, 0, 1) + '%';
+      if (introClock >= CONFIG.closedHold) setTargetOpen(1);
+
+      const lift = smoothstep(CONFIG.closedHold, 2.8, introClock);
+      const coasting = Math.max(0, introClock - 2.8);
+      const azimuth = lerp(FOLDED_ROTATION, TAU, lift)
+        + 0.38 * (1 - Math.exp(-0.74 * coasting)) + idleSpin() * coasting;
+      if (elapsed > 0) {
+        const delta = wrapAngle(azimuth - rot + Math.PI) - Math.PI;
+        omega = delta / elapsed;
+      }
+      rot = wrapAngle(azimuth);
+      if (introClock >= CONFIG.introDuration) enterInteractive();
+    }
+
     function loop(now) {
-      const dt = Math.min(0.05, (now - last) / 1000);
+      frameRequest = 0;
+      if (!active || document.hidden) return;
+      const elapsed = Math.max(0, (now - last) / 1000);
+      const dt = Math.min(elapsed, 0.05);
       last = now;
       time += dt;
 
       if (appState === 'intro') {
-        updateIntro(dt);
-      } else if (appState === 'interactive' && !pDown) {
-        const idleSpin = motionPreference.matches ? 0 : (targetOpen > 0.5 ? 0.18 : 0);
-        omega += (idleSpin - omega) * dt * 1.1;
+        updateIntro(elapsed);
+      } else if (!pointer) {
+        omega = lerp(omega, idleSpin(), 1 - Math.exp(-1.23 * dt));
+        rot = wrapAngle(rot + omega * dt);
       }
 
-      // 弹簧阻尼开合伞
-      openVel += ((targetOpen - openVal) * 14.0 - openVel * 5.6) * dt;
-      openVal = clamp(openVal + openVel * dt, 0, 1.02);
+      openVel += ((targetOpen - openVal) * 36 - openVel * 12) * dt;
+      openVal = clamp(openVal + openVel * dt, 0, 1);
+      tiltExtra = lerp(tiltExtra, clamp(omega * 0.005, -0.024, 0.024), 1 - Math.exp(-3 * dt));
 
-      if (!pDown) rot += omega * dt;
-      const handleDelta = Math.atan2(Math.sin(rot - handleRot), Math.cos(rot - handleRot));
-      handleRot += handleDelta * Math.min(1, dt * 8.0);
-      tiltExtra += (clamp(omega * 0.025, -0.12, 0.12) - tiltExtra) * dt * 3;
-      ornamentSwing += (clamp(omega * 0.25, -1.2, 1.2) - ornamentSwing) * Math.min(1, dt * 2.3);
-
-      // 驱动连续音频（钢琴夜曲、星雨底噪、转伞风铃）
-      audio.updateContinuous({ dt, openVal, omega, rainActive });
+      const showWish = Number(wishCount >= CONFIG.wishEasterEggCount);
+      poemBlend = lerp(poemBlend, showWish, 1 - Math.exp(-1.55 * dt));
+      audio.updateContinuous({ dt, openVal, omega, rainActive: targetOpen === 1 });
 
       const P = getParams();
-      const geo = getGeo(P);
-
-      // 1. The paper and vignette are composited only on resize.
-      ctx.drawImage(backgroundLayer, 0, 0, W, H);
-
-      // 极淡的氛围微尘
-      ambientDust.forEach(d => {
-        if (!motionPreference.matches) d.y -= d.vy * dt;
-        if (d.y < -0.02) { d.y = 1.02; d.x = Math.random(); }
-        const tw = 0.25 + 0.75 * Math.sin(time * 1.4 + d.p);
-        ctx.fillStyle = `rgba(216, 180, 254, ${0.14 * tw})`;
-        ctx.beginPath();
-        ctx.arc(d.x * W, d.y * H, d.r, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      // 2. 与伞同步缩放的极简椭圆水洼
-      const rx = lerp(9 * P.unit, Math.min(W * 0.42, 100 * P.unit), Math.pow(clamp(openVal, 0, 1), 0.78));
-      const ry = rx * 0.165;
-      ctx.save();
-      const pg = ctx.createLinearGradient(P.cx - rx, P.puddleY, P.cx + rx, P.puddleY);
-      pg.addColorStop(0, 'rgba(46, 27, 86, 0.98)');
-      pg.addColorStop(0.5, 'rgba(124, 72, 192, 0.91)');
-      pg.addColorStop(1, 'rgba(44, 28, 82, 0.98)');
-      ctx.fillStyle = pg;
-      ctx.beginPath();
-      ctx.ellipse(P.cx, P.puddleY, rx, ry, 0, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(216, 180, 254, 0.38)';
-      ctx.lineWidth = 0.9;
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.ellipse(P.cx, P.puddleY, rx, ry, 0, 0, Math.PI * 2);
-      ctx.clip();
-      for (let i = puddleRipples.length - 1; i >= 0; i--) {
-        const rp = puddleRipples[i];
-        rp.r += dt * 28 * P.unit;
-        rp.life = 1 - rp.r / rp.maxR;
-        if (rp.life <= 0) { puddleRipples.splice(i, 1); continue; }
-        ctx.strokeStyle = rp.color;
-        ctx.globalAlpha = rp.life * 0.78;
-        ctx.lineWidth = 0.90;
-        ctx.beginPath();
-        ctx.ellipse(rp.x, rp.y, rp.r, rp.r * 0.24, 0, 0, Math.PI * 2);
-        ctx.stroke();
-        // Brief reflected point of light at the contact, fading with the ripple.
-        if (rp.life > 0.68) {
-          ctx.globalAlpha = (rp.life - 0.68) * 1.85;
-          ctx.fillStyle = rp.color;
-          ctx.beginPath();
-          ctx.arc(rp.x, rp.y, 1.45 * P.unit, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-
-      // Delicate reflected marks keep the water from looking like a flat oval.
-      if (openVal > 0.4) {
-        const shimmer = clamp((openVal - 0.4) / 0.5, 0, 1);
-        ctx.lineCap = 'round';
-        for (const glint of waterGlints) {
-          const gx = P.cx + glint.u * rx;
-          const gy = P.puddleY + glint.v * ry;
-          const pulse = 0.5 + 0.5 * Math.sin(time * 1.9 + glint.phase);
-          const len = glint.length * P.unit;
-          const dx = Math.cos(glint.angle) * len;
-          const dy = Math.sin(glint.angle) * len * 0.24;
-          ctx.strokeStyle = '#DCCBFF';
-          ctx.globalAlpha = shimmer * (0.18 + 0.24 * pulse);
-          ctx.lineWidth = 0.7;
-          ctx.beginPath();
-          ctx.moveTo(gx - dx * 0.5, gy - dy * 0.5);
-          ctx.lineTo(gx + dx * 0.5, gy + dy * 0.5);
-          ctx.stroke();
-        }
-      }
-
-      for (let i = surfaceStreaks.length - 1; i >= 0; i--) {
-        const st = surfaceStreaks[i];
-        st.life -= dt * st.decay;
-        if (st.life <= 0) { surfaceStreaks.splice(i, 1); continue; }
-        const t = (1 - st.life) * st.length * 1.9;
-        const len = st.length * (0.48 + st.life * 0.50);
-        const dx = Math.cos(st.angle);
-        const dy = Math.sin(st.angle) * 0.24;
-        ctx.strokeStyle = st.color;
-        ctx.globalAlpha = Math.pow(st.life, 1.2) * 0.84;
-        ctx.lineWidth = 0.78;
-        ctx.beginPath();
-        ctx.moveTo(st.x + dx * t, st.y + dy * t);
-        ctx.lineTo(st.x + dx * (t + len), st.y + dy * (t + len));
-        ctx.stroke();
-      }
-      ctx.restore();
-
-      // 3. 立体折面版画紫伞 + 伞檐珍珠点链
-      const panels = [];
-      for (let i = 0; i < NUM_RIBS; i++) {
-        const r1 = geo.ribs[i], r2 = geo.ribs[(i + 1) % NUM_RIBS];
-        panels.push({ r1, r2, idx: i, zAvg: (r1.tip.z + r2.tip.z) * 0.5 });
-      }
-      panels.sort((a, b) => a.zAvg - b.zAvg);
-
-      panels.filter(p => p.zAvg < 0).forEach(p => drawPanel(p.r1, p.r2, p.zAvg, P, p.idx));
-
-      ctx.save();
-      ctx.strokeStyle = '#8B5CF6';
-      ctx.lineWidth = 2.0 * P.unit;
-      ctx.lineCap = 'round';
-      ctx.beginPath();
-      ctx.moveTo(geo.ferrule.x, geo.ferrule.y);
-      ctx.lineTo(geo.shaftEnd.x, geo.shaftEnd.y);
-      ctx.stroke();
-
-      ctx.strokeStyle = '#A78BFA';
-      ctx.lineWidth = 2.6 * P.unit;
-      ctx.beginPath();
-      geo.hookPts.forEach((pt, idx) => idx === 0 ? ctx.moveTo(pt.x, pt.y) : ctx.lineTo(pt.x, pt.y));
-      ctx.stroke();
-      ctx.restore();
-
-      panels.filter(p => p.zAvg >= 0).forEach(p => drawPanel(p.r1, p.r2, p.zAvg, P, p.idx));
-
-      const beadA = clamp((openVal - 0.55) / 0.4, 0, 1);
-      if (beadA > 0.02) {
-        for (let i = 0; i < NUM_RIBS; i++) {
-          const a = geo.ribs[i].tip, b = geo.ribs[(i + 1) % NUM_RIBS].tip;
-          // Soft occlusion fade rather than an on/off visibility threshold.
-          const depth = (a.z + b.z) * 0.5 / P.unit;
-          const tVis = clamp((depth + 35) / 53, 0, 1);
-          const visibility = tVis * tVis * (3 - 2 * tVis);
-          if (visibility < 0.005) continue;
-          ctx.save();
-          ctx.globalAlpha = visibility;
-          const sag = (7 + 2 * Math.sin(time * 2.2 + i)) * P.unit;
-          for (let k = 1; k < 6; k++) {
-            const t = k / 6;
-            ctx.fillStyle = `rgba(233, 213, 255, ${beadA * 0.58})`;
-            ctx.beginPath();
-            const hang = Math.sin(t * Math.PI);
-            ctx.arc(lerp(a.x, b.x, t) + ornamentSwing * 2.1 * P.unit * hang,
-              lerp(a.y, b.y, t) + hang * sag, 0.67 * P.unit, 0, Math.PI * 2);
-            ctx.fill();
-          }
-          if (i % 2 === 0) {
-            const hy = a.y + (9 + Math.sin(time * 2.4 + i) * 2) * P.unit;
-            const hx = a.x + ornamentSwing * (4 + 1.5 * Math.sin(time * 1.8 + i)) * P.unit;
-            ctx.strokeStyle = `rgba(233, 213, 255, ${beadA * 0.36})`;
-            ctx.lineWidth = 0.55;
-            ctx.beginPath();
-            ctx.moveTo(a.x, a.y);
-            ctx.lineTo(hx, hy);
-            ctx.stroke();
-            drawStarShape(hx, hy, 2.1 * P.unit, 4, 0, i % 4 === 0 ? '#F5D65C' : '#F9F6FF');
-          }
-          ctx.restore();
-        }
-      }
-
-      // 4. 伞下局部流星雨与手绘放射水花
-      if (rainActive && openVal > 0.65) {
-        starSpawnAcc += dt * (motionPreference.matches ? 2.6 : 6.1 + Math.abs(omega) * 1.6);
-        while (starSpawnAcc >= 1) {
-          starSpawnAcc -= 1;
-          spawnStar(geo, P, false);
-        }
-      }
-
-      for (let i = stars.length - 1; i >= 0; i--) {
-        const s = stars[i];
-        s.x += s.vx * dt;
-        s.y += s.vy * dt;
-        s.vx *= (1 - dt * 0.6);
-        s.rot += s.vrot * dt;
-
-        ctx.save();
-        ctx.globalAlpha = s.alpha;
-        const tx = s.x - s.vx * 0.14;
-        const ty = s.y - (s.isWish ? 36 : 20) * P.unit;
-        const tg = ctx.createLinearGradient(s.x, s.y, tx, ty);
-        tg.addColorStop(0, s.tailColor);
-        tg.addColorStop(1, 'rgba(255, 255, 255, 0)');
-        ctx.strokeStyle = tg;
-        ctx.lineWidth = s.isWish ? 1.45 : 0.9;
-        ctx.beginPath();
-        ctx.moveTo(s.x, s.y);
-        ctx.lineTo(tx, ty);
-        ctx.stroke();
-
-        if (s.isWish) {
-          ctx.shadowBlur = 9 * P.unit;
-          ctx.shadowColor = 'rgba(255, 228, 138, 0.30)';
-        }
-        drawStarShape(s.x, s.y, s.size * (0.85 + 0.18 * Math.sin(time * 6 + s.tp)), s.kind, s.rot, s.color);
-        ctx.restore();
-        if (s.y >= s.targetY) {
-          spawnSplash(s.x, s.targetY, s.color, s.isWish, P.unit);
-          stars.splice(i, 1);
-        }
-      }
-
-      ctx.save();
-      for (let i = splashLines.length - 1; i >= 0; i--) {
-        const sp = splashLines[i];
-        sp.px = sp.x; sp.py = sp.y;
-        sp.x += sp.vx * dt; sp.y += sp.vy * dt;
-        sp.vy += 125 * P.unit * dt;
-        sp.life -= dt * sp.decay;
-        if (sp.life <= 0) { splashLines.splice(i, 1); continue; }
-        ctx.strokeStyle = sp.color;
-        ctx.globalAlpha = Math.pow(sp.life, 0.75) * 0.88;
-        ctx.lineWidth = sp.width;
-        ctx.lineCap = 'round';
-        ctx.beginPath();
-        ctx.moveTo(sp.x - sp.vx * 0.10, sp.y - sp.vy * 0.10);
-        ctx.lineTo(sp.x, sp.y);
-        ctx.stroke();
-      }
-      ctx.restore();
-
+      const canopy = P.e > 0.015 ? getCanopy(P) : null;
+      if (canopy) canopy.dew = getDew(canopy, P);
+      const hardware = getHardware(P);
+      updateRain(dt, canopy, P);
+      ctx.drawImage(background, 0, 0, W, H);
+      drawPoetry(P);
+      drawPuddle(P);
+      drawUmbrella(canopy, hardware, P);
+      drawRain(P);
+      drawSplashes(P);
+      ctx.drawImage(inkGrain, 0, 0, W, H);
       frameRequest = requestAnimationFrame(loop);
     }
 
-    window.addEventListener('resize', resize);
-    const embedded = new URLSearchParams(location.search).has('gallery') && window.parent !== window;
-    if (embedded) {
+    function resumeFrame() {
+      if (!active || document.hidden || frameRequest) return;
+      last = performance.now();
+      loop(last);
+    }
+
+    function pauseFrame() {
+      cancelAnimationFrame(frameRequest);
+      frameRequest = 0;
+      if (pointer && canvas.hasPointerCapture(pointer.id)) canvas.releasePointerCapture(pointer.id);
+      pointer = null;
+    }
+
+    function showExperience() {
+      if (active) return;
+      active = true;
+      resize();
+      startIntro();
+      syncAudioUI();
+      resumeFrame();
+    }
+
+    function stopExperience() {
+      if (!active) return;
+      active = false;
+      soundRequested = soundUnlocked = false;
+      pendingCanopySound = null;
+      pauseFrame();
+      pauseSound();
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!active) return;
+      if (document.hidden) {
+        pauseFrame();
+        soundRequested = soundUnlocked;
+        pendingCanopySound = null;
+        pauseSound();
+      } else {
+        resumeFrame();
+        if (soundUnlocked && !userMuted) void enableSound();
+      }
+    });
+
+    motionPreference.addEventListener('change', event => {
+      if (!active || !event.matches || appState !== 'intro') return;
+      startIntro();
+    });
+
+    window.addEventListener('resize', () => { if (active) resize(); });
+    if (window.parent !== window && new URLSearchParams(location.search).has('gallery')) {
       window.xmqRain = { start: showExperience, stop: stopExperience };
       document.querySelector('.xmq-home').addEventListener('click', event => {
         if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -1177,6 +1461,7 @@
     } else {
       showExperience();
     }
+
   </script>
 </body>
 </html>
