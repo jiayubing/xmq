@@ -2,9 +2,10 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#160D2D" />
   <title>今夜，局部紫色流星雨 · 27</title>
+  <meta name="description" content="撑开一把紫伞，让星星轻轻落进水面。一个可以触摸、许愿与安静欣赏的小小动画世界。" />
   <style>
     *, *::before, *::after {
       box-sizing: border-box;
@@ -197,10 +198,65 @@
     body.zen-mode #btn-zen:hover {
       opacity: 0.9;
     }
+
+    /* Navigation and interaction remain visually quiet. */
+    .xmq-home {
+      position: fixed; z-index: 40;
+      top: max(12px, env(safe-area-inset-top));
+      left: max(12px, env(safe-area-inset-left));
+      display: inline-flex; align-items: center; min-height: 36px;
+      padding: 0 10px; border: 1px solid rgba(233, 220, 250, .4);
+      border-radius: 999px; background: rgba(35, 21, 55, .74);
+      color: #f8efff; font: 12px/1 system-ui, sans-serif;
+      text-decoration: none; gap: 5px;
+    }
+    .xmq-home:hover { background: #231537; }
+    .xmq-home:focus-visible, button:focus-visible {
+      outline: 2px solid #f8efff; outline-offset: 3px;
+    }
+    body.zen-mode .xmq-home { display: none; }
+    #intro-hint {
+      position: fixed; left: 0; right: 0;
+      bottom: max(30px, env(safe-area-inset-bottom)); z-index: 19;
+      color: rgba(233, 213, 255, .52); text-align: center;
+      font-size: 11px; letter-spacing: .16em;
+      opacity: 0; pointer-events: none; transition: opacity 600ms ease;
+    }
+    #intro-hint.visible { opacity: 1; }
+    body.zen-mode #intro-hint { opacity: 0; }
+    @media (max-width: 480px) {
+      .xmq-home {
+        top: max(10px, env(safe-area-inset-top));
+        left: max(10px, env(safe-area-inset-left));
+        min-height: 34px; font-size: 11px; padding: 0 9px;
+      }
+      #top-controls {
+        top: max(10px, env(safe-area-inset-top));
+        right: max(10px, env(safe-area-inset-right)); gap: 4px;
+      }
+      .icon-pill { min-height: 34px; font-size: 11px; padding: 7px 8px; }
+      #dock { bottom: max(16px, env(safe-area-inset-bottom)); padding: 0 10px; }
+      .dock-bar { max-width: calc(100vw - 20px); padding: 4px 5px; gap: 2px; }
+      .dock-btn { min-height: 40px; font-size: 11.5px; padding: 10px 9px; }
+      .dock-hint { max-width: 90vw; font-size: 10px; line-height: 1.5; }
+    }
+    @media (max-width: 360px) {
+      .icon-pill { font-size: 10px; padding: 7px 6px; }
+      .dock-btn { font-size: 11px; padding: 10px 7px; }
+    }
+    @media (max-height: 500px) {
+      #dock { bottom: max(8px, env(safe-area-inset-bottom)); }
+      .dock-hint { display: none; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      #top-controls, #dock, #intro-hint, .icon-pill, .dock-btn {
+        transition: none;
+      }
+    }
   </style>
-<style>.xmq-home{position:fixed;z-index:40;top:max(12px,env(safe-area-inset-top));left:max(12px,env(safe-area-inset-left));display:inline-flex;align-items:center;min-height:36px;padding:0 10px;border:1px solid #e9dcfa66;border-radius:999px;background:#231537bc;color:#f8efff;font:12px/1 system-ui,sans-serif;text-decoration:none;gap:5px}.xmq-home:hover{background:#231537}.xmq-home:focus-visible{outline:2px solid #f8efff;outline-offset:2px}body.zen-mode .xmq-home{display:none}</style></head>
+</head>
 <body><a class="xmq-home" href="../" aria-label="返回作品首页"><span aria-hidden="true">‹</span> 作品</a>
-  <canvas id="stage"></canvas>
+  <canvas id="stage" role="img" aria-label="紫色夜空中的一把紫伞，星星从伞下落进水面。点击开合，左右滑动旋转，或者使用下方操作按钮。"></canvas>
 
   <!-- 顶部极简声音与纯净模式按钮 -->
   <div id="top-controls">
@@ -224,349 +280,16 @@
   <div id="intro-progress">
     <div id="intro-progress-fill"></div>
   </div>
+  <div id="intro-hint" aria-hidden="true">轻触画面 · 即可互动</div>
 
+  <script src="./violetAudio.js"></script>
   <script>
     const INTRO_DURATION = 13; // 开场动画时长（秒）
 
-    function midiToHz(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
     function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
     function lerp(a, b, t) { return a + (b - a) * t; }
 
-    /* =========================================================================
-       1. 纯原生 Web Audio 声音引擎（零外部音频文件依赖）
-       ========================================================================= */
-    const SCORE = [
-      // Bar 1: Ebmaj9
-      { step: 0,  notes: [51, 58, 67], vel: 0.42, dur: 3.4, box: false },
-      { step: 2,  notes: [65],         vel: 0.28, dur: 2.2, box: false },
-      { step: 4,  notes: [70],         vel: 0.30, dur: 2.4, box: false },
-      { step: 6,  notes: [74],         vel: 0.34, dur: 2.8, box: true  },
-      { step: 7,  notes: [70],         vel: 0.22, dur: 1.8, box: false },
-      // Bar 2: Cm9
-      { step: 8,  notes: [48, 55, 63], vel: 0.40, dur: 3.4, box: false },
-      { step: 10, notes: [62],         vel: 0.26, dur: 2.2, box: false },
-      { step: 12, notes: [67],         vel: 0.30, dur: 2.4, box: false },
-      { step: 14, notes: [70],         vel: 0.33, dur: 2.8, box: true  },
-      { step: 15, notes: [75],         vel: 0.24, dur: 2.2, box: true  },
-      // Bar 3: Abmaj9
-      { step: 16, notes: [44, 51, 60], vel: 0.42, dur: 3.4, box: false },
-      { step: 18, notes: [58],         vel: 0.26, dur: 2.2, box: false },
-      { step: 20, notes: [67],         vel: 0.30, dur: 2.6, box: false },
-      { step: 22, notes: [72],         vel: 0.32, dur: 2.8, box: true  },
-      { step: 23, notes: [70],         vel: 0.22, dur: 1.9, box: false },
-      // Bar 4: Bb6/9
-      { step: 24, notes: [46, 53, 62], vel: 0.38, dur: 3.4, box: false },
-      { step: 26, notes: [60],         vel: 0.25, dur: 2.2, box: false },
-      { step: 28, notes: [65],         vel: 0.29, dur: 2.6, box: false },
-      { step: 30, notes: [67],         vel: 0.28, dur: 2.8, box: true  },
-      { step: 31, notes: [74],         vel: 0.20, dur: 2.6, box: true  }
-    ];
-    const PENTATONIC_HIGH = [75, 77, 79, 82, 84, 86, 87, 89, 91];
-
-    class VioletAudioEngine {
-      constructor() {
-        this.ctx = null;
-        this.enabled = false;
-        this.musicEnabled = true;
-        this.masterVolume = 0.78;
-        this._stepDur = 0.41;
-        this._seqAcc = 0;
-        this._seqStep = 0;
-        this._lastSplashAt = 0;
-        this._lastChimeAt = 0;
-      }
-
-      init() {
-        if (this.ctx) return;
-        const AC = window.AudioContext || window.webkitAudioContext;
-        if (!AC) return;
-        const ctx = new AC();
-        this.ctx = ctx;
-
-        const comp = ctx.createDynamicsCompressor();
-        comp.threshold.value = -16;
-        comp.knee.value = 18;
-        comp.ratio.value = 4;
-        comp.attack.value = 0.01;
-        comp.release.value = 0.25;
-
-        this.masterGain = ctx.createGain();
-        this.masterGain.gain.value = 0.0001;
-        comp.connect(this.masterGain);
-        this.masterGain.connect(ctx.destination);
-
-        this.dryBus = ctx.createGain();
-        this.dryBus.gain.value = 0.72;
-        this.dryBus.connect(comp);
-
-        const conv = ctx.createConvolver();
-        conv.buffer = this._createReverbIR(ctx, 2.7, 2.4);
-        const revLP = ctx.createBiquadFilter();
-        revLP.type = 'lowpass';
-        revLP.frequency.value = 3400;
-
-        this.wetBus = ctx.createGain();
-        this.wetBus.gain.value = 0.44;
-        this.wetBus.connect(conv);
-        conv.connect(revLP);
-        revLP.connect(comp);
-
-        this.musicFilter = ctx.createBiquadFilter();
-        this.musicFilter.type = 'lowpass';
-        this.musicFilter.frequency.value = 1600;
-        this.musicFilter.connect(this.dryBus);
-        this.musicFilter.connect(this.wetBus);
-
-        this.noiseBuffer = this._createNoiseBuffer(ctx, 3.0);
-        const rainSrc = ctx.createBufferSource();
-        rainSrc.buffer = this.noiseBuffer;
-        rainSrc.loop = true;
-
-        this.rainFilter = ctx.createBiquadFilter();
-        this.rainFilter.type = 'bandpass';
-        this.rainFilter.frequency.value = 1850;
-        this.rainFilter.Q.value = 0.7;
-
-        this.rainGain = ctx.createGain();
-        this.rainGain.gain.value = 0.0001;
-        rainSrc.connect(this.rainFilter);
-        this.rainFilter.connect(this.rainGain);
-        this.rainGain.connect(this.dryBus);
-        this.rainGain.connect(this.wetBus);
-        rainSrc.start();
-      }
-
-      async enable() {
-        this.init();
-        if (!this.ctx) return false;
-        if (this.ctx.state === 'suspended') await this.ctx.resume();
-        this.enabled = true;
-        const now = this.ctx.currentTime;
-        this.masterGain.gain.cancelScheduledValues(now);
-        this.masterGain.gain.setTargetAtTime(this.masterVolume, now, 0.12);
-        return true;
-      }
-
-      disable() {
-        this.enabled = false;
-        if (!this.ctx || !this.masterGain) return;
-        const now = this.ctx.currentTime;
-        this.masterGain.gain.cancelScheduledValues(now);
-        this.masterGain.gain.setTargetAtTime(0.0001, now, 0.08);
-      }
-
-      resetPhrase() {
-        this._seqStep = 0;
-        this._seqAcc = 0;
-      }
-
-      playOpen() {
-        if (!this.enabled || !this.ctx) return;
-        const ctx = this.ctx, now = ctx.currentTime;
-        const src = ctx.createBufferSource();
-        src.buffer = this.noiseBuffer;
-        const flt = ctx.createBiquadFilter();
-        flt.type = 'bandpass';
-        flt.Q.value = 1.6;
-        flt.frequency.setValueAtTime(340, now);
-        flt.frequency.exponentialRampToValueAtTime(1250, now + 0.34);
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(0.0001, now);
-        g.gain.linearRampToValueAtTime(0.11, now + 0.14);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
-        src.connect(flt); flt.connect(g); g.connect(this.dryBus); g.connect(this.wetBus);
-        src.start(now); src.stop(now + 0.46);
-
-        this._celesta(midiToHz(82), now + 0.22, 1.3, 0.075, 0);
-        this._celesta(midiToHz(87), now + 0.29, 1.5, 0.06, 0.18);
-      }
-
-      playClose() {
-        if (!this.enabled || !this.ctx) return;
-        const ctx = this.ctx, now = ctx.currentTime;
-        const src = ctx.createBufferSource();
-        src.buffer = this.noiseBuffer;
-        const flt = ctx.createBiquadFilter();
-        flt.type = 'bandpass';
-        flt.Q.value = 1.8;
-        flt.frequency.setValueAtTime(1050, now);
-        flt.frequency.exponentialRampToValueAtTime(240, now + 0.36);
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(0.0001, now);
-        g.gain.linearRampToValueAtTime(0.09, now + 0.08);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.40);
-        src.connect(flt); flt.connect(g); g.connect(this.dryBus); g.connect(this.wetBus);
-        src.start(now); src.stop(now + 0.45);
-
-        this._piano(midiToHz(58), now + 0.12, 1.6, 0.07, 0);
-      }
-
-      playStarSplash(pan = 0) {
-        if (!this.enabled || !this.ctx) return;
-        const now = this.ctx.currentTime;
-        if (now - this._lastSplashAt < 0.24 || Math.random() > 0.55) return;
-        this._lastSplashAt = now;
-
-        const hz = midiToHz(PENTATONIC_HIGH[Math.floor(Math.random() * PENTATONIC_HIGH.length)]);
-        const ctx = this.ctx;
-        const osc = ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(hz * 0.96, now);
-        osc.frequency.exponentialRampToValueAtTime(hz, now + 0.045);
-        const g = ctx.createGain();
-        g.gain.setValueAtTime(0.0001, now);
-        g.gain.linearRampToValueAtTime(0.032, now + 0.012);
-        g.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
-        const out = this._panner(ctx, clamp(pan, -0.75, 0.75));
-        osc.connect(g); g.connect(out); out.connect(this.dryBus); out.connect(this.wetBus);
-        osc.start(now); osc.stop(now + 0.46);
-      }
-
-      playWishLaunch() {
-        if (!this.enabled || !this.ctx) return;
-        const now = this.ctx.currentTime;
-        [79, 82, 86, 89].forEach((m, i) => {
-          this._celesta(midiToHz(m), now + i * 0.055, 1.1, 0.055, -0.25 + i * 0.16);
-        });
-      }
-
-      playWishImpact(pan = 0) {
-        if (!this.enabled || !this.ctx) return;
-        const now = this.ctx.currentTime;
-        [67, 70, 74, 77, 82].forEach((m, i) => {
-          this._celesta(
-            midiToHz(m),
-            now + i * 0.032,
-            2.6,
-            0.068 - i * 0.006,
-            clamp(pan + (i - 2) * 0.14, -0.8, 0.8)
-          );
-        });
-      }
-
-      updateContinuous({ dt, openVal, omega, rainActive }) {
-        if (!this.enabled || !this.ctx) return;
-        const now = this.ctx.currentTime;
-
-        const targetRain = rainActive && openVal > 0.35
-          ? clamp(0.022 + Math.abs(omega) * 0.008, 0.02, 0.055)
-          : 0.004;
-        this.rainGain.gain.setTargetAtTime(targetRain, now, 0.25);
-        this.rainFilter.frequency.setTargetAtTime(1500 + Math.abs(omega) * 240, now, 0.2);
-        this.musicFilter.frequency.setTargetAtTime(900 + openVal * 1500, now, 0.22);
-
-        const absW = Math.abs(omega);
-        if (openVal > 0.45 && absW > 1.35 && now - this._lastChimeAt > Math.max(0.11, 0.36 - absW * 0.04)) {
-          this._lastChimeAt = now;
-          const m = PENTATONIC_HIGH[Math.floor(Math.random() * PENTATONIC_HIGH.length)];
-          this._celesta(
-            midiToHz(m),
-            now,
-            1.35,
-            clamp(0.028 + absW * 0.007, 0.028, 0.068),
-            (Math.random() - 0.5) * 1.1
-          );
-        }
-
-        if (this.musicEnabled) {
-          this._seqAcc += dt;
-          while (this._seqAcc >= this._stepDur) {
-            this._seqAcc -= this._stepDur;
-            const evt = SCORE.find(s => s.step === this._seqStep);
-            if (evt) {
-              evt.notes.forEach((m, idx) => {
-                const off = idx * 0.024 + Math.random() * 0.012;
-                const pan = clamp(((m - 62) / 28) * 0.55, -0.55, 0.55);
-                if (evt.box) this._celesta(midiToHz(m), now + off, evt.dur, evt.vel * 0.22, pan);
-                else this._piano(midiToHz(m), now + off, evt.dur, evt.vel * 0.28, pan);
-              });
-            }
-            this._seqStep = (this._seqStep + 1) % 32;
-          }
-        }
-      }
-
-      _piano(hz, t, dur, peak, pan) {
-        const ctx = this.ctx;
-        const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
-        o1.type = 'triangle'; o2.type = 'sine';
-        o1.frequency.setValueAtTime(hz, t); o2.frequency.setValueAtTime(hz * 2, t);
-        const g1 = ctx.createGain(), g2 = ctx.createGain();
-        g1.gain.setValueAtTime(0.0001, t);
-        g1.gain.linearRampToValueAtTime(peak, t + 0.022);
-        g1.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-        g2.gain.setValueAtTime(0.0001, t);
-        g2.gain.linearRampToValueAtTime(peak * 0.22, t + 0.018);
-        g2.gain.exponentialRampToValueAtTime(0.0001, t + Math.min(dur * 0.45, 0.9));
-        const lp = ctx.createBiquadFilter();
-        lp.type = 'lowpass';
-        lp.frequency.setValueAtTime(1600, t);
-        lp.frequency.exponentialRampToValueAtTime(520, t + dur * 0.7);
-        const out = this._panner(ctx, pan);
-        o1.connect(g1); o2.connect(g2);
-        g1.connect(lp); g2.connect(lp);
-        lp.connect(out); out.connect(this.musicFilter);
-        o1.start(t); o2.start(t);
-        o1.stop(t + dur + 0.06); o2.stop(t + dur + 0.06);
-      }
-
-      _celesta(hz, t, dur, peak, pan) {
-        const ctx = this.ctx;
-        const o1 = ctx.createOscillator(), o2 = ctx.createOscillator();
-        o1.type = 'sine'; o2.type = 'sine';
-        o1.frequency.setValueAtTime(hz, t); o2.frequency.setValueAtTime(hz * 3, t);
-        const g1 = ctx.createGain(), g2 = ctx.createGain();
-        g1.gain.setValueAtTime(0.0001, t);
-        g1.gain.linearRampToValueAtTime(peak, t + 0.01);
-        g1.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-        g2.gain.setValueAtTime(0.0001, t);
-        g2.gain.linearRampToValueAtTime(peak * 0.14, t + 0.008);
-        g2.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
-        const out = this._panner(ctx, pan);
-        o1.connect(g1); o2.connect(g2);
-        g1.connect(out); g2.connect(out);
-        out.connect(this.musicFilter);
-        o1.start(t); o2.start(t);
-        o1.stop(t + dur + 0.06); o2.stop(t + 0.26);
-      }
-
-      _panner(ctx, pan) {
-        if (typeof ctx.createStereoPanner === 'function') {
-          const p = ctx.createStereoPanner();
-          p.pan.value = pan;
-          return p;
-        }
-        return ctx.createGain();
-      }
-
-      _createNoiseBuffer(ctx, sec) {
-        const len = Math.floor(ctx.sampleRate * sec);
-        const buf = ctx.createBuffer(2, len, ctx.sampleRate);
-        for (let c = 0; c < 2; c++) {
-          const d = buf.getChannelData(c);
-          let b0 = 0, b1 = 0, b2 = 0;
-          for (let i = 0; i < len; i++) {
-            const w = Math.random() * 2 - 1;
-            b0 = 0.997 * b0 + w * 0.029;
-            b1 = 0.985 * b1 + w * 0.032;
-            b2 = 0.950 * b2 + w * 0.048;
-            d[i] = (b0 + b1 + b2 + w * 0.12) * 0.45;
-          }
-        }
-        return buf;
-      }
-
-      _createReverbIR(ctx, dur, dec) {
-        const len = Math.floor(ctx.sampleRate * dur);
-        const ir = ctx.createBuffer(2, len, ctx.sampleRate);
-        for (let c = 0; c < 2; c++) {
-          const d = ir.getChannelData(c);
-          for (let i = 0; i < len; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, dec);
-        }
-        return ir;
-      }
-    }
-
+    // A single audio implementation is kept in violetAudio.js.
     const audio = new VioletAudioEngine();
 
     /* =========================================================================
@@ -604,6 +327,7 @@
     let rot = 0.25;
     let omega = 0;
     let tiltExtra = 0;
+    let ornamentSwing = 0;
 
     // 流星雨状态
     let rainActive = false;
@@ -623,7 +347,8 @@
     let pDown = false, pMoved = false, startX = 0, startY = 0, lastX = 0;
 
     // 离屏生成深紫织物棉纸肌理（Risograph 版画海报质感）
-    let paperPattern = null;
+    let paperTile = null;
+    let backgroundLayer = null;
     function buildPaperTexture() {
       const tc = document.createElement('canvas');
       tc.width = 180;
@@ -647,17 +372,37 @@
           : `rgba(5, 2, 14, ${Math.random() * 0.15})`;
         tctx.fillRect(Math.random() * 180, Math.random() * 180, 1.2, 1.2);
       }
-      paperPattern = ctx.createPattern(tc, 'repeat');
+      paperTile = tc;
+    }
+
+    function buildBackgroundLayer() {
+      const bg = document.createElement('canvas');
+      bg.width = canvas.width;
+      bg.height = canvas.height;
+      const bctx = bg.getContext('2d');
+      bctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      bctx.fillStyle = bctx.createPattern(paperTile, 'repeat') || '#160D2D';
+      bctx.fillRect(0, 0, W, H);
+      const vignette = bctx.createRadialGradient(
+        W * .5, H * .45, Math.min(W, H) * .22,
+        W * .5, H * .5, Math.max(W, H) * .78
+      );
+      vignette.addColorStop(0, 'rgba(139, 92, 246, 0.07)');
+      vignette.addColorStop(1, 'rgba(6, 2, 16, 0.38)');
+      bctx.fillStyle = vignette;
+      bctx.fillRect(0, 0, W, H);
+      backgroundLayer = bg;
     }
 
     function resize() {
+      W = Math.max(1, Math.round(canvas.clientWidth || window.innerWidth));
+      H = Math.max(1, Math.round(canvas.clientHeight || window.innerHeight));
       dpr = Math.min(window.devicePixelRatio || 1, 2);
-      W = window.innerWidth;
-      H = window.innerHeight;
       canvas.width = Math.round(W * dpr);
       canvas.height = Math.round(H * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      if (!paperPattern) buildPaperTexture();
+      if (!paperTile) buildPaperTexture();
+      buildBackgroundLayer();
     }
 
     function syncAudioUI() {
@@ -666,6 +411,7 @@
       btnSound.setAttribute('aria-pressed', String(audio.enabled));
       btnBgm.textContent = audio.musicEnabled ? '钢琴夜曲：开' : '钢琴夜曲：关';
       btnBgm.classList.toggle('muted', !audio.musicEnabled);
+      btnBgm.setAttribute('aria-pressed', String(audio.musicEnabled));
     }
 
     function setTargetOpen(val) {
@@ -684,6 +430,8 @@
       openVal = 0;
       openVel = 0;
       omega = 0.08;
+      ornamentSwing = 0;
+      starSpawnAcc = 0;
       rainActive = false;
       stars.length = 0;
       splashLines.length = 0;
@@ -694,6 +442,7 @@
       introProgress.classList.add('visible');
       introProgressFill.style.width = '0%';
       topControls.classList.add('visible');
+      document.getElementById('intro-hint').classList.add('visible');
       dockToggle.textContent = '撑伞落星';
     }
 
@@ -701,30 +450,46 @@
       appState = 'interactive';
       dock.classList.add('visible');
       introProgress.classList.remove('visible');
+      document.getElementById('intro-hint').classList.remove('visible');
       dockToggle.textContent = targetOpen > 0.5 ? '合伞收池' : '撑伞落星';
     }
 
-    let soundRequested = true;
+    const motionPreference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    let soundRequested = false;
+    let soundBusy = false;
     let active = false;
     let frameRequest = 0;
 
-    function trySound() {
-      if (!active || !soundRequested || audio.enabled) return;
-      audio.enable().then(() => {
+    async function trySound() {
+      if (!active || !soundRequested || audio.enabled || soundBusy) return;
+      soundBusy = true;
+      try {
+        const enabled = await audio.enable();
+        if (!enabled) soundRequested = false;
         if (!active || !soundRequested) audio.disable();
+      } catch (_) {
+        soundRequested = false;
+        audio.disable();
+      } finally {
+        soundBusy = false;
         syncAudioUI();
-      }).catch(syncAudioUI);
+      }
     }
 
     function showExperience() {
       if (active) return;
       active = true;
-      soundRequested = true;
       startIntro();
       resize();
+      if (motionPreference.matches) {
+        setTargetOpen(1);
+        openVal = 1;
+        omega = 0;
+        rainActive = false;
+        enterInteractive();
+      }
       last = performance.now();
-      frameRequest = requestAnimationFrame(loop);
-      trySound();
+      frameRequest = document.hidden ? 0 : requestAnimationFrame(loop);
       syncAudioUI();
     }
 
@@ -732,23 +497,37 @@
       if (!active) return;
       active = false;
       cancelAnimationFrame(frameRequest);
+      frameRequest = 0;
       audio.disable();
+      soundRequested = false;
       if (audio.ctx?.state === 'running') audio.ctx.suspend().catch(() => {});
       syncAudioUI();
     }
 
-    function unlockOnGesture(event) {
-      if (event.target === btnSound || event.target.closest?.('.xmq-home')) return;
-      trySound();
-    }
-    document.addEventListener('click', unlockOnGesture, true);
-    document.addEventListener('keydown', unlockOnGesture, true);
+    document.addEventListener('visibilitychange', () => {
+      if (!active) return;
+      if (document.hidden) {
+        cancelAnimationFrame(frameRequest);
+        frameRequest = 0;
+        if (audio.ctx?.state === 'running') audio.ctx.suspend().catch(() => {});
+      } else {
+        if (frameRequest) return;
+        last = performance.now();
+        frameRequest = requestAnimationFrame(loop);
+        if (soundRequested && audio.enabled && audio.ctx?.state === 'suspended') {
+          audio.ctx.resume().catch(() => {
+            soundRequested = false;
+            audio.disable();
+            syncAudioUI();
+          });
+        }
+      }
+    });
 
     btnSound.addEventListener('click', () => {
-      soundRequested = !audio.enabled;
+      soundRequested = !soundRequested;
       if (soundRequested) trySound();
-      else audio.disable();
-      syncAudioUI();
+      else { audio.disable(); syncAudioUI(); }
     });
 
     btnBgm.addEventListener('click', () => {
@@ -835,8 +614,8 @@
       // 同时适配手机竖屏海报比例与电脑宽屏电影比例
       const unit = Math.min(W / 270, H / 365);
       const cx = W * 0.5;
-      const cy = H * 0.34;
-      const puddleY = H * 0.785;
+      const cy = H * (H < 500 ? 0.30 : 0.34);
+      const puddleY = H * (H < 500 ? 0.69 : 0.785);
       const pitch = 0.22;
       const sway = openVal > 0.2 ? Math.sin(time * 1.05) * 0.085 * openVal : Math.sin(time * 0.8) * 0.018;
       const roll = sway + tiltExtra;
@@ -909,6 +688,9 @@
       const col = isWish
         ? { fill: '#FEF08A', tail: 'rgba(254, 240, 138, 0.9)' }
         : pal[Math.floor(Math.random() * pal.length)];
+      const depthRoll = Math.random();
+      const depth = isWish ? 1.12 : (depthRoll < 0.22 ? 0.65 : depthRoll < 0.88 ? 0.93 : 1.17);
+      const alpha = isWish ? 1 : (depth < 0.8 ? 0.43 : depth > 1.1 ? 0.88 : 0.72);
 
       const puddleRx = lerp(9 * P.unit, Math.min(W * 0.40, 96 * P.unit), Math.pow(clamp(openVal, 0, 1), 0.78));
       const relX = clamp((x - P.cx) / Math.max(12, puddleRx), -0.88, 0.88);
@@ -917,9 +699,10 @@
       stars.push({
         x,
         y: geo.avgRimY - 4 + (Math.random() - 0.5) * 14,
-        vx: omega * 7.2 * P.unit + (Math.random() - 0.5) * 6 * P.unit,
-        vy: (isWish ? 115 : (60 + Math.random() * 62)) * P.unit,
-        size: (isWish ? 8.2 : (2.5 + Math.random() * 3.9)) * P.unit,
+        vx: (omega * 7.2 + (Math.random() - 0.5) * 6) * P.unit * depth,
+        vy: (isWish ? 115 : (60 + Math.random() * 62)) * P.unit * depth,
+        size: (isWish ? 8.2 : (2.5 + Math.random() * 3.9)) * P.unit * depth,
+        alpha,
         kind: isWish ? 8 : (Math.random() > 0.52 ? 4 : (Math.random() > 0.4 ? 8 : 0)),
         rot: Math.random() * Math.PI,
         vrot: (Math.random() - 0.5) * 1.6,
@@ -1009,9 +792,20 @@
       ctx.bezierCurveTo(p2[2].x, p2[2].y, p2[1].x, p2[1].y, p2[0].x, p2[0].y);
       ctx.closePath();
 
-      ctx.fillStyle = isFront
-        ? (idx % 2 === 0 ? 'rgba(124, 58, 237, 0.85)' : 'rgba(139, 92, 246, 0.78)')
-        : 'rgba(76, 29, 149, 0.86)';
+      const fabric = ctx.createLinearGradient(p1[0].x, p1[0].y, rx, ry);
+      if (!isFront) {
+        fabric.addColorStop(0, 'rgba(120, 73, 185, 0.90)');
+        fabric.addColorStop(1, 'rgba(57, 29, 109, 0.97)');
+      } else if (idx % 2 === 0) {
+        fabric.addColorStop(0, 'rgba(168, 117, 238, 0.95)');
+        fabric.addColorStop(0.48, 'rgba(128, 73, 214, 0.94)');
+        fabric.addColorStop(1, 'rgba(91, 43, 162, 0.97)');
+      } else {
+        fabric.addColorStop(0, 'rgba(183, 137, 242, 0.92)');
+        fabric.addColorStop(0.48, 'rgba(141, 91, 217, 0.93)');
+        fabric.addColorStop(1, 'rgba(99, 51, 166, 0.97)');
+      }
+      ctx.fillStyle = fabric;
       ctx.fill();
 
       ctx.strokeStyle = isFront ? 'rgba(221, 214, 254, 0.45)' : 'rgba(167, 139, 250, 0.22)';
@@ -1041,10 +835,13 @@
           : 0.35;
         omega += (targetW - omega) * dt * 2.2;
       } else if (introClock < dur - 0.35) {
-        rainActive = false;
-        if (introClock > 10.8) setTargetOpen(0);
-        omega += (0.08 - omega) * dt * 2.8;
+        // End with the purple umbrella open, not an empty scene.
+        setTargetOpen(1);
+        rainActive = true;
+        omega += (0.18 - omega) * dt * 2.8;
       } else {
+        setTargetOpen(1);
+        rainActive = true;
         enterInteractive();
       }
     }
@@ -1058,7 +855,8 @@
       if (appState === 'intro') {
         updateIntro(dt);
       } else if (appState === 'interactive' && !pDown) {
-        omega += ((targetOpen > 0.5 ? 0.24 : 0.0) - omega) * dt * 1.1;
+        const idleSpin = motionPreference.matches ? 0 : (targetOpen > 0.5 ? 0.18 : 0);
+        omega += (idleSpin - omega) * dt * 1.1;
       }
 
       // 弹簧阻尼开合伞
@@ -1067,6 +865,7 @@
 
       if (!pDown) rot += omega * dt;
       tiltExtra += (clamp(omega * 0.025, -0.12, 0.12) - tiltExtra) * dt * 3;
+      ornamentSwing += (clamp(omega * 0.25, -1.2, 1.2) - ornamentSwing) * Math.min(1, dt * 2.3);
 
       // 驱动连续音频（钢琴夜曲、星雨底噪、转伞风铃）
       audio.updateContinuous({ dt, openVal, omega, rainActive });
@@ -1074,18 +873,12 @@
       const P = getParams();
       const geo = getGeo(P);
 
-      // 1. 深紫织物棉纸肌理背景
-      ctx.fillStyle = paperPattern || '#160D2D';
-      ctx.fillRect(0, 0, W, H);
-      const vig = ctx.createRadialGradient(W * 0.5, H * 0.45, Math.min(W, H) * 0.22, W * 0.5, H * 0.5, Math.max(W, H) * 0.78);
-      vig.addColorStop(0, 'rgba(139, 92, 246, 0.07)');
-      vig.addColorStop(1, 'rgba(6, 2, 16, 0.38)');
-      ctx.fillStyle = vig;
-      ctx.fillRect(0, 0, W, H);
+      // 1. The paper and vignette are composited only on resize.
+      ctx.drawImage(backgroundLayer, 0, 0, W, H);
 
       // 极淡的氛围微尘
       ambientDust.forEach(d => {
-        d.y -= d.vy * dt;
+        if (!motionPreference.matches) d.y -= d.vy * dt;
         if (d.y < -0.02) { d.y = 1.02; d.x = Math.random(); }
         const tw = 0.25 + 0.75 * Math.sin(time * 1.4 + d.p);
         ctx.fillStyle = `rgba(216, 180, 254, ${0.14 * tw})`;
@@ -1099,9 +892,9 @@
       const ry = rx * 0.165;
       ctx.save();
       const pg = ctx.createLinearGradient(P.cx - rx, P.puddleY, P.cx + rx, P.puddleY);
-      pg.addColorStop(0, '#5B21B6');
-      pg.addColorStop(0.5, '#7C3AED');
-      pg.addColorStop(1, '#6D28D9');
+      pg.addColorStop(0, 'rgba(46, 27, 86, 0.98)');
+      pg.addColorStop(0.5, 'rgba(111, 66, 166, 0.90)');
+      pg.addColorStop(1, 'rgba(44, 28, 82, 0.98)');
       ctx.fillStyle = pg;
       ctx.beginPath();
       ctx.ellipse(P.cx, P.puddleY, rx, ry, 0, 0, Math.PI * 2);
@@ -1165,25 +958,28 @@
             const t = k / 7;
             ctx.fillStyle = `rgba(233, 213, 255, ${beadA * 0.58})`;
             ctx.beginPath();
-            ctx.arc(lerp(a.x, b.x, t), lerp(a.y, b.y, t) + Math.sin(t * Math.PI) * sag, 0.75 * P.unit, 0, Math.PI * 2);
+            const hang = Math.sin(t * Math.PI);
+            ctx.arc(lerp(a.x, b.x, t) + ornamentSwing * 2.1 * P.unit * hang,
+              lerp(a.y, b.y, t) + hang * sag, 0.75 * P.unit, 0, Math.PI * 2);
             ctx.fill();
           }
           if (i % 2 === 0 && a.z >= -4) {
             const hy = a.y + (9 + Math.sin(time * 2.4 + i) * 2) * P.unit;
+            const hx = a.x + ornamentSwing * (4 + 1.5 * Math.sin(time * 1.8 + i)) * P.unit;
             ctx.strokeStyle = `rgba(233, 213, 255, ${beadA * 0.36})`;
             ctx.lineWidth = 0.55;
             ctx.beginPath();
             ctx.moveTo(a.x, a.y);
-            ctx.lineTo(a.x, hy);
+            ctx.lineTo(hx, hy);
             ctx.stroke();
-            drawStarShape(a.x, hy, 2.2 * P.unit, 4, 0, i % 4 === 0 ? '#FDE68A' : '#FAF5FF');
+            drawStarShape(hx, hy, 2.2 * P.unit, 4, 0, i % 4 === 0 ? '#FDE68A' : '#FAF5FF');
           }
         }
       }
 
       // 4. 伞下局部流星雨与手绘放射水花
       if (rainActive && openVal > 0.65) {
-        starSpawnAcc += dt * (7.2 + Math.abs(omega) * 2.2);
+        starSpawnAcc += dt * (motionPreference.matches ? 2.6 : 6.1 + Math.abs(omega) * 1.6);
         while (starSpawnAcc >= 1) {
           starSpawnAcc -= 1;
           spawnStar(geo, P, false);
@@ -1197,6 +993,8 @@
         s.vx *= (1 - dt * 0.6);
         s.rot += s.vrot * dt;
 
+        ctx.save();
+        ctx.globalAlpha = s.alpha;
         const tx = s.x - s.vx * 0.14;
         const ty = s.y - (s.isWish ? 36 : 17) * P.unit;
         const tg = ctx.createLinearGradient(s.x, s.y, tx, ty);
@@ -1209,7 +1007,12 @@
         ctx.lineTo(tx, ty);
         ctx.stroke();
 
+        if (s.isWish) {
+          ctx.shadowBlur = 9 * P.unit;
+          ctx.shadowColor = 'rgba(254, 240, 138, 0.35)';
+        }
         drawStarShape(s.x, s.y, s.size * (0.85 + 0.18 * Math.sin(time * 6 + s.tp)), s.kind, s.rot, s.color);
+        ctx.restore();
         if (s.y >= s.targetY) {
           spawnSplash(s.x, s.targetY, s.color, s.isWish, P.unit);
           stars.splice(i, 1);
