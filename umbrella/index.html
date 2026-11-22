@@ -313,9 +313,13 @@
     const HARDWARE_GLINT = 'rgba(191,166,246,.38)';
     const STAR_COLORS = ['#FDE68A', '#F6CB61', '#F5F3FF', '#DDD6FE'];
     const WISH_COLOR = '#FFE39A';
+    const OPEN_WATER_RY = 23.1;
+    const RAIN_DUST = { size: [0.55, 1.0], duration: [1.77, 2.12], tail: [7, 12], brightness: 0.56 };
+    const RAIN_STAR = { size: [1.5, 2.7], duration: [1.60, 1.96], tail: [13, 22], brightness: 0.82 };
+    const RAIN_SPARK = { size: [3.2, 4.9], duration: [1.45, 1.80], tail: [22, 32], brightness: 1 };
     const INTRO = {
       openStart: 0.6, spinStart: 1.4, peakStart: 2.7, coastStart: 3.5,
-      rockStart: 6, rainEnd: 7.6, lastLanding: 8.30, closeStart: 8.36, end: 9.2, peakSpeed: 5.9
+      rainTaperStart: 4.5, rainEnd: 5.55, lastLanding: 6.94, closeStart: 7, end: 7.9, peakSpeed: 5.9
     };
     const THREADS = [
       [11.5, 0.042, 0.68, 0, '#E6D4FF'], [15, -0.035, 2.05, 4, '#FFF0BA'],
@@ -336,7 +340,7 @@
     let W = 0, H = 0, dpr = 0, dockCeiling = 0;
     let active = false, frameRequest = 0, last = 0, time = 0;
     let appState, introClock = 0;
-    let targetOpen = 0, openVal = 0, openVel = 0;
+    let targetOpen = 0, openVal = 0, openVel = 0, waterOpen = 0;
     let rot = FOLDED_ROTATION, omega = 0, previousOmega = 0, angularAccel = 0;
     let pitchExtra = 0, rollExtra = 0;
     let pointer = null;
@@ -501,7 +505,7 @@
       appState = 'intro';
       introClock = time = 0;
       setTargetOpen(reduced ? 1 : 0, false);
-      openVal = targetOpen;
+      waterOpen = openVal = targetOpen;
       openVel = pitchExtra = rollExtra = starSpawnAcc = 0;
       rot = reduced ? 0 : FOLDED_ROTATION;
       omega = previousOmega = angularAccel = 0;
@@ -519,7 +523,7 @@
         enterInteractive();
         return;
       }
-      addImpact({ u: -0.12, v: -0.08, wish: false }, 0.07, 0.29);
+      addImpact({ x: -3.5, v: -0.08, wish: false }, 0.07, 0.29);
       dock.inert = true;
       dock.classList.remove('visible');
       introProgress.classList.add('visible');
@@ -709,7 +713,17 @@
 
     function getParams() {
       const portrait = smoothstep(1, 1.6, H / W);
-      const unit = Math.min(W / lerp(366, 374, portrait), H / lerp(400, 455, portrait));
+      const sidePoetry = H < 460 && W >= 800;
+      const baseApexY = H * lerp(0.14, 0.280, portrait);
+      const waterLine = H * lerp(0.85, 0.745, portrait);
+      const dockGap = 7;
+      const fitHeight = (sceneHeight, poemHeight = 0) => Math.min(
+        (waterLine - baseApexY - poemHeight) / sceneHeight,
+        (dockCeiling - dockGap - baseApexY - poemHeight) / (sceneHeight + OPEN_WATER_RY)
+      );
+      // 矮屏把诗放到侧边，居中时在钩底与水面之间给四行诗预留高度。
+      const heightUnit = sidePoetry ? fitHeight(280) : Math.min(fitHeight(315), fitHeight(272, 48));
+      const unit = Math.min(W / lerp(366, 398, portrait), H / 432, Math.max(0.08, heightUnit));
       const e = clamp(openVal, 0, 1);
       const lift = smoothstep(0, 0.9, e);
       const breathing = motionPreference.matches ? 0 : lift;
@@ -718,12 +732,12 @@
       const roll = (motionPreference.matches ? 0 : -0.029) + breathing
         * (rollExtra + 0.027 * Math.sin(time * 0.70) + 0.013 * Math.sin(time * 1.43 + 1.1));
       const float = breathing * (2.4 * Math.sin(time * 0.94 + 0.45) + 0.8 * Math.sin(time * 1.68));
-      const spread = Math.pow(e, 0.78);
+      const spread = Math.pow(waterOpen, 0.78);
       return {
-        unit, e, portrait, cx: W * 0.5, apexY: H * lerp(0.1625, 0.30, portrait) + float * unit,
+        unit, e, portrait, sidePoetry, baseApexY, cx: W * 0.5, apexY: baseApexY + float * unit,
         cinch: 1 - smoothstep(0, 0.37, e),
-        puddleY: H * lerp(0.8175, 0.745, portrait), waterRx: lerp(29, 158, spread) * unit,
-        waterRy: lerp(5.7, 23.1, spread) * unit,
+        puddleY: Math.min(waterLine, dockCeiling - dockGap - OPEN_WATER_RY * unit),
+        waterRx: lerp(29, 158, spread) * unit, waterRy: lerp(5.7, OPEN_WATER_RY, spread) * unit,
         cosP: Math.cos(pitch), sinP: Math.sin(pitch),
         cosR: Math.cos(roll), sinR: Math.sin(roll)
       };
@@ -746,21 +760,23 @@
       const axis = y => project(0, y, 0, P);
       const cos = Math.cos(rot), sin = Math.sin(rot);
       const handlePoint = (x, y) => project(x * cos, y, x * sin, P);
-      const shaftEnd = axis(178);
-      const handle = [axis(176), axis(185)];
+      const shaftEnd = axis(210);
+      const hookY = 216;
+      const handle = [axis(208), axis(hookY)];
       for (let i = 1; i <= 32; i++) {
         const a = Math.PI * i / 32;
-        handle.push(handlePoint(12.4 * (1 - Math.cos(a)), 185 + 13.2 * Math.sin(a)));
+        handle.push(handlePoint(12.4 * (1 - Math.cos(a)), hookY + 13.8 * Math.sin(a)));
       }
-      const toe = handlePoint(24.8, 181.5);
+      const toeY = hookY - 3.5;
+      const toe = handlePoint(24.8, toeY);
       handle.push(toe);
       return {
-        shaft: [axis(lerp(89, 43, P.e)), shaftEnd],
+        shaft: [axis(lerp(103, 43, P.e)), shaftEnd],
         finial: [axis(lerp(-17, -13, P.e)), axis(1.1)],
-        runner: axis(lerp(110, 79, P.e)),
+        runner: axis(lerp(127, 79, P.e)),
         handle,
         // 比较钩尖与同高度中杆的相机深度，重叠时近的一侧在上。
-        handleInFront: toe.depth >= axis(181.5).depth
+        handleInFront: toe.depth >= axis(toeY).depth
       };
     }
 
@@ -798,7 +814,7 @@
       const hemDepth = 5 + 2.2 * sine ** 2 / Math.hypot(sine, 0.16);
       const unfoldedY = 70 * (0.65 * t ** 1.52 + 0.35 * t ** 3.2)
         - sideBlend * hemDepth * scallop * t ** 4;
-      const foldedY = (125 - 3.1 * scallop) * t;
+      const foldedY = (145 - 3.6 * scallop) * t;
       const foldedR = 16.4 * t ** 1.36 * (1 - 0.105 * scallop);
       const pinch = 1 - 0.21 * P.cinch * Math.exp(-(((t - 0.79) / 0.097) ** 2));
       const r = lerp(foldedR, (165 - 2.8 * scallop) * t, P.e) * pinch;
@@ -1027,16 +1043,18 @@
       drawDew(canopy.dew, true, P);
     }
 
-    function posePoetry(P) {
-      const compact = H < 330;
-      const fs = clamp(8.5 * P.unit, compact ? 9 : 10, 19);
+    function posePoetry(P, hardware) {
+      const fs = clamp(8.5 * P.unit, P.sidePoetry ? 9 : 10, 19);
       const english = fs + 'px "Courier New", monospace';
       const chinese = fs + 'px "Songti SC", "SimSun", "Microsoft YaHei", serif';
       const lineHeight = fs * 1.24;
       const spacing = Math.max(0.13, 0.28 * P.unit) + 'px';
-      if (!compact) {
-        const belowHandle = Math.min(P.apexY + 221 * P.unit, P.puddleY - P.waterRy - 4 * lineHeight);
-        return { x: P.cx, y: lerp(H * 0.48, belowHandle, P.portrait), lineHeight, spacing, english, chinese };
+      if (!P.sidePoetry) {
+        const handleBottom = Math.max(...hardware.handle.map(point => point.y)) + 1.35 * P.unit;
+        const top = handleBottom + 9 * P.unit + fs / 2;
+        const bottom = P.puddleY - P.waterRy - 6 * P.unit - fs / 2 - 3 * lineHeight;
+        const y = clamp(H * lerp(0.6775, 0.58, P.portrait), top, Math.max(top, bottom));
+        return { x: P.cx, y, lineHeight, spacing, english, chinese };
       }
 
       ctx.save();
@@ -1053,18 +1071,15 @@
       const halfWidth = Math.max(...metrics.map(m => Math.max(m.actualBoundingBoxLeft, m.actualBoundingBoxRight)));
       const ascent = Math.max(...metrics.map(m => m.actualBoundingBoxAscent));
       const descent = Math.max(...metrics.map(m => m.actualBoundingBoxDescent));
-      const rightOfHandle = P.cx + 34 * P.unit + 10;
-      const onSide = rightOfHandle + 2 * halfWidth + 12 <= W;
-      const top = Math.max(58, P.apexY + (onSide ? 106 : 100) * P.unit);
-      const bottom = Math.min(dockCeiling - 5, P.puddleY - P.waterRy - 5,
-        onSide ? H : P.apexY + 178 * P.unit - 4);
-      const leading = Math.min(lineHeight, Math.max(fs * 0.88, (bottom - top - ascent - descent) / 3));
-      const y = clamp(H * 0.48, top + ascent, Math.max(top + ascent, bottom - descent - leading * 3));
-      return { x: onSide ? rightOfHandle + halfWidth : P.cx, y, lineHeight: leading, spacing, english, chinese };
+      const rightOfPuddle = P.cx + 158 * P.unit + 12;
+      const top = Math.max(58, P.baseApexY + 106 * P.unit);
+      const bottom = dockCeiling - 5;
+      const y = clamp(H * 0.48, top + ascent, bottom - descent - lineHeight * 3);
+      return { x: Math.min(rightOfPuddle + halfWidth, W - halfWidth - 12), y, lineHeight, spacing, english, chinese };
     }
 
-    function drawPoetry(P) {
-      const { x, y, lineHeight, spacing, english, chinese } = posePoetry(P);
+    function drawPoetry(P, hardware) {
+      const { x, y, lineHeight, spacing, english, chinese } = posePoetry(P, hardware);
       const presence = appState === 'intro' ? smoothstep(0.2, 1.65, introClock) : 1;
       ctx.save();
       ctx.textAlign = 'center';
@@ -1173,21 +1188,23 @@
 
 
     function spawnStar(canopy, P, wish, xHint, random = Math.random) {
-      const tips = canopy?.ribs.map(rib => rib.tip);
-      const rimY = tips ? tips.reduce((sum, tip) => sum + tip.y, 0) / NUM_RIBS : P.apexY + 70 * P.unit;
-      const x = xHint === undefined ? (random() * 2 - 1) * 147 : clamp((xHint - P.cx) / P.unit, -147, 147);
-      const drift = clamp(omega * 6.4, -43, 43) + (random() - 0.5) * 14;
-      const u = clamp((x + drift * 0.70) / 165, -0.93, 0.93);
-      const kind = wish ? 8 : [0, 4, 4, 4, 8][Math.floor(random() * 5)];
-      const duration = wish ? 0.96 : 1.62 + random() * 0.50;
+      const rimY = canopy ? Math.max(...canopy.ribs.map(rib => rib.tip.y)) : P.apexY + 70 * P.unit;
+      const limit = Math.min(lerp(16, 147, P.e), 0.93 * P.waterRx / P.unit);
+      const x = xHint === undefined ? (random() * 2 - 1) * limit : clamp((xHint - P.cx) / P.unit, -limit, limit);
+      const u = x * P.unit / P.waterRx;
+      const weight = random();
+      const profile = weight < 0.40 ? RAIN_DUST : weight < 0.84 ? RAIN_STAR : RAIN_SPARK;
+      const kind = wish ? 8 : profile === RAIN_DUST ? 0 : profile === RAIN_SPARK && random() < 0.52 ? 8 : 4;
+      const duration = wish ? 0.96 : lerp(...profile.duration, random());
       const star = {
-        x, u, drift,
-        y: (rimY - P.apexY) / P.unit + 12 + random() * 16,
+        x,
+        y: (rimY - P.baseApexY) / P.unit + 7 + random() * 15,
         v: (random() - 0.50) * 1.5 * Math.sqrt(1 - u ** 2),
         elapsed: 0,
         duration: appState === 'intro' && !wish ? Math.min(duration, INTRO.lastLanding - introClock) : duration,
-        size: wish ? 6.8 : kind === 0 ? 0.58 + random() * 0.54 : 1.65 + random() * 2.3,
-        tail: wish ? 32 : 13 + random() * 10,
+        size: wish ? 6.8 : lerp(...profile.size, random()),
+        tail: wish ? 32 : lerp(...profile.tail, random()),
+        brightness: wish ? 1 : profile.brightness,
         kind,
         phase: random() * TAU,
         flicker: 1.6 + random() * 2.8,
@@ -1214,7 +1231,7 @@
       audio.playWishLaunch();
     }
 
-    function addImpact({ u, v, wish }, elapsed = 0, size = 1) {
+    function addImpact({ x, v, wish }, elapsed = 0, size = 1) {
       const rayCount = wish ? 13 : 6;
       const dropCount = wish ? 16 : 8;
       const particle = (angle, speed, radius) => ({
@@ -1233,12 +1250,12 @@
         (wish ? 64 : 35) + Math.random() * (wish ? 73 : 50),
         (wish ? 0.56 : 0.26) + Math.random() * (wish ? 0.88 : 0.53)
       ));
-      impacts.push({ u, v, wish, elapsed, size, rays, drops });
+      impacts.push({ x, v, wish, elapsed, size, rays, drops });
     }
 
     function drawRipples(impact, P) {
-      const { u, v, wish, elapsed, size } = impact;
-      const x = P.cx + u * P.waterRx, y = P.puddleY + v * P.waterRy;
+      const { x: sceneX, v, wish, elapsed, size } = impact;
+      const x = P.cx + sceneX * P.unit, y = P.puddleY + v * P.waterRy;
       const rings = wish ? 4 : 3;
       ctx.save();
       ctx.strokeStyle = wish ? '#FFE9BE' : '#DAC0FE';
@@ -1263,10 +1280,10 @@
     function drawSplashes(P) {
       const gravity = 235;
       ctx.save();
-      for (const { u, v, wish, elapsed, size, rays, drops } of impacts) {
+      for (const { x: sceneX, v, wish, elapsed, size, rays, drops } of impacts) {
         const life = 1 - elapsed / (wish ? 0.78 : 0.58);
         if (life <= 0) continue;
-        const ox = P.cx + u * P.waterRx, oy = P.puddleY + v * P.waterRy;
+        const ox = P.cx + sceneX * P.unit, oy = P.puddleY + v * P.waterRy;
         const scale = size * P.unit;
         const rise = 0.5 * gravity * elapsed ** 2;
 
@@ -1311,7 +1328,7 @@
         star.elapsed += dt;
         if (star.elapsed < star.duration) continue;
         addImpact(star, 0, lerp(0.28, 1, P.e));
-        const pan = clamp(star.u * 0.8, -0.8, 0.8);
+        const pan = clamp(star.x * P.unit / P.waterRx, -1, 1) * 0.8;
         if (star.wish) audio.playWishImpact(pan);
         else audio.playStarSplash(pan);
         stars.splice(i, 1);
@@ -1323,7 +1340,7 @@
       }
       const intro = appState === 'intro';
       const rate = motionPreference.matches ? 14 : 18.4 + Math.abs(omega) * 2.65;
-      const taper = intro ? 1 - smoothstep(6.85, INTRO.rainEnd, introClock) : 1;
+      const taper = intro ? 1 - smoothstep(INTRO.rainTaperStart, INTRO.rainEnd, introClock) : 1;
       if (intro && !introRainSeeded) {
         seedRain(canopy, P, 0.32);
         introRainSeeded = true;
@@ -1342,12 +1359,12 @@
       for (const star of stars) {
         const t = star.elapsed / star.duration;
         if (t <= 0) continue;
-        const x = P.cx + lerp(star.x * u, star.u * P.waterRx, t) + Math.sin(Math.PI * t) * star.drift * u;
-        const y = lerp(P.apexY + star.y * u, P.puddleY + star.v * P.waterRy, t * (0.72 + 0.28 * t));
-        const tx = x - star.drift * 0.32 * u;
+        const x = P.cx + star.x * u;
+        const y = lerp(P.baseApexY + star.y * u, P.puddleY + star.v * P.waterRy, t * (0.72 + 0.28 * t));
+        const tx = x;
         const ty = y - star.tail * u * smoothstep(0, 0.22, t);
         const pulse = 0.78 + 0.20 * Math.sin(time * star.flicker + star.phase);
-        ctx.globalAlpha = pulse * smoothstep(0, 0.08, t);
+        ctx.globalAlpha = star.brightness * pulse * smoothstep(0, 0.08, t);
         if (ctx.globalAlpha <= 0.01) continue;
 
         const tail = ctx.createLinearGradient(x, y, tx, ty);
@@ -1355,13 +1372,13 @@
         tail.addColorStop(0.42, star.color + '26');
         tail.addColorStop(1, star.color + '00');
         ctx.strokeStyle = tail;
-        ctx.lineWidth = (star.wish ? 0.93 : star.kind ? 0.58 : 0.46) * u;
+        ctx.lineWidth = (star.wish ? 0.93 : 0.37 + 0.09 * star.size) * u;
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctx.lineTo(tx, ty);
         ctx.stroke();
 
-        const radius = Math.max(2.3, star.size * (star.wish ? 2 : 1.62)) * u;
+        const radius = Math.max(1.45, star.size * (star.wish ? 2 : 1.62)) * u;
         const halo = ctx.createRadialGradient(x, y, 0, x, y, radius);
         halo.addColorStop(0, star.color + (star.wish ? '66' : '38'));
         halo.addColorStop(1, star.color + '00');
@@ -1405,9 +1422,8 @@
     }
 
     function updateUmbrella(dt, now) {
-      let sway = 0;
       if (appState === 'intro') {
-        sway = updateIntro(dt);
+        updateIntro(dt);
       } else {
         if (!pointer) {
           omega = lerp(omega, idleSpin(), 1 - Math.exp(-1.23 * dt));
@@ -1427,9 +1443,9 @@
 
       const turn = clamp(omega / 7.8, -1, 1);
       const pitchTarget = clamp(-0.044 * openVel, -0.086, 0.086)
-        - 0.046 * Math.abs(turn) + 0.026 * turn * Math.cos(rot) + 0.066 * sway;
+        - 0.046 * Math.abs(turn) + 0.026 * turn * Math.cos(rot);
       const rollTarget = clamp(-0.016 * openVel, -0.031, 0.031)
-        - 0.11 * turn + 0.035 * turn * Math.sin(rot) + 0.18 * sway;
+        - 0.11 * turn + 0.035 * turn * Math.sin(rot);
       pitchExtra = lerp(pitchExtra, pitchTarget, 1 - Math.exp(-5.2 * dt));
       rollExtra = lerp(rollExtra, rollTarget, 1 - Math.exp(-(pointer ? 7.8 : 4.8) * dt));
     }
@@ -1449,7 +1465,7 @@
     }
 
     function updateIntro(dt) {
-      const { openStart, spinStart, peakStart, coastStart, rockStart, rainEnd, closeStart, end, peakSpeed } = INTRO;
+      const { openStart, spinStart, peakStart, coastStart, closeStart, end, peakSpeed } = INTRO;
       const t = introClock = Math.min(introClock + dt, end);
       introProgressFill.style.width = 100 * t / end + '%';
       if (t >= openStart) setTargetOpen(Number(t < closeStart));
@@ -1463,24 +1479,14 @@
       // 对平滑升降速曲线积分，转角和角速度在每个阶段边界都连续。
       const rampArea = p => p ** 3 * (1 - p * 0.5);
       const accel = phase(spinStart, peakStart, t);
-      const coast = phase(coastStart, rockStart, t);
+      const coast = phase(coastStart, closeStart, t);
       const spinAngle = peakSpeed * ((peakStart - spinStart) * rampArea(accel)
         + clamp(t - peakStart, 0, coastStart - peakStart)
-        + (rockStart - coastStart) * (coast - rampArea(coast)));
-      const rocking = phase(rockStart, rainEnd, t);
-      const rockEdge = 0.17;
-      const fade = phase(0, rockEdge, Math.min(rocking, 1 - rocking));
-      const envelope = fade ** 2 * (3 - 2 * fade);
-      const envelopeRate = 6 * fade * (1 - fade) * Math.sign(0.5 - rocking) / rockEdge;
-      const wave = rocking * TAU * 2;
-      const sway = envelope * Math.sin(wave);
-      const rockSpeed = 0.22 / (rainEnd - rockStart) * (envelopeRate * Math.sin(wave)
-        + envelope * TAU * 2 * Math.cos(wave));
-      omega = peakSpeed * (smoothstep(spinStart, peakStart, t) - smoothstep(coastStart, rockStart, t)) + rockSpeed;
-      rot = wrapAngle(FOLDED_ROTATION + spinAngle + 0.22 * sway);
+        + (closeStart - coastStart) * (coast - rampArea(coast)));
+      omega = peakSpeed * (smoothstep(spinStart, peakStart, t) - smoothstep(coastStart, closeStart, t));
+      rot = wrapAngle(FOLDED_ROTATION + spinAngle);
 
       if (t >= end) enterInteractive();
-      return sway;
     }
 
     function loop(now) {
@@ -1499,13 +1505,15 @@
         && (appState !== 'intro' || introClock < INTRO.rainEnd);
       audio.updateContinuous({ dt, openVal, omega, rainActive: raining });
 
+      // 手动收伞时让水洼托住仍在下落的星星，待它们触水后再缩小。
+      waterOpen = Math.max(openVal, stars.length ? waterOpen : waterOpen - 2.7 * dt);
       const P = getParams();
       const canopy = getCanopy(P);
       canopy.dew = getDew(canopy, P);
       const hardware = getHardware(P);
       updateRain(dt, canopy, P, raining);
       ctx.drawImage(background, 0, 0, W, H);
-      drawPoetry(P);
+      drawPoetry(P, hardware);
       drawPuddle(P);
       drawUmbrella(canopy, hardware, P);
       drawRain(P);
