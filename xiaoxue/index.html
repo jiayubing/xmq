@@ -1,0 +1,1140 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#d5e6f2">
+<link rel="icon" href="data:,">
+<title>小雪</title>
+<style>
+  :root {
+    color-scheme: light;
+    color: #283440;
+    font-family: "DengXian", "PingFang SC", "Microsoft YaHei", sans-serif;
+    --serif: "Songti SC", "SimSun", "Noto Serif CJK SC", serif;
+  }
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; }
+  .stage {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    isolation: isolate;
+    background:
+      radial-gradient(ellipse at 34% 73%, #f7eae4 0%, #f7eae49a 19%, #f7eae400 54%),
+      radial-gradient(ellipse at 78% 36%, #f3f8fc92, transparent 64%),
+      linear-gradient(170deg, #d5e6f2, #ecf3f8 57%, #e2edf5);
+  }
+  #paper { position: absolute; inset: 0; pointer-events: none; opacity: .036; }
+  .corner [hidden] { display: none; }
+  ::selection { color: #213948; background: #e2bdcb; }
+  #garden { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: manipulation; }
+  .corner {
+    position: absolute;
+    z-index: 2;
+    top: max(10px, env(safe-area-inset-top));
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .back { left: max(15px, env(safe-area-inset-left)); }
+  .actions { right: max(15px, env(safe-area-inset-right)); }
+  .corner a, .corner button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .44em;
+    min-height: 44px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: 24px;
+    background: transparent;
+    color: #506577;
+    font: inherit;
+    font-size: .8125rem;
+    letter-spacing: .07em;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 150ms, background-color 150ms;
+  }
+  .corner a:hover, .corner button:hover { color: #283440; background: #ffffff80; }
+  .corner :focus-visible { outline: 2px solid #47667d; outline-offset: 2px; }
+  .sound-lamp { width: 5px; height: 5px; border-radius: 50%; box-shadow: inset 0 0 0 1px currentColor; }
+  #sound[aria-pressed="true"] .sound-lamp { background: #47667d; }
+  .sound-state { font-size: .72rem; }
+  #pause { padding-inline: 0; width: 44px; }
+  #pause svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.35; }
+  #pause .play-icon, #pause.is-paused .pause-icon { display: none; }
+  #pause.is-paused .play-icon { display: block; }
+  @media (max-width: 360px) {
+    .corner { gap: 0; }
+    .actions { right: 9px; }
+    .back { left: 9px; }
+    .corner a, .corner button { padding-inline: 7px; }
+  }
+  .copy {
+    position: absolute;
+    inset: 22.5% max(4.5%, env(safe-area-inset-right)) 12% 65%;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .copy h1 {
+    margin: 0;
+    color: #283440;
+    font: 400 clamp(3.7rem, min(6.6vw, 11vh), 6.8rem)/1.04 var(--serif);
+    letter-spacing: .145em;
+  }
+  .date {
+    margin: clamp(9px, 2.2vh, 23px) 0 0;
+    color: #465e71;
+    font-size: clamp(.9rem, 1.54vw, 1.375rem);
+    letter-spacing: .055em;
+    font-variant-numeric: tabular-nums;
+  }
+  .date::after {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 1px;
+    margin-block: clamp(13px, 3.5vh, 32px);
+    background-color: #7897ab70;
+  }
+  .blessing {
+    margin: 0;
+    max-width: 100%;
+    font: 400 clamp(.9375rem, 1.545vw, 1.44rem)/2.12 var(--serif);
+    letter-spacing: .063em;
+  }
+  .blessing span { display: block; }
+  .seasons {
+    margin: clamp(30px, 8vh, 90px) 0 0;
+    max-width: 100%;
+    color: #4f6476;
+    font-size: clamp(.72rem, .98vw, .875rem);
+    line-height: 1.65;
+    text-wrap: pretty;
+  }
+  .seasons span { display: inline-block; }
+  @media (max-width: 760px) and (min-aspect-ratio: 6/5),
+         (max-height: 480px) and (min-aspect-ratio: 6/5) {
+    .copy { inset: 18% 3% 5% 61%; }
+    .copy h1 { font-size: clamp(2.2rem, 11vh, 4rem); }
+    .date { margin-top: 6px; font-size: .82rem; }
+    .date::after { margin-block: 8px; width: 25px; }
+    .blessing { font-size: clamp(.75rem, 2.1vw, .98rem); line-height: 1.65; }
+    .seasons { margin-top: clamp(8px, 4vh, 22px); font-size: .68rem; line-height: 1.35; }
+  }
+  @media (max-aspect-ratio: 6/5) {
+    .copy {
+      inset: max(clamp(57px, 9vh, 88px), calc(env(safe-area-inset-top) + 45px)) 10px auto;
+      align-items: center;
+      text-align: center;
+    }
+    .copy h1 { font-size: clamp(2.7rem, min(11vw, 7.4vh), 5.4rem); text-indent: .145em; }
+    .date { margin-top: 8px; font-size: clamp(.78rem, 3.2vw, 1.04rem); }
+    .date::after { width: 26px; margin: clamp(9px, 1.6vh, 15px) auto; }
+    .blessing { font-size: clamp(.84rem, 3.5vw, 1.18rem); line-height: 1.88; }
+    .seasons { margin: clamp(9px, 1.85vh, 16px) 0 0; font-size: clamp(.66rem, 2.75vw, .84rem); }
+  }
+  @media (max-aspect-ratio: 6/5) and (max-height: 640px) {
+    .copy h1 { font-size: 2.35rem; }
+    .date { margin-top: 5px; }
+    .date::after { margin-block: 7px; }
+    .blessing { line-height: 1.66; }
+    .seasons { margin-top: 8px; }
+  }
+</style>
+</head>
+<body>
+<main class="stage">
+  <div id="paper" aria-hidden="true"></div>
+  <canvas id="garden" aria-hidden="true"></canvas>
+  <div class="corner back"><a href="../">‹ 作品</a></div>
+  <div class="corner actions">
+    <button id="sound" type="button" aria-pressed="false" title="轻点开启冬日风雪与风铃">
+      <span class="sound-lamp" aria-hidden="true"></span>声景 <span class="sound-state" aria-hidden="true">· 点击开启</span>
+    </button>
+    <button id="pause" type="button" aria-label="暂停动画" title="暂停动画" hidden>
+      <svg viewBox="0 0 12 12" aria-hidden="true">
+        <path class="pause-icon" d="M4 2v8m4-8v8"/>
+        <path class="play-icon" d="M4 2.3 9 6l-5 3.7z"/>
+      </svg>
+    </button>
+    <button id="replay" type="button">重看</button>
+  </div>
+  <article class="copy" aria-labelledby="title">
+    <h1 id="title">小雪</h1>
+    <p class="date">11.22 · 太阳黄经 240°</p>
+    <p class="blessing">
+      <span>虹藏天地闭，寒云压霜重。</span>
+      <span>幸有瓶中春一寸，破雪作花红。</span>
+      <span>愿君冬日长暖，心有繁花，</span>
+      <span>待凛冬散尽，万事皆逢春。</span>
+    </p>
+    <p class="seasons"><span>初候 虹藏不见</span> · <span>二候 天气上升地气下降</span> · <span>三候 闭塞而成冬</span></p>
+  </article>
+</main>
+<script src="./snowAudio.js"></script>
+<script>
+(() => {
+  'use strict';
+
+  const stage = document.querySelector('.stage');
+  const copy = document.querySelector('.copy');
+  const canvas = document.querySelector('#garden');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+
+  const motion = matchMedia('(prefers-reduced-motion: reduce)');
+  const portrait = matchMedia('(max-aspect-ratio: 6/5)');
+  const replay = document.querySelector('#replay');
+  const sound = document.querySelector('#sound');
+  const pause = document.querySelector('#pause');
+  const soundState = sound.querySelector('.sound-state');
+  const audio = new SnowAudioEngine();
+  const TAU = Math.PI * 2;
+  const INTAKE_END = 2.12;
+  const ROOT_START = 2.89;
+  const STEM_START = 4.01;
+  const BRANCH_SHIFT = 3.16;
+  const BLESSING = 6.80 + BRANCH_SHIFT;
+  const FINISH = 9.08 + BRANCH_SHIFT;
+  const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
+  const mix = (a, b, amount) => a + (b - a) * amount;
+  const unit = (a, b, value) => clamp((value - a) / (b - a));
+  const out = x => 1 - (1 - clamp(x)) ** 3;
+  const smooth = (a, b, value) => {
+    const x = unit(a, b, value);
+    return x * x * (3 - 2 * x);
+  };
+  const wrap = (value, limit) => ((value % limit) + limit) % limit;
+
+  function gust(time) {
+    return .34 + .11 * Math.sin(time * 1.17 + .1) +
+      .05 * Math.sin(time * 2.06 - .6) + .065 * Math.cos(time * .61);
+  }
+
+  function randomSource(seed) {
+    return () => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+  }
+
+  function surface(width, height, density = 1) {
+    const layer = document.createElement('canvas');
+    layer.width = Math.ceil(width * density);
+    layer.height = Math.ceil(height * density);
+    const paint = layer.getContext('2d');
+    paint.scale(density, density);
+    return { layer, paint };
+  }
+
+  function crystal(paint, x, y, r, angle = 0, stars = true) {
+    paint.beginPath();
+    for (let side = 0; side < 6; side++) {
+      const a = angle + side * TAU / 6;
+      const dx = Math.cos(a);
+      const dy = Math.sin(a);
+      paint.moveTo(x, y);
+      paint.lineTo(x + dx * r, y + dy * r);
+      if (stars) {
+        for (const sign of [-1, 1]) {
+          paint.moveTo(x + dx * r * .55, y + dy * r * .55);
+          paint.lineTo(x + Math.cos(a + sign * .30) * r * .82, y + Math.sin(a + sign * .30) * r * .82);
+        }
+      }
+    }
+    paint.stroke();
+  }
+
+  function makeSnowSprites() {
+    return ['powder', 'crystal', 'blur'].map(kind => {
+      const { layer, paint } = surface(48, 48);
+      const glow = paint.createRadialGradient(24, 24, 1, 24, 24, 23);
+      glow.addColorStop(0, '#fff');
+      glow.addColorStop(.48, kind === 'blur' ? '#fcfeffba' : '#faffff');
+      glow.addColorStop(1, '#f4fbff00');
+      paint.fillStyle = glow;
+      if (kind === 'crystal') {
+        paint.strokeStyle = '#a8c5d8aa';
+        paint.lineWidth = 2.5;
+        crystal(paint, 24, 25, 17, .25);
+        paint.strokeStyle = '#ffffff';
+        paint.lineWidth = 1.55;
+        crystal(paint, 24, 24, 17, .25);
+        paint.fillRect(23, 23, 2, 2);
+      } else {
+        paint.fillRect(0, 0, 48, 48);
+      }
+      return layer;
+    });
+  }
+
+  function ellipseWash(paint, x, y, rx, ry, color, edge) {
+    paint.save();
+    paint.translate(x, y);
+    paint.scale(rx, ry);
+    const glow = paint.createRadialGradient(0, 0, .12, 0, 0, 1);
+    glow.addColorStop(0, color);
+    glow.addColorStop(1, edge);
+    paint.fillStyle = glow;
+    paint.fillRect(-1, -1, 2, 2);
+    paint.restore();
+  }
+
+  function makePaper() {
+    const { layer, paint } = surface(420, 364);
+    const grain = paint.createImageData(420, 364);
+    const rand = randomSource(27431);
+    const warp = Array.from({ length: 420 }, () => rand() - .5);
+    const weft = Array.from({ length: 364 }, () => rand() - .5);
+    for (let y = 0; y < 364; y++) {
+      for (let x = 0; x < 420; x++) {
+        const thread = warp[x] * Math.sin(y * .123 + x * .052) + weft[y] * Math.cos(x * .138 - y * .063);
+        const value = (rand() - .5) * 1.75 + thread * .64;
+        const i = (y * 420 + x) * 4;
+        grain.data[i] = value > 0 ? 253 : 53;
+        grain.data[i + 1] = value > 0 ? 253 : 78;
+        grain.data[i + 2] = value > 0 ? 255 : 115;
+        grain.data[i + 3] = Math.min(255, Math.abs(value) * 224);
+      }
+    }
+    paint.putImageData(grain, 0, 0);
+    const light = new Path2D(), dark = new Path2D();
+    for (let i = 0; i < 960; i++) {
+      const x = rand() * 420, y = rand() * 364;
+      const length = .7 + rand() ** 2 * 4.4;
+      const path = i % 4 ? light : dark;
+      path.moveTo(x, y);
+      if (i % 3) path.quadraticCurveTo(x + .4, y + length * .5, x + .5, y + length);
+      else path.quadraticCurveTo(x + length * .5, y - .5, x + length, y - .36);
+    }
+    paint.lineWidth = .7;
+    paint.lineCap = 'round';
+    paint.strokeStyle = '#fbfdffe0';
+    paint.stroke(light);
+    paint.strokeStyle = '#4b668fb9';
+    paint.stroke(dark);
+    const paper = document.querySelector('#paper');
+    paper.style.backgroundImage = 'url(' + layer.toDataURL() + ')';
+  }
+
+  function pointOnCurve(points, t) {
+    const a = 1 - t;
+    return [
+      a ** 3 * points[0] + 3 * a * a * t * points[2] + 3 * a * t * t * points[4] + t ** 3 * points[6],
+      a ** 3 * points[1] + 3 * a * a * t * points[3] + 3 * a * t * t * points[5] + t ** 3 * points[7]
+    ];
+  }
+
+  function makeBranches() {
+    const rand = randomSource(92822);
+    const branches = [], flowers = [], clusters = [];
+    const bands = [[4.22, .033], [4.48, .077], [4.73, .15], [5.05, .27], [5.31, .39],
+      [5.57, .54], [5.86, .68], [6.13, .83], [6.41, .95], [6.66, 1]];
+
+    function add(parent, join, controls, width, start, duration) {
+      if (parent) {
+        start = Math.max(start + BRANCH_SHIFT, parent.start + parent.duration * Math.sqrt(join));
+        duration = duration * 1.6 + .12;
+      }
+      const [baseX, baseY] = parent ? restPoint(parent, join) : [0, -228];
+      const points = [baseX, baseY, ...controls];
+      const length = Math.hypot(points[6] - baseX, points[7] - baseY);
+      const count = Math.ceil(clamp(length / 9, 7, 52));
+      const heading = Math.atan2(points[7] - baseY, points[6] - baseX);
+      const phase = rand() * TAU;
+      const kink = (parent ? 1 : .9) * clamp(length * .075, 1.2, 29);
+      const samples = Array.from({ length: count + 1 }, (_, i) => {
+        const u = i / count;
+        const [x, y] = pointOnCurve(points, u);
+        const wiggle = Math.sin(u * Math.PI) * (Math.sin(u * TAU + phase) + .21 * Math.sin(u * TAU * 2 + phase)) * kink;
+        const node = Math.exp(-(((u - .27) / .028) ** 2)) + .55 * Math.exp(-(((u - .66) / .043) ** 2));
+        return [x - Math.sin(heading) * wiggle, y + Math.cos(heading) * wiggle,
+          (width * (1 - u) ** .97 + .15) * (.5 + node * .10)];
+      });
+      const depth = parent ? parent.depth + 1 : 0;
+      const branch = { parent, join, width, points, samples, start, duration, depth,
+        phase, reach: 0, bend: 0, anchorX: 0, anchorY: 0 };
+      branches.push(branch);
+      return branch;
+    }
+
+    function blossom(branch, at, size, bud, cluster, rank) {
+      const depth = rand();
+      const tint = Math.floor(rand() * 4) + (depth > .56 ? 0 : 4);
+      const delay = rank * (.032 + rand() * .022);
+      flowers.push({ branch, cluster, at, delay, size, bud, tint, depth, angle: rand() * TAU,
+        ox: (rand() - .5) * 8, oy: (rand() - .5) * 7 });
+    }
+
+    function cluster(branch, join) {
+      const [x, y] = restPoint(branch, join);
+      const distance = clamp((Math.abs(x) * .57 + (-y - 300) * .71) / 475);
+      const value = { x, y, distance: distance + rand() * .15, offset: rand() * .055, firstBloom: Infinity };
+      clusters.push(value);
+      return value;
+    }
+
+    const stem = add(null, 0, [35,-370, 142,-516, 86,-650], 8.3, STEM_START, 2.28);
+    const left = add(stem, .17, [-113,-425, -182,-437, -356,-552], 5.25, 2.00, .53);
+    const right = add(stem, .32, [142,-452, 271,-424, 363,-526], 4.9, 2.79, .50);
+    const inner = add(stem, .59, [14,-567, -72,-585, -94,-676], 3.3, 3.12, .42);
+    const high = add(stem, .68, [162,-534, 174,-642, 245,-654], 3.1, 3.38, .43);
+    const crown = add(stem, .96, [80,-681, 128,-687, 108,-722], 2.55, 3.63, .36);
+
+    const fans = [
+      [left, .54, [-205,-499, -201,-568, -249,-613], 2.1, 3.10],
+      [left, .31, [-91,-458, -110,-498, -147,-552], 1.8, 3.40],
+      [left, .77, [-293,-537, -278,-567, -323,-596], 1.6, 3.67],
+      [right, .69, [268,-486, 251,-541, 285,-584], 1.9, 3.53],
+      [right, .50, [228,-488, 208,-531, 227,-566], 1.7, 3.41],
+      [right, .62, [267,-501, 295,-442, 356,-467], 1.85, 3.76],
+      [right, .78, [312,-479, 321,-421, 373,-435], 1.5, 3.97],
+      [right, .31, [165,-444, 197,-460, 223,-439], 1.43, 3.49],
+      [inner, .47, [-32,-602, -7,-627, -28,-653], 1.55, 3.73],
+      [inner, .72, [-72,-633, -113,-624, -127,-646], 1.55, 3.94],
+      [high, .56, [181,-623, 165,-650, 180,-681], 1.50, 4.04],
+      [high, .70, [190,-624, 224,-604, 259,-631], 1.56, 4.14],
+      [stem, .79, [122,-595, 119,-640, 140,-660], 1.56, 3.93],
+      [stem, .90, [78,-650, 56,-675, 42,-694], 1.45, 4.09],
+      [left, .86, [-315,-519, -345,-502, -359,-518], 1.4, 3.93]
+    ].map(([parent, join, controls, width, start]) =>
+      add(parent, join, controls, width, start, .28 + rand() * .21));
+
+    for (const [index, branch] of [left, right, inner, high, crown, ...fans].entries()) {
+      const count = (index > 4 ? 3 : 5) + Math.floor(rand() * 2);
+      for (let i = 0; i < count; i++) {
+        const join = .26 + .70 * ((i + rand() * .8) / count);
+        const [x, y] = restPoint(branch, join);
+        const next = restPoint(branch, join + .018);
+        const tangent = Math.atan2(next[1] - y, next[0] - x);
+        const direction = i % 2 === index % 2 ? -1 : 1;
+        const a = tangent + direction * (.47 + rand() * .74);
+        const length = 17 + rand() * 46;
+        const tip = a + direction * (rand() - .39) * 1.21;
+        const start = Math.min(4.91, branch.start - BRANCH_SHIFT + branch.duration * (.73 + join * .41) + rand() * .49);
+        const twig = add(branch, join, [
+          x + Math.cos(tangent) * length * .23, y + Math.sin(tangent) * length * .23,
+          x + Math.cos(a) * length * .72, y + Math.sin(a) * length * .72,
+          x + Math.cos(tip) * length, y + Math.sin(tip) * length
+        ], .53 + rand() * .68, start, .20 + rand() * .21);
+        const group = cluster(twig, .59);
+        if (rand() > .11) blossom(twig, .30 + rand() * .34, 7.1 + rand() * 7.6, rand() < .17, group, 0);
+        if (rand() > .24) blossom(twig, .72 + rand() * .24, 3.6 + rand() * 5.4, rand() < .63, group, 1);
+        if (i % 2 === 0 || rand() > .52) blossom(branch, join, 6.2 + rand() * 6.7, rand() < .18, group, 1);
+        if (rand() > .71) blossom(twig, .78 + rand() * .15, 3.2 + rand() * 4.6, rand() < .55, group, 2);
+      }
+    }
+    for (const [at, size] of [[.29, 8.2], [.46, 10.0], [.59, 8.2], [.73, 9.2], [.87, 6.5]]) {
+      blossom(stem, at, size, false, cluster(stem, at), 0);
+    }
+    clusters.sort((a, b) => a.distance - b.distance);
+    clusters.forEach((group, i) => {
+      const [beat] = bands.find(([, fraction]) => i / clusters.length < fraction);
+      group.at = beat + BRANCH_SHIFT + group.offset;
+    });
+    for (const flower of flowers) {
+      flower.start = Math.max(flower.cluster.at + flower.delay, flower.branch.start + flower.branch.duration * Math.max(.65, Math.sqrt(flower.at)));
+      flower.cluster.firstBloom = Math.min(flower.cluster.firstBloom, flower.start);
+    }
+    flowers.sort((a, b) => a.depth - b.depth);
+    return { branches, flowers, clusters: clusters.filter(group => Number.isFinite(group.firstBloom)) };
+  }
+
+  function restPoint(branch, u) {
+    const step = clamp(u) * (branch.samples.length - 1);
+    const n = Math.floor(step);
+    const a = branch.samples[n], b = branch.samples[Math.min(n + 1, branch.samples.length - 1)];
+    return [mix(a[0], b[0], step - n), mix(a[1], b[1], step - n), mix(a[2], b[2], step - n)];
+  }
+
+  function makeFlowerSprites() {
+    const rand = randomSource(4319);
+    const colors = ['#e04e66', '#df574d', '#f29b92', '#f7a3b2', '#fce4e9'];
+    return Array.from({ length: 10 }, (_, index) => {
+      const { layer, paint } = surface(64, 64, 1.5);
+      paint.translate(32, 32);
+      const red = index < 4 ? colors[index % 2] : (index % 2 ? '#d88585' : '#d98b9a');
+      const light = index < 4 ? colors[2 + index % 2] : colors[3 + index % 2];
+      const petals = index % 3 === 0 ? 6 : 5;
+      for (let petal = 0; petal < petals; petal++) {
+        const a = petal * TAU / petals + (rand() - .5) * .49;
+        const tip = 19 + rand() * 10;
+        const half = 7 + rand() * 7;
+        paint.save();
+        paint.rotate(a);
+        paint.beginPath();
+        paint.moveTo(1, 1);
+        paint.bezierCurveTo(half * .9, -tip * .18, half * 1.33, -tip * .62, half * .62, -tip * .88);
+        paint.bezierCurveTo(half * .27, -tip * 1.09, -half * .6, -tip * 1.02, -half * .87, -tip * .75);
+        paint.bezierCurveTo(-half * 1.15, -tip * .45, -half * .37, -tip * .19, 1, 1);
+        paint.closePath();
+        const wash = paint.createRadialGradient(0, -4, 1, 2, -tip * .38, tip * .84);
+        wash.addColorStop(0, red + 'd6');
+        wash.addColorStop(.44, (petal % 3 === 0 ? red : light) + 'af');
+        wash.addColorStop(.83, light + '92');
+        wash.addColorStop(1, '#fce4e94f');
+        paint.fillStyle = wash;
+        paint.fill();
+        paint.lineWidth = .52;
+        paint.strokeStyle = red + '42';
+        paint.stroke();
+        paint.clip();
+        ellipseWash(paint, 2, -tip * .61, half, tip * .41, '#fffaef80', '#fff9ef00');
+        ellipseWash(paint, -half * .4, -tip * .72, half * .83, tip * .44, red + '57', red + '00');
+        for (let i = 0; i < 67; i++) {
+          paint.fillStyle = i % 3 === 0 ? '#fff6eaa5' : red + '37';
+          paint.fillRect((rand() - .5) * half * 2, -rand() * tip, .3 + rand() * 1.15, .4 + rand());
+        }
+        paint.restore();
+      }
+      ellipseWash(paint, 0, 0, 8, 7, '#9f344797', '#ba405500');
+      for (let i = 0; i < 13; i++) {
+        const a = rand() * TAU;
+        const r = 4 + rand() * 9;
+        const x = Math.cos(a) * r;
+        const y = Math.sin(a) * r;
+        paint.beginPath();
+        paint.moveTo(x * .13, y * .13);
+        paint.quadraticCurveTo(x * .57 + 1, y * .47, x, y);
+        paint.strokeStyle = i % 3 === 0 ? '#a9475189' : '#fff4d996';
+        paint.lineWidth = .58;
+        paint.stroke();
+        paint.fillStyle = i % 3 === 0 ? '#a94b59ae' : '#fff4d7dd';
+        paint.beginPath();
+        paint.arc(x, y, .52 + rand() * .52, 0, TAU);
+        paint.fill();
+      }
+      return layer;
+    });
+  }
+
+  const vaseShape = new Path2D('M -18 -229 C -15 -207 -12 -181 -20 -154 C -33 -109 -63 -77 -70 -45 C -79 -13 -58 .8 0 3 C 58 3 80 -13 70 -45 C 62 -79 36 -112 23 -154 C 16 -178 16 -208 18 -229 Z');
+
+  function makeVase() {
+    const { layer, paint } = surface(184, 254, 2);
+    paint.translate(92, 244);
+    const shape = vaseShape;
+    const ceramic = paint.createLinearGradient(-77, -92, 77, -79);
+    ceramic.addColorStop(0, '#cfdee7');
+    ceramic.addColorStop(.12, '#eaf1f4');
+    ceramic.addColorStop(.32, '#fcfbf8');
+    ceramic.addColorStop(.62, '#fdfcf9');
+    ceramic.addColorStop(.84, '#f5f4f2');
+    ceramic.addColorStop(1, '#dce5eb');
+    paint.fillStyle = ceramic;
+    paint.fill(shape);
+    paint.save();
+    paint.clip(shape);
+    ellipseWash(paint, -27, -112, 67, 120, '#ffffffa0', '#ffffff00');
+    ellipseWash(paint, 29, -42, 43, 92, '#d2dfea70', '#d4e3eb00');
+    ellipseWash(paint, 0, 6, 68, 29, '#c9d6e050', '#d4dfeb00');
+
+    const rand = randomSource(310);
+    for (let i = 0; i < 1750; i++) {
+      paint.fillStyle = i % 2 ? '#8197a211' : '#ffffff80';
+      paint.fillRect((rand() - .5) * 150, -rand() * 234, .52, .52);
+    }
+    paint.restore();
+    paint.lineWidth = .85;
+    paint.strokeStyle = '#9fb7c767';
+    paint.stroke(shape);
+    paint.beginPath();
+    paint.ellipse(0, -229, 18.2, 2.8, 0, 0, TAU);
+    paint.fillStyle = '#a7bfd0';
+    paint.fill();
+    paint.strokeStyle = '#fffffff1';
+    paint.lineWidth = 1.35;
+    paint.stroke();
+    return layer;
+  }
+
+  function drawVaseContents(time) {
+    const arrived = vaseSnow.filter(flake => flake.at <= time);
+    if (!arrived.length) return;
+    ctx.save();
+    ctx.clip(vaseShape);
+    const settled = arrived.filter(flake => time >= flake.at + flake.duration);
+    const warmthInVase = smooth(ROOT_START, STEM_START, time);
+    if (settled.length) {
+      const glow = Math.min(.94, .36 + settled.length * .14);
+      ctx.globalAlpha = glow;
+      ellipseWash(ctx, 3, -15, 48, 20, '#92b5cd88', '#bfd8e400');
+      ellipseWash(ctx, -3, -21, 32, 14, '#fffffffa', '#ffffff00');
+      if (warmthInVase > 0) {
+        ctx.globalAlpha = warmthInVase * .73;
+        ellipseWash(ctx, -3, -23, 31, 19, '#ffdcb788', '#ffe9d300');
+      }
+    }
+    for (const flake of arrived) {
+      const p = clamp((time - flake.at) / flake.duration);
+      const falling = 1 - (1 - p) ** 1.15;
+      const x = mix(flake.x,flake.bedX,falling ** 1.85) +
+        flake.speedX * .079 * (1 - Math.exp(-p * 8)) * (1 - p) +
+        2.3 * Math.sin(p * TAU * 1.25 + flake.angle) * Math.sin(p * Math.PI);
+      const y = mix(-228,flake.bedY,falling);
+      const r = clamp(flake.size * .54, 3.3, 8.2) * (1 - .24 * warmthInVase);
+      ctx.globalAlpha = 1 - .25 * warmthInVase;
+      ellipseWash(ctx, x + .9, y + 1.8, r * 1.30, r * 1.05, '#7b9eb6c9', '#90b0c900');
+      ctx.fillStyle = '#ffffff';
+      ctx.strokeStyle = '#7e9fb7a8';
+      ctx.lineWidth = .75;
+      ctx.beginPath();
+      ctx.ellipse(x,y,r * .68,r * .74,flake.angle + p * 2,0,TAU);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#f8fdff';
+      ctx.fillRect(x - r * .23,y - r * .53,r * .52,r * .46);
+    }
+    ctx.globalAlpha = 1;
+    if (time > ROOT_START) drawRoots(time);
+    ctx.globalAlpha = .68;
+    ellipseWash(ctx, -24, -93, 19, 119, '#ffffff84', '#ffffff00');
+    ctx.restore();
+  }
+
+  const rootCurves = [
+    { from: 0, span: 1.01, width: 3.0, points: [-21,-14, 57,-74, -35,-132, -3,-158, 14,-182, -14,-202, 0,-229] },
+    { from: .16, span: .91, width: 1.68, points: [11,-16, -47,-70, 25,-123, 1,-154, -19,-177, 23,-209, 0,-229] },
+    { from: .29, span: .55, width: 1.27, points: [-37,-27, -28,-58, -3,-57, -2,-103] },
+    { from: .37, span: .49, width: 1.11, points: [39,-32, 28,-55, 15,-65, 10,-110] },
+    { from: .49, span: .41, width: .87, points: [24,-72, -1,-83, 30,-117, 17,-131] },
+    { from: .46, span: .42, width: .88, points: [-21,-88, -11,-102, -24,-120, -15,-145] }
+  ].map(route => {
+    const path = route.points;
+    const segments = [path.slice(0,8)];
+    if (path.length > 8) segments.push(path.slice(6,14));
+    const samples = segments.flatMap(points => Array.from({length:32}, (_, i) => pointOnCurve(points,i / 31)));
+    return { ...route, samples };
+  });
+
+  function drawRoots(time) {
+    for (const root of rootCurves) {
+      const extent = out(unit(ROOT_START + root.from, ROOT_START + root.from + root.span, time));
+      if (extent <= 0) continue;
+      const end = extent * (root.samples.length - 1);
+      const count = Math.floor(end);
+      ctx.beginPath();
+      ctx.moveTo(...root.samples[0]);
+      for (let i = 1; i <= count; i++) ctx.lineTo(...root.samples[i]);
+      if (count + 1 < root.samples.length) {
+        const [x,y] = root.samples[count], [x1,y1] = root.samples[count + 1];
+        ctx.lineTo(mix(x,x1,end - count),mix(y,y1,end - count));
+      }
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = '#c48e7972';
+      ctx.lineWidth = root.width + 1.4;
+      ctx.stroke();
+      ctx.strokeStyle = root.width > 2 ? '#5a6a83b8' : '#657b94a8';
+      ctx.lineWidth = root.width;
+      ctx.stroke();
+    }
+  }
+
+  const botanical = makeBranches();
+  const blooms = makeFlowerSprites();
+  const flakes = makeSnowSprites();
+  const vase = makeVase();
+  const shadow = surface(365, 80, 1.5);
+  ellipseWash(shadow.paint, 180, 42, 180, 30, '#859bb03c', '#9fb7d100');
+  const warmth = surface(220, 210);
+  ellipseWash(warmth.paint, 110, 104, 110, 103, '#fff0d8d3', '#ffe9cc00');
+  const halo = surface(80, 80);
+  ellipseWash(halo.paint, 40, 41, 39, 36, '#ef9ca134', '#faabb900');
+  ellipseWash(halo.paint, 31, 40, 22, 25, '#ffb5a929', '#ffb5a900');
+  const pointer = { x: -1000, y: -1000, push: 0, target: 0 };
+
+  let rect, ambient, openingSnow, vaseSnow;
+  const cues = [];
+  let elapsed = 0, lastFrame, frame = 0, lastLayout = '';
+  let manuallyMuted = false;
+  let paused = false;
+
+  // Open air, including the snow above the vase, shares one unforced path.
+  function windTravel(time, depth, phase) {
+    return rect.airScale * ((17 + 12 * depth) * time + 8.5 * Math.sin(time * .92) +
+      (4 + 5 * depth) * (Math.sin(time * 1.13 + phase) - Math.sin(phase)));
+  }
+
+  function airPoint(flake, time) {
+    return [flake.x + windTravel(time, flake.depth, flake.phase), flake.y + time * flake.speed];
+  }
+
+  function makeOpeningSnow() {
+    const rand = randomSource(948731);
+    const { center, sx, mouth, base, airScale, height } = rect;
+    const pace = clamp(height / 840, .67, 1.14);
+    const lanes = [-151, -68, -5, 91, 2, -38, 7, 133, -5, -122, -1, 50, 5, -102, 4, 104];
+    const outside = lanes.map((lane, index) => {
+      const crossing = 1.06 + index * .064 + rand() * .08;
+      const depth = .39 + rand() * .26;
+      const phase = rand() * TAU;
+      const speed = (65 + rand() * 37) * pace;
+      const size = (4.3 + rand() * 4.2) * mix(.79, 1, airScale);
+      const drift = airScale * (23.24 * crossing + 8.5 * Math.sin(crossing * .92));
+      const flake = { x: center + lane * sx - drift, y: mouth - speed * crossing,
+        depth, phase, speed, size, alpha: .82 + rand() * .16, kind: index % 4 ? 0 : 1,
+        floor: base + 8 + rand() * 18, entry: null };
+      const [x] = airPoint(flake, crossing);
+      const across = (x - center) / (sx * 15.2);
+      const depthInMouth = (depth - .52) * 4.45;
+      if (crossing <= INTAKE_END && across ** 2 + depthInMouth ** 2 <= 1) {
+        const [after] = airPoint(flake, crossing + .01);
+        flake.entry = { at: crossing, x: (x - center) / sx, speedX: (after - x) / (.01 * sx),
+          size: size / sx, angle: phase, depth };
+      }
+      return flake;
+    });
+    const inside = outside.flatMap(flake => flake.entry ? [flake.entry] : []).sort((a, b) => a.at - b.at);
+    inside.forEach((flake, index) => {
+      flake.duration = .57 + flake.depth * .14;
+      flake.bedX = Math.sin(index * 2.38 + flake.angle) * (10 + 16 * flake.depth);
+      flake.bedY = -13 - 7 * flake.depth - (index % 3) * 3.5;
+    });
+    return [outside, inside];
+  }
+
+  function makeCues() {
+    const pan = x => clamp((x / rect.width - .5) * 2, -.82, .82);
+    const entries = [{ at: BLESSING + .20, method: 'playBlessingChord', pan: 0 }];
+    if (vaseSnow.length) entries.push({ at: vaseSnow[0].at, method: 'playSnowTouch', pan: pan(rect.center) });
+    const groups = botanical.clusters.slice().sort((a, b) => a.firstBloom - b.firstBloom);
+    let heard = -Infinity;
+    groups.forEach((blossom, index) => {
+      const at = blossom.firstBloom;
+      if (at - heard < .17) return;
+      heard = at;
+      entries.push({ at, method: 'playBlossomNote',
+        pan: pan(rect.center + blossom.x * rect.sx), detail: index % 7 });
+    });
+    return entries.sort((a, b) => a.at - b.at);
+  }
+
+  function resize() {
+    const width = stage.clientWidth, height = stage.clientHeight;
+    if (!width || !height) return;
+    const density = Math.max(1, Math.min(window.devicePixelRatio || 1, 2.4, Math.sqrt(4400000 / (width * height))));
+    const vertical = portrait.matches;
+    const staticMargin = vertical ? copy.offsetTop + copy.offsetHeight : 0;
+    const layout = [width, height, density, staticMargin].join('/');
+    if (layout === lastLayout) return;
+    lastLayout = layout;
+    canvas.width = Math.round(width * density);
+    canvas.height = Math.round(height * density);
+    ctx.setTransform(canvas.width / width, 0, 0, canvas.height / height, 0, 0);
+    const center = width * (vertical ? .5 : width <= 760 ? .300 : .330);
+    const base = height * (vertical ? .923 : .875);
+    const sx = vertical ? Math.min(width * .91 / 810, (base - staticMargin) / 588) :
+      Math.min(width * .567 / 810, height * .00118);
+    const sy = vertical ? Math.max(.038, Math.min((base - staticMargin - 26) / 761, sx * 1.55)) :
+      Math.min(height * .787 / 747, sx * 1.14);
+    const mouth = base - 228 * sy;
+    const airScale = clamp(width / 1040, .53, 1);
+    rect = { width, height, center, base, sx: Math.max(.025, sx), sy, mouth, airScale,
+      vertical, copyBottom: staticMargin };
+    [openingSnow, vaseSnow] = makeOpeningSnow();
+    cues.splice(0, cues.length, ...makeCues());
+    const rand = randomSource(4711);
+    ambient = Array.from({ length: vertical ? 119 : 267 }, (_, index) => ({
+      x: rand() * width, y: rand() * height, depth: rand(), speed: 19 + rand() ** 1.76 * 69, phase: rand() * TAU,
+      size: 1.5 + rand() ** 1.9 * 5.6, kind: index % 17 === 0 ? 1 : index % 21 === 0 ? 2 : 0,
+      alpha: .47 + rand() * .50
+    }));
+    paintScene(elapsed);
+  }
+
+  function snowSprite(flake, x, y, size, alpha, angle, paint = ctx) {
+    if (alpha < .012 || size < .30) return;
+    paint.globalAlpha = clamp(alpha);
+    const sprite = flakes[flake.kind];
+    if (flake.kind === 1) {
+      paint.save();
+      paint.translate(x, y);
+      paint.rotate(angle);
+      paint.drawImage(sprite, -size / 2, -size / 2, size, size);
+      paint.restore();
+    } else {
+      paint.drawImage(sprite, x - size / 2, y - size / 2, size, size);
+    }
+  }
+
+  function drawAmbient(time, front) {
+    const { width, height, vertical } = rect;
+    const freeze = motion.matches;
+    for (const flake of ambient) {
+      if ((flake.kind === 2 || flake.depth > .76) !== front) continue;
+      const y = wrap(flake.y + (freeze ? 0 : time * flake.speed), height + 28) - 14;
+      let x = wrap(flake.x + (freeze ? 0 : windTravel(time, flake.depth, flake.phase)), width + 28) - 14;
+      const breeze = 1 - clamp(Math.hypot(x - pointer.x, y - pointer.y) / 145);
+      x += breeze * (pointer.push * .35);
+      const clear = time > BLESSING && (vertical ? y < rect.copyBottom + 13 : x > width * .63);
+      const r = flake.size * (flake.kind === 2 ? 4.1 : flake.kind === 1 ? 2.5 : 1.15);
+      if (!clear && flake.kind === 0 && r > 3.8) {
+        ctx.globalAlpha = flake.alpha * .42;
+        ctx.beginPath();
+        ctx.ellipse(x + .6, y + .7, r * .26, r * .32, -.3, 0, TAU);
+        ctx.fillStyle = '#729ab6';
+        ctx.fill();
+      }
+      snowSprite(flake, x, y, r, flake.alpha * (clear ? .37 : .96), time * .46 + flake.phase);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawOpeningSnow(time) {
+    for (const flake of openingSnow) {
+      if (flake.entry && time >= flake.entry.at) continue;
+      const [x, y] = airPoint(flake, time);
+      const alpha = flake.alpha * (1 - smooth(flake.floor - 24, flake.floor, y));
+      if (alpha <= 0) continue;
+      ctx.globalAlpha = alpha * .34;
+      ctx.beginPath();
+      ctx.ellipse(x + .6, y + .6, flake.size * .24, flake.size * .27, .2, 0, TAU);
+      ctx.fillStyle = '#8baac0';
+      ctx.fill();
+      snowSprite(flake, x, y, flake.size, alpha, flake.phase + time * .52);
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  const lettering = [
+    [copy.querySelector('h1'), BLESSING, .64, 11],
+    [copy.querySelector('.date'), BLESSING + .07, .60, 9],
+    ...Array.from(copy.querySelectorAll('.blessing span'), (line, i) => [line, BLESSING + .34 + i * .35, .55, 8]),
+    [copy.querySelector('.seasons'), BLESSING + 1.72, .55, 5]
+  ];
+  const interaction = [];
+  let copyFinished = false;
+
+  function drawLettering(time) {
+    if (copyFinished && time >= FINISH) return;
+    copyFinished = time >= FINISH;
+    for (const [node, entrance, duration, rise] of lettering) {
+      if (copyFinished) {
+        node.style.removeProperty('opacity');
+        node.style.removeProperty('translate');
+      } else {
+        const progress = out(unit(entrance, entrance + duration, time));
+        node.style.opacity = progress;
+        node.style.translate = '0 ' + ((1 - progress) * rise).toFixed(2) + 'px';
+      }
+    }
+  }
+
+  function prepareBranches(time, wind) {
+    const still = motion.matches;
+    for (const branch of botanical.branches) {
+      const { parent, join, start, duration, depth, phase, points } = branch;
+      branch.reach = smooth(start, start + duration, time);
+      if (!branch.reach) continue;
+      if (parent) {
+        const [x, y] = bentPoint(parent, join);
+        branch.anchorX = x - points[0];
+        branch.anchorY = y - points[1];
+      }
+      const local = Math.sin(time * (.76 + depth * .17) + phase) * (.002 + depth * .002);
+      const breath = (wind - .34) * (.017 + depth * .022);
+      const nudge = pointer.push * (.0005 + depth * .00017);
+      branch.bend = still ? 0 : local + breath + nudge + (parent ? parent.bend * .36 : 0);
+    }
+  }
+
+  function bentPoint(branch, u) {
+    const [x, y, width] = restPoint(branch, u);
+    return posePoint(branch, x, y, width, u);
+  }
+
+  function posePoint(branch, x, y, width, u) {
+    const angle = branch.bend * u ** 1.28;
+    const dx = x - branch.points[0], dy = y - branch.points[1];
+    return [x + branch.anchorX - dy * angle, y + branch.anchorY + dx * angle, width];
+  }
+
+  function drawBranch(branch) {
+    const { reach } = branch;
+    const last = reach * (branch.samples.length - 1);
+    const integer = Math.floor(last);
+    const points = [];
+    for (let i = 0; i <= integer; i++) {
+      const u = i / (branch.samples.length - 1);
+      points.push(posePoint(branch, ...branch.samples[i], u));
+    }
+    if (last !== integer) points.push(bentPoint(branch, reach));
+    if (points.length < 2) return;
+    ctx.beginPath();
+    for (const side of [1, -1]) {
+      for (let step = 0; step < points.length; step++) {
+        const i = side > 0 ? step : points.length - 1 - step;
+        const [x, y, width] = points[i];
+        const before = points[Math.max(0, i - 1)], after = points[Math.min(points.length - 1, i + 1)];
+        const dx = after[0] - before[0], dy = after[1] - before[1];
+        const length = Math.hypot(dx, dy) || 1;
+        const r = side * width / length * clamp((points.length - 1 - i) / 2.7, .13, 1);
+        if (!step && side > 0) ctx.moveTo(x - dy * r, y + dx * r);
+        else ctx.lineTo(x - dy * r, y + dx * r);
+      }
+    }
+    ctx.closePath();
+    if (branch.depth < 2) {
+      const [x, y] = points[0];
+      const [ex, ey] = points.at(-1);
+      const ink = ctx.createLinearGradient(x, y, ex, ey);
+      ink.addColorStop(0, '#26363d');
+      ink.addColorStop(.39, '#4b494c');
+      ink.addColorStop(.57, '#3c414a');
+      ink.addColorStop(.77, '#555157');
+      ink.addColorStop(1, '#57525ab9');
+      ctx.fillStyle = ink;
+    } else {
+      ctx.fillStyle = branch.depth === 2 ? '#4a4a55cf' : '#655864aa';
+    }
+    ctx.fill();
+    if (branch.width < 2.4) return;
+    for (const u of [.18, .30, .49, .69, .81]) {
+      if (u > reach - .021) break;
+      const [x, y, r] = bentPoint(branch, u);
+      const [px, py] = bentPoint(branch, u + .016);
+      const angle = Math.atan2(py - y, px - x);
+      ctx.fillStyle = '#342b3d85';
+      ctx.beginPath();
+      ctx.ellipse(x, y, r * 1.52, r * .53, angle + .73, 0, TAU);
+      ctx.fill();
+      ctx.fillStyle = '#e9bcb4ac';
+      ctx.beginPath();
+      ctx.ellipse(x + r * .13, y - r * .31, r * 1.14, Math.max(.14, r * .16), angle + .79, 0, TAU);
+      ctx.fill();
+    }
+  }
+
+  function drawFlowers(time) {
+    for (const blossom of botanical.flowers) {
+      const age = time - blossom.start;
+      if (age <= 0 || blossom.branch.reach < blossom.at) continue;
+      const opening = out(age / .45);
+      const [x, y] = bentPoint(blossom.branch, blossom.at);
+      const size = blossom.size * opening;
+      ctx.save();
+      ctx.translate(x + blossom.ox, y + blossom.oy);
+      ctx.rotate(blossom.angle + blossom.branch.bend * .83 + (1 - opening) * .10);
+      const alpha = (.50 + blossom.depth * .49) * out(age / .13);
+      if (!blossom.bud && age < .77) {
+        const n = size * (2.3 + age * 1.2);
+        ctx.globalAlpha = out(age / .11) * (1 - unit(.13, .77, age)) * .86;
+        ctx.drawImage(halo.layer, -n, -n, n * 2, n * 2);
+      }
+      ctx.globalAlpha = alpha;
+      if (blossom.bud) {
+        ctx.fillStyle = blossom.tint < 4 ? '#c25764' : '#e48f96';
+        ctx.beginPath();
+        ctx.ellipse(0, 0, size * .43, size * .74, .28, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = '#ffe7d8ba';
+        ctx.beginPath();
+        ctx.ellipse(-size * .13, -size * .24, size * .16, size * .33, .42, 0, TAU);
+        ctx.fill();
+        ctx.fillStyle = '#554754a0';
+        ctx.beginPath();
+        ctx.ellipse(size * .12, size * .48, size * .27, size * .13, -.37, 0, TAU);
+        ctx.fill();
+      } else {
+        ctx.drawImage(blooms[blossom.tint], -size * 1.30, -size * 1.3, size * 2.6, size * 2.6);
+      }
+      ctx.restore();
+    }
+  }
+
+  function drawPlant(time, wind) {
+    const { center, base, sx, sy } = rect;
+    ctx.save();
+    ctx.translate(center, base);
+    ctx.scale(sx, sy);
+    ctx.globalAlpha = .25 + .52 * smooth(2.0, STEM_START + .4, time) - .16 * smooth(6.4, 9.1, time);
+    ctx.drawImage(warmth.layer, -171, -284 - 17 * out(unit(ROOT_START,STEM_START,time)), 342, 309);
+    ctx.globalAlpha = 1;
+    ctx.drawImage(shadow.layer, -182, -37, 365, 80);
+    ctx.drawImage(vase, -92, -244, 184, 254);
+    drawVaseContents(time);
+    ctx.restore();
+
+    prepareBranches(time, wind);
+    ctx.save();
+    ctx.translate(center, base);
+    ctx.scale(sx, sy);
+    for (const branch of botanical.branches) {
+      if (branch.reach > 0) drawBranch(branch);
+    }
+    drawFlowers(time);
+    ctx.restore();
+  }
+
+  function drawClickSnow(time) {
+    for (const flake of interaction) {
+      const age = time - flake.start;
+      if (age < 0 || age >= flake.life) continue;
+      const x = flake.x + windTravel(time, flake.depth, flake.phase) - windTravel(flake.start, flake.depth, flake.phase);
+      const y = flake.y + age * flake.speed;
+      const alpha = smooth(0, .31, age) * (1 - smooth(flake.life - .65, flake.life, age)) * .88;
+      snowSprite(flake, x, y, flake.size, alpha, flake.phase + age * .65);
+    }
+    while (interaction.length && time - interaction[0].start > 2.5) interaction.shift();
+    ctx.globalAlpha = 1;
+  }
+
+  function paintScene(time) {
+    if (!rect) return;
+    const wind = gust(time);
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    drawAmbient(time, false);
+    drawOpeningSnow(time);
+    drawPlant(time, wind);
+    drawClickSnow(time);
+    drawAmbient(time, true);
+    drawLettering(time);
+  }
+
+  function advanceAudio() {
+    audio.updateContinuous({ time: elapsed, wind: gust(elapsed),
+      opening: .66 * smooth(STEM_START, 7.5, elapsed) + .34 * smooth(7.35, BLESSING, elapsed),
+      pointer: Math.abs(pointer.push) / 36 });
+  }
+
+  function tick(now) {
+    frame = 0;
+    const delta = lastFrame === undefined ? 0 : Math.max(0, (now - lastFrame) / 1000);
+    lastFrame = now;
+    elapsed = motion.matches && !audio.enabled ? FINISH : (audio.timelineTime() ?? elapsed + delta);
+    if (!motion.matches) {
+      pointer.push = mix(pointer.push, pointer.target, 1 - Math.exp(-delta * 4.6));
+      pointer.target *= Math.exp(-delta * 3.1);
+      paintScene(elapsed);
+    }
+    advanceAudio();
+    if (!paused && !document.hidden && (!motion.matches || audio.enabled)) frame = requestAnimationFrame(tick);
+  }
+
+  function syncPlayback() {
+    cancelAnimationFrame(frame);
+    frame = 0;
+    lastFrame = undefined;
+    const suspended = paused || document.hidden;
+    audio.setHidden(suspended);
+    if (suspended) return;
+    if (audio.enabled && rect) {
+      audio.resetTimeline(elapsed, motion.matches ? [] : cues);
+      advanceAudio();
+    }
+    if (!motion.matches || audio.enabled) frame = requestAnimationFrame(tick);
+  }
+
+  function syncControls() {
+    sound.setAttribute('aria-pressed', String(audio.enabled));
+    soundState.textContent = audio.enabled ? '· 开启' : manuallyMuted ? '· 静音' : '· 点击开启';
+    sound.title = audio.enabled ? '关闭冬日声景' : '轻点开启冬日风雪与风铃';
+    pause.hidden = motion.matches;
+    pause.classList.toggle('is-paused', paused);
+    pause.setAttribute('aria-label', paused ? '继续动画' : '暂停动画');
+    pause.title = paused ? '继续动画' : '暂停动画';
+  }
+
+  async function startSound() {
+    if (audio.enabled) return true;
+    try {
+      if (!await audio.enable()) return false;
+      manuallyMuted = false;
+      syncPlayback();
+      syncControls();
+      return true;
+    } catch {
+      if (!audio.enabled) sound.title = '当前浏览器无法启动声景';
+      return false;
+    }
+  }
+
+  function changeSound() {
+    if (!audio.enabled) {
+      void startSound();
+      return;
+    }
+    manuallyMuted = true;
+    audio.disable();
+    syncPlayback();
+    syncControls();
+  }
+
+  function restart() {
+    elapsed = motion.matches ? FINISH : 0;
+    paused = false;
+    pointer.push = pointer.target = 0;
+    interaction.length = 0;
+    paintScene(elapsed);
+    syncControls();
+    syncPlayback();
+  }
+
+  function nearCanopy(x, y) {
+    return Math.abs(x - rect.center) < rect.sx * 393 && y < rect.mouth + 3 &&
+      y > rect.mouth - rect.sy * 527;
+  }
+
+  canvas.addEventListener('pointermove', event => {
+    if (!rect || paused || motion.matches || elapsed < STEM_START) return;
+    const { left, top } = canvas.getBoundingClientRect();
+    const x = event.clientX - left, y = event.clientY - top;
+    const travel = pointer.x < 0 ? 0 : x - pointer.x;
+    const speed = pointer.x < 0 ? 0 : Math.hypot(travel, y - pointer.y);
+    pointer.x = x;
+    pointer.y = y;
+    if (speed < .8 || !nearCanopy(x, y)) return;
+    pointer.target = clamp(pointer.target + travel * .52, -17, 17);
+    audio.playHover((x / rect.width - .5) * 2, clamp(speed / 38, .21, .68));
+  }, { passive: true });
+
+  canvas.addEventListener('pointerleave', () => {
+    pointer.x = pointer.y = -1000;
+  });
+
+  stage.addEventListener('click', async event => {
+    if (!rect || event.target.closest('.corner')) return;
+    const { left, top } = canvas.getBoundingClientRect();
+    const x = event.clientX - left, y = event.clientY - top;
+    const pan = (x / rect.width - .5) * 2;
+    if (!paused && !motion.matches) {
+      const rand = Math.random;
+      if (interaction.length > 90) interaction.splice(0, 11);
+      for (let i = 0; i < 11; i++) {
+        interaction.push({ x: x + (rand() - .5) * 49, y: y + (rand() - .57) * 35,
+          start: elapsed + i * .023, depth: rand(), phase: rand() * TAU, speed: 25 + rand() * 31,
+          life: 1.2 + rand() * 1.0, size: 2.8 + rand() ** 2 * 6.6, kind: i % 5 ? 0 : 1 });
+      }
+    }
+    if (audio.enabled || (!manuallyMuted && await startSound())) audio.playClick(pan);
+  });
+
+  replay.addEventListener('click', () => {
+    restart();
+    if (!manuallyMuted) void startSound();
+  });
+  sound.addEventListener('click', changeSound);
+  pause.addEventListener('click', () => {
+    paused = !paused;
+    syncControls();
+    syncPlayback();
+  });
+  motion.addEventListener('change', restart);
+  document.addEventListener('visibilitychange', syncPlayback);
+  new ResizeObserver(resize).observe(stage);
+  new ResizeObserver(() => { if (portrait.matches) resize(); }).observe(copy);
+  makePaper();
+  restart();
+  resize();
+  if (location.protocol === 'file:') document.querySelector('.back a').href = '../index.html';
+  void startSound();
+})();
+</script>
+</body>
+</html>

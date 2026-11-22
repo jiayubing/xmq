@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f6f1f8"><meta name="description" content="两件关于天气的小作品：雨伞和纸风车。"><link rel="icon" href="data:,"><title>一小段天气</title>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f6f1f8"><meta name="description" content="雨伞、纸风车和小雪，三个关于天气的动画作品。"><link rel="icon" href="data:,"><title>一小段天气</title>
 <style>
 :root{--ink:#2b1a3f;--soft:#665571;--rule:#ddd1e5;--serif:"Noto Serif SC","Songti SC",STSong,SimSun,serif}*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--ink);background:radial-gradient(ellipse at 84% -40%,#dfc6ed,transparent 68%),#f6f1f8;font-family:system-ui,"Microsoft YaHei",sans-serif}.shell{width:min(100% - 80px,1080px);margin:auto}
 header,footer{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--soft);font-size:10px;letter-spacing:.18em}header{padding:24px 0 16px;border-bottom:1px solid var(--rule)}.grid{margin-top:clamp(26px,5.5vw,65px)}#rain-room{position:fixed;inset:0;width:100%;height:100%;border:0;background:#160d2d}footer{padding:14px 0 24px;margin-top:32px;border-top:1px solid var(--rule)}.mark{display:flex;align-items:center;gap:9px}.mark svg{width:13px;color:#7d4f9c}
@@ -6,6 +6,7 @@ header,footer{display:flex;justify-content:space-between;align-items:center;gap:
 .label{position:absolute;top:12px;left:12px;border:1px solid #fff7;border-radius:99px;padding:5px 8px;color:white;background:#261739a0;letter-spacing:.12em;font-size:10px}.info{display:grid;grid-template-columns:1fr auto;gap:5px 12px;align-items:center;padding:17px clamp(15px,3vw,25px) 19px}.info h2{font:600 clamp(22px,3.5vw,32px)/1.25 var(--serif);margin:0}.info p{grid-column:1;margin:0;color:var(--soft);font-size:13px;line-height:1.6}.arrow{grid-column:2;grid-row:1/3;display:grid;place-items:center;border:1px solid var(--rule);border-radius:50%;width:36px;height:36px;color:#68408f;transition:color .28s,background .28s}.card:focus-visible .arrow{color:white;background:#68408f}
 @media(hover:hover){.card:hover{transform:translateY(-4px);box-shadow:0 14px 32px #46245f20}.card:hover .art>svg,.card:hover .field{transform:scale(1.035)}.card:hover .arrow{color:white;background:#68408f}}
 @media(max-width:640px){.shell{width:calc(100% - 36px)}header{padding-top:17px}.grid{margin-top:24px}footer{margin-top:23px}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+.snow-art{background:#e2edf5}
 </style></head><body><div class="shell">
 <header><span class="mark"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 0c1 8 4 11 12 12-8 1-11 4-12 12-1-8-4-11-12-12 8-1 11-4 12-12Z"/></svg>XINGMENGQI</span><span>MOTION STUDIES / VOL. 01</span></header>
 <main><div class="grid">
@@ -23,7 +24,11 @@ header,footer{display:flex;justify-content:space-between;align-items:center;gap:
 <g fill="#efd7fa"><circle cx="69" cy="66" r="1.1"/><circle cx="511" cy="90" r="1.2"/><circle cx="280" cy="42" r="1.2"/><circle cx="198" cy="40" r="1.1"/><circle cx="230" cy="202" r="1.7"/><circle cx="251" cy="226" r="1.2"/><circle cx="320" cy="222" r="1.6"/><circle cx="336" cy="249" r="1.3"/><circle cx="310" cy="271" r="1.7"/><path d="m375 211 2 7 7 2-7 2-2 7-2-7-7-2 7-2zm-198-90 1.5 5 5 1.5-5 1.5-1.5 5-1.5-5-5-1.5 5-1.5z"/></g></svg>
 <span class="label">01 / 夜雨</span></div><div class="info"><h2>雨伞</h2><p>撑开一把紫伞，让流星落进水里</p><span class="arrow" aria-hidden="true">↗</span></div></a>
 <a class="card" href="./pinwheel/"><div class="art" aria-hidden="true"><img class="field" src="./assets/meadow.webp" width="560" height="330" alt=""><span class="stem"></span><img class="wheel" src="./assets/pinwheel.webp" alt=""><span class="label">02 / 微风</span></div><div class="info"><h2>纸风车</h2><p>看彩纸飞过草地，从白天吹到日落</p><span class="arrow" aria-hidden="true">↗</span></div></a>
-</div></main><footer><span>一个小小的动画展厅</span><span>01 — 02</span></footer></div><iframe id="rain-room" src="./umbrella/?gallery=clean" allow="autoplay" title="雨伞动画" hidden></iframe>
+<a class="card" href="./xiaoxue/" data-snow><article>
+  <div class="art snow-art" aria-hidden="true"><img class="field" src="./xiaoxue/cover.webp" width="800" height="480" alt=""><span class="label">03 / 落雪</span></div>
+  <div class="info"><h2>小雪</h2><p>细雪落入瓷瓶，等一枝红梅开</p><span class="arrow" aria-hidden="true">↗</span></div>
+</article></a>
+</div></main><footer><span>一个小小的动画展厅</span><span>01 — 03</span></footer></div><iframe id="rain-room" src="./umbrella/?gallery=clean" allow="autoplay" title="雨伞动画" hidden></iframe>
 <script>
 const frame = document.querySelector('#rain-room');
 const gallery = document.querySelector('.shell');
@@ -31,6 +36,7 @@ const umbrellaLink = document.querySelector('[data-rain]');
 const localFile = location.protocol === 'file:';
 if (localFile) {
   umbrellaLink.href = './umbrella/index.html';
+  document.querySelector('[data-snow]').href = './xiaoxue/index.html';
 }
 const homeTitle = document.title;
 const homeURL = location.href;
