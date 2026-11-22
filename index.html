@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f6f1f8"><meta name="description" content="雨伞、纸风车、小雪和虹藏，四个关于天气的动画作品。"><link rel="icon" href="data:,"><title>一小段天气</title>
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f6f1f8"><meta name="description" content="雨伞、纸风车、小雪、虹藏与飞鸟，五个动画小作品。"><link rel="icon" href="data:,"><title>一小段天气</title>
 <style>
 :root{--ink:#2b1a3f;--soft:#665571;--rule:#ddd1e5;--serif:"Noto Serif SC","Songti SC",STSong,SimSun,serif}*{box-sizing:border-box}body{margin:0;min-height:100vh;color:var(--ink);background:radial-gradient(ellipse at 84% -40%,#dfc6ed,transparent 68%),#f6f1f8;font-family:system-ui,"Microsoft YaHei",sans-serif}.shell{width:min(100% - 80px,1080px);margin:auto}
 header,footer{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--soft);font-size:10px;letter-spacing:.18em}header{padding:24px 0 16px;border-bottom:1px solid var(--rule)}.grid{margin-top:clamp(26px,5.5vw,65px)}#rain-room{position:fixed;inset:0;width:100%;height:100%;border:0;background:#160d2d}footer{padding:14px 0 24px;margin-top:32px;border-top:1px solid var(--rule)}.mark{display:flex;align-items:center;gap:9px}.mark svg{width:13px;color:#7d4f9c}
@@ -32,7 +32,18 @@ header,footer{display:flex;justify-content:space-between;align-items:center;gap:
   <div class="art snow-art" aria-hidden="true"><img class="field" src="./xiaoxue-hongcang/cover.webp" width="800" height="480" alt=""><span class="label">04 / 雨霁</span></div>
   <div class="info"><h2 id="hongcang-entry-title">小雪 · 虹藏</h2><p>看虹散成雪，在雪里找回七色</p><span class="arrow" aria-hidden="true">↗</span></div>
 </article></a>
-</div></main><footer><span>一个小小的动画展厅</span><span>01 — 04</span></footer></div><iframe id="rain-room" src="./umbrella/?gallery=clean" allow="autoplay" title="雨伞动画" hidden></iframe>
+<a class="card" href="./bird/"><div class="art" aria-hidden="true">
+<svg viewBox="0 0 560 330" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice"><defs>
+<linearGradient id="bird-cover-sky" x2="77%" y2="100%"><stop stop-color="#171959"/><stop offset=".6" stop-color="#304bc4"/><stop offset="1" stop-color="#6f9ed1"/></linearGradient>
+<radialGradient id="bird-cover-light" cx="100%" cy="33%" r="75%"><stop stop-color="#faefff" stop-opacity=".96"/><stop offset=".28" stop-color="#c8d9ff" stop-opacity=".7"/><stop offset="1" stop-color="#9bb4fb" stop-opacity="0"/></radialGradient>
+<linearGradient id="bird-cover-trails"><stop stop-color="#c1d2ff" stop-opacity="0"/><stop offset="1" stop-color="#e4f0ff" stop-opacity=".95"/></linearGradient>
+</defs><path fill="url(#bird-cover-sky)" d="M0 0h560v330H0z"/><path fill="url(#bird-cover-light)" d="M0 0h560v330H0z"/>
+<g fill="none" stroke="url(#bird-cover-trails)" stroke-width="1.4"><path d="M47 240Q207 222 354 128M42 278Q254 267 402 170M77 257Q248 250 470 115M32 314Q205 299 325 214M107 316Q313 317 439 219"/></g>
+<g fill="#f7ecff"><path d="M341 122q9-2 14 6 4-11 14-12-8 5-13 16l-3 5 1-7q-6-5-13-8Z"/><path d="M389 165q8-2 13 5 4-10 14-12-7 5-13 15l-2 5v-6q-6-5-12-7Z"/></g>
+<g fill="#d5f4ff"><path d="M458 111q7-3 12 4 5-9 13-11-6 4-11 13l-3 5v-5q-5-4-11-6Z"/><path d="M312 211q8-3 13 3 4-9 12-11-6 5-10 14l-3 5v-6q-5-4-12-5Z"/><path d="M429 216q6-3 10 3 3-7 11-10-5 4-10 12l-2 4v-5q-5-3-9-4Z"/></g>
+<g fill="#e6f0ff"><circle cx="149" cy="190" r="1.7"/><circle cx="190" cy="209" r="2.1"/><circle cx="225" cy="195" r="1.2"/><circle cx="276" cy="169" r="1.7"/><circle cx="302" cy="191" r="1.1"/><circle cx="339" cy="177" r="1.5"/></g></svg>
+<span class="label">05 / 飞行</span></div><div class="info"><h2>人生不止两点一线</h2><p>从两点一线，飞进一片有光的天空</p><span class="arrow" aria-hidden="true">↗</span></div></a>
+</div></main><footer><span>一个小小的动画展厅</span><span>01 — 05</span></footer></div><iframe id="rain-room" src="./umbrella/?gallery=clean" allow="autoplay" title="雨伞动画" hidden></iframe>
 <script>
 const frame = document.querySelector('#rain-room');
 const gallery = document.querySelector('.shell');
