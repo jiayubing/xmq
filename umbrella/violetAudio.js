@@ -65,6 +65,9 @@
   // 高音五声音阶（风铃与流星落水用，任何音叠加都极和谐）
   const PENTATONIC_HIGH = [75, 77, 79, 82, 84, 86, 87, 89, 91];
 
+  const RAIN_SILENCE = 0.0001;
+  const RAIN_BASE_FREQUENCY = 900;
+
   class VioletAudioEngine {
     constructor(options = {}) {
       this.ctx = null;
@@ -146,11 +149,11 @@
 
       this.rainFilter = ctx.createBiquadFilter();
       this.rainFilter.type = 'bandpass';
-      this.rainFilter.frequency.value = 1850;
+      this.rainFilter.frequency.value = RAIN_BASE_FREQUENCY;
       this.rainFilter.Q.value = 0.7;
 
       this.rainGain = ctx.createGain();
-      this.rainGain.gain.value = 0.0001;
+      this.rainGain.gain.value = RAIN_SILENCE;
 
       rainSrc.connect(this.rainFilter);
       this.rainFilter.connect(this.rainGain);
@@ -218,7 +221,7 @@
 
       const g = ctx.createGain();
       g.gain.setValueAtTime(0.0001, now);
-      g.gain.linearRampToValueAtTime(0.11, now + 0.14);
+      g.gain.linearRampToValueAtTime(0.05, now + 0.14);
       g.gain.exponentialRampToValueAtTime(0.0001, now + 0.42);
 
       src.connect(filter);
@@ -249,7 +252,7 @@
 
       const g = ctx.createGain();
       g.gain.setValueAtTime(0.0001, now);
-      g.gain.linearRampToValueAtTime(0.09, now + 0.08);
+      g.gain.linearRampToValueAtTime(0.04, now + 0.08);
       g.gain.exponentialRampToValueAtTime(0.0001, now + 0.40);
 
       src.connect(filter);
@@ -327,18 +330,18 @@
       const now = this.ctx.currentTime;
 
       // 1. Modulate starlight rain shimmer bed
-      const targetRain = rainActive && openVal > 0.35
-        ? clamp(0.022 + Math.abs(omega) * 0.008, 0.02, 0.055)
-        : 0.004;
-      this.rainGain.gain.setTargetAtTime(targetRain, now, 0.25);
-      this.rainFilter.frequency.setTargetAtTime(1500 + Math.abs(omega) * 240, now, 0.2);
+      const absW = Math.abs(omega);
+      const spin = Math.min(absW / 6, 1);
+      const audibleRain = rainActive && openVal > 0.35;
+      const targetRain = audibleRain ? 0.003 + spin * 0.005 : RAIN_SILENCE;
+      this.rainGain.gain.setTargetAtTime(targetRain, now, audibleRain ? 0.25 : 0.12);
+      this.rainFilter.frequency.setTargetAtTime(RAIN_BASE_FREQUENCY + spin * 380, now, 0.2);
 
       // 2. Modulate piano warmth with umbrella open state
       const targetCutoff = 900 + openVal * 1500;
       this.musicFilter.frequency.setTargetAtTime(targetCutoff, now, 0.22);
 
       // 3. Spin wind chimes when umbrella rotates briskly
-      const absW = Math.abs(omega);
       if (openVal > 0.45 && absW > 1.35 && now - this._lastChimeAt > Math.max(0.11, 0.36 - absW * 0.04)) {
         this._lastChimeAt = now;
         const m = PENTATONIC_HIGH[Math.floor(Math.random() * PENTATONIC_HIGH.length)];

@@ -311,23 +311,25 @@
     const FOLDED_ROTATION = Math.PI - 0.12;
     const ENAMEL = '#7A56C4';
     const HARDWARE_GLINT = 'rgba(191,166,246,.38)';
-    const STAR_COLORS = ['#FDE68A', '#F6CB61', '#F5F3FF', '#DDD6FE'];
+    const STAR_PINK = '#F9A8D4';
+    const STAR_PALE_PINK = '#FBCFE8';
+    const STAR_COLORS = ['#FDE68A', '#F6CB61', '#F5F3FF', '#DDD6FE', STAR_PINK, STAR_PALE_PINK];
     const WISH_COLOR = '#FFE39A';
     const OPEN_WATER_RY = 23.1;
-    const RAIN_DUST = { size: [1.05, 1.40], duration: [1.77, 2.12], tail: [10, 15], brightness: 0.62 };
-    const RAIN_STAR = { size: [1.65, 2.68], duration: [1.60, 1.96], tail: [16, 25], brightness: 0.88 };
-    const RAIN_SPARK = { size: [2.70, 3.90], duration: [1.45, 1.80], tail: [23, 34], brightness: 1 };
+    const RAIN_DUST = { size: [1.35, 1.80], duration: [1.77, 2.12], tail: [10, 15], brightness: 0.62 };
+    const RAIN_STAR = { size: [2.10, 3.20], duration: [1.60, 1.96], tail: [16, 25], brightness: 0.88 };
+    const RAIN_SPARK = { size: [3.40, 4.90], duration: [1.45, 1.80], tail: [23, 34], brightness: 1 };
     const INTRO = {
       openStart: 0.6, spinStart: 1.4, peakStart: 2.7, coastStart: 3.5,
       rainTaperStart: 4.5, rainEnd: 5.55, lastLanding: 6.94, closeStart: 7, end: 7.9, peakSpeed: 5.9
     };
     const THREADS = [
-      [11.5, 0.042, 1.02, 0, '#E6D4FF'], [15, -0.035, 2.05, 4, '#FFF0BA'],
-      [19, -0.043, 2.55, 8, '#E6D4FF'], [8, 0.026, 1.38, 4, '#E6D4FF'],
-      [13, 0.037, 1.75, 4, '#FDE68A'], [21, -0.028, 2.65, 8, '#FFF0BA'],
-      [16, 0.040, 2.10, 4, '#E6D4FF'], [10.5, -0.047, 1.12, 0, '#E6D4FF'],
-      [18, 0.025, 2.25, 4, '#FDE68A'], [12, -0.035, 1.68, 4, '#E6D4FF'],
-      [14.5, 0.032, 2.15, 8, '#E6D4FF'], [9, -0.040, 1.00, 0, '#FFF0BA']
+      [11.5, 0.042, 1.20, 0, '#E6D4FF'], [15, -0.035, 2.30, 4, '#FFF0BA'],
+      [19, -0.043, 2.90, 8, STAR_PINK], [8, 0.026, 1.60, 4, '#E6D4FF'],
+      [13, 0.037, 2.00, 4, '#FDE68A'], [21, -0.028, 3.00, 8, '#FFF0BA'],
+      [16, 0.040, 2.38, 4, STAR_PALE_PINK], [10.5, -0.047, 1.30, 0, '#E6D4FF'],
+      [18, 0.025, 2.55, 4, '#FDE68A'], [12, -0.035, 1.95, 4, STAR_PINK],
+      [14.5, 0.032, 2.45, 8, '#E6D4FF'], [9, -0.040, 1.17, 0, '#FFF0BA']
     ].map(([length, slant, size, kind, color], i) => ({
       length, slant, size, kind, color,
       frequency: 9.6 * Math.sqrt(14 / length),
@@ -735,7 +737,7 @@
       const spread = Math.pow(waterOpen, 0.78);
       return {
         unit, e, portrait, sidePoetry, baseApexY, cx: W * 0.5, apexY: baseApexY + float * unit,
-        starScale: lerp(1.28, 1.48, portrait),
+        starScale: lerp(1.52, 2.05, portrait),
         cinch: 1 - smoothstep(0, 0.37, e),
         puddleY: Math.min(waterLine, dockCeiling - dockGap - OPEN_WATER_RY * unit),
         waterRx: lerp(29, 158, spread) * unit, waterRy: lerp(5.7, OPEN_WATER_RY, spread) * unit,
@@ -1101,7 +1103,7 @@
     }
 
     function drawStarGlow(x, y, size, color) {
-      const mistRadius = size * 3.2;
+      const mistRadius = size * 3.45;
       const mist = ctx.createRadialGradient(x, y, 0, x, y, mistRadius);
       mist.addColorStop(0, color + '5C');
       mist.addColorStop(0.34, color + '26');
@@ -1111,8 +1113,8 @@
 
       const light = ctx.createRadialGradient(x, y, 0, x, y, size);
       light.addColorStop(0, '#FFF7E4C0');
-      light.addColorStop(0.38, '#FFF7E454');
-      light.addColorStop(1, '#FFF7E400');
+      light.addColorStop(0.38, color + '7A');
+      light.addColorStop(1, color + '00');
       drawEllipse(x, y, size, size, light);
     }
 
@@ -1254,14 +1256,16 @@
       audio.playWishLaunch();
     }
 
-    function addImpact({ x, v, wish }, elapsed = 0, size = 1) {
+    function addImpact({ x, v, wish, color = '#DAC0FE' }, elapsed = 0, size = 1) {
       const rayCount = wish ? 13 : 6;
       const dropCount = wish ? 16 : 8;
       const particle = (angle, speed, radius) => ({
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
         radius,
-        color: wish && Math.random() > 0.49 ? '#FFE5AC' : Math.random() > 0.44 ? '#F3DEFF' : '#CEAFFE'
+        color: wish
+          ? (Math.random() > 0.49 ? '#FFE5AC' : Math.random() > 0.44 ? '#F3DEFF' : '#CEAFFE')
+          : color
       });
       const rays = Array.from({ length: rayCount }, (_, i) => particle(
         -Math.PI * (0.08 + 0.84 * (i + Math.random()) / rayCount),
@@ -1273,15 +1277,15 @@
         (wish ? 64 : 35) + Math.random() * (wish ? 73 : 50),
         (wish ? 0.56 : 0.26) + Math.random() * (wish ? 0.88 : 0.53)
       ));
-      impacts.push({ x, v, wish, elapsed, size, rays, drops });
+      impacts.push({ x, v, wish, color, elapsed, size, rays, drops });
     }
 
     function drawRipples(impact, P) {
-      const { x: sceneX, v, wish, elapsed, size } = impact;
+      const { x: sceneX, v, wish, color, elapsed, size } = impact;
       const x = P.cx + sceneX * P.unit, y = P.puddleY + v * P.waterRy;
       const rings = wish ? 4 : 3;
       ctx.save();
-      ctx.strokeStyle = wish ? '#FFE9BE' : '#DAC0FE';
+      ctx.strokeStyle = wish ? '#FFE9BE' : color;
       for (let j = 0; j < rings; j++) {
         const t = (elapsed - 0.077 * j) / (wish ? 0.77 : 0.64);
         if (t < 0 || t >= 1) continue;
@@ -1295,7 +1299,7 @@
       if (elapsed < 0.24) {
         ctx.globalAlpha = (1 - elapsed / 0.24) * (wish ? 0.84 : 0.56);
         drawEllipse(x, y, (wish ? 4.2 : 1.65) * P.unit * size, 0.52 * P.unit,
-          wish ? '#FFF0BC' : '#F8E7FF');
+          wish ? '#FFF0BC' : color);
       }
       ctx.restore();
     }
