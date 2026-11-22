@@ -288,7 +288,7 @@
 
     const canvas = document.getElementById('stage');
     const ctx = canvas.getContext('2d', { alpha: false });
-    const audio = new VioletAudioEngine();
+    const audio = new VioletAudioEngine({ masterVolume: 0.92 });
     const topControls = document.getElementById('top-controls');
     const btnSound = document.getElementById('btn-sound');
     const btnBgm = document.getElementById('btn-bgm');
@@ -306,10 +306,11 @@
     const FOLDED_ROTATION = Math.PI - 0.12;
     const ENAMEL = '#7A56C4';
     const HARDWARE_GLINT = 'rgba(191,166,246,.38)';
-    const STAR_PINK = '#DCA0C1';
-    const STAR_PALE_PINK = '#E7BBD4';
-    const STAR_COLORS = ['#BCA8E3', '#C7B9EA', '#ABC4E8', '#D0C5EF', STAR_PINK, '#DEBA78'];
-    const SPARK_COLORS = ['#F3D083', '#D9CCFA', '#C2E0F4', '#E7B8D4'];
+    const STAR_ICE = '#A7E9FF';
+    const STAR_GOLD = '#FFDB83';
+    const STAR_LILAC = '#E1D4FF';
+    const STAR_COLORS = ['#88C9E5', '#ABDDF4', '#D5B371', '#E8CA85', '#C7B4EB'];
+    const SPARK_COLORS = ['#8EE1FF', STAR_ICE, '#FFE79D', STAR_GOLD, STAR_LILAC];
     const WISH_COLOR = '#FFE39A';
     const OPEN_WATER_RY = 23.1;
     const RAIN_DUST = { size: [1.15, 1.55], duration: [1.77, 2.12], tail: [10, 15], brightness: [0.34, 0.53] };
@@ -320,12 +321,12 @@
       rainTaperStart: 4.5, rainEnd: 5.55, lastLanding: 6.94, closeStart: 7, end: 7.9, peakSpeed: 5.9
     };
     const THREADS = [
-      [11.5, 0.042, 1.20, 0, '#E6D4FF'], [15, -0.035, 2.30, 4, '#FFF0BA'],
-      [19, -0.043, 2.90, 8, STAR_PINK], [8, 0.026, 1.60, 4, '#E6D4FF'],
-      [13, 0.037, 2.00, 4, '#FDE68A'], [21, -0.028, 3.00, 8, '#FFF0BA'],
-      [16, 0.040, 2.38, 4, STAR_PALE_PINK], [10.5, -0.047, 1.30, 0, '#E6D4FF'],
-      [18, 0.025, 2.55, 4, '#FDE68A'], [12, -0.035, 1.95, 4, STAR_PINK],
-      [14.5, 0.032, 2.45, 8, '#E6D4FF'], [9, -0.040, 1.17, 0, '#FFF0BA']
+      [11.5, 0.042, 1.20, 0, STAR_LILAC], [15, -0.035, 2.30, 4, STAR_GOLD],
+      [19, -0.043, 2.90, 8, STAR_ICE], [8, 0.026, 1.60, 4, STAR_LILAC],
+      [13, 0.037, 2.00, 4, STAR_GOLD], [21, -0.028, 3.00, 8, STAR_GOLD],
+      [16, 0.040, 2.38, 4, STAR_ICE], [10.5, -0.047, 1.30, 0, STAR_LILAC],
+      [18, 0.025, 2.55, 4, STAR_GOLD], [12, -0.035, 1.95, 4, STAR_ICE],
+      [14.5, 0.032, 2.45, 8, STAR_ICE], [9, -0.040, 1.17, 0, STAR_GOLD]
     ].map(([length, slant, size, kind, color], i) => ({
       length, slant, size, kind, color,
       frequency: 9.6 * Math.sqrt(14 / length),
