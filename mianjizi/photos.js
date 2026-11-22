@@ -54,5 +54,89 @@ window.MIANJIZI_PHOTOS = [
     "note": "把耳朵藏进绒绒里，风声就变成了轻一点的悄悄话。",
     "pos": "53% 23%",
     "zoom": 1.08
+  },
+  {
+    "src": "photos/mianjizi-09.webp",
+    "title": "蓝团子出门啦",
+    "note": "把自己裹成一小团蓝色，走两步，连冷风都追不上。",
+    "pos": "50% 33%",
+    "zoom": 1.03
+  },
+  {
+    "src": "photos/mianjizi-10.webp",
+    "title": "趴一小会儿",
+    "note": "下巴在桌沿歇一会儿，头发还在和风打招呼。",
+    "pos": "66% 50%",
+    "zoom": 1.03
+  },
+  {
+    "src": "photos/mianjizi-11.webp",
+    "title": "我有话要说",
+    "note": "手指举起来啦。等一下，我还有一小句没说完。",
+    "pos": "51% 29%",
+    "zoom": 1.04
+  },
+  {
+    "src": "photos/mianjizi-12.webp",
+    "title": "嘴巴翘一下",
+    "note": "嘴巴先噘一小下，等我想好再告诉你怎么啦。",
+    "pos": "50% 24%",
+    "zoom": 1.04
+  },
+  {
+    "src": "photos/mianjizi-13.webp",
+    "title": "鬼脸营业",
+    "note": "说好只看镜头，舌头偏要出来抢个位置。",
+    "pos": "52% 32%",
+    "zoom": 1.04
+  },
+  {
+    "src": "photos/mianjizi-14.webp",
+    "title": "踩影子去",
+    "note": "小红帽往前走，影子也跟着迈了一大步。",
+    "pos": "49% 18%",
+    "zoom": 1.02
+  },
+  {
+    "src": "photos/mianjizi-15.webp",
+    "title": "靠近一点点",
+    "note": "本来只想看一眼镜头，结果脑袋又往前凑了半步。",
+    "pos": "54% 20%",
+    "zoom": 1.03
+  },
+  {
+    "src": "photos/mianjizi-16.webp",
+    "title": "笑到眯眼",
+    "note": "本来还忍得住，眼睛一弯，笑就藏不回去啦。",
+    "pos": "52% 31%",
+    "zoom": 1.06
+  },
+  {
+    "src": "photos/mianjizi-17.webp",
+    "title": "抬下巴啦",
+    "note": "把下巴抬高一点，看看高处藏着什么。",
+    "pos": "50% 41%",
+    "zoom": 1.04
+  },
+  {
+    "src": "photos/mianjizi-18.webp",
+    "title": "啵一小口",
+    "note": "嘴巴已经摆好啦，先给镜头送一个小小的啵。",
+    "pos": "57% 48%",
+    "zoom": 1.04
+  },
+  {
+    "src": "photos/mianjizi-19.webp",
+    "title": "先尝一口",
+    "note": "手比勺子快了一步。就一小口，真的。",
+    "pos": "50% 53%",
+    "zoom": 1.03
+  },
+  {
+    "src": "photos/mianjizi-20.webp",
+    "title": "再嚼两下",
+    "note": "等我再嚼两下，碗里的好吃的可不许偷偷跑掉。",
+    "pos": "52% 53%",
+    "zoom": 1.03
   }
 ];

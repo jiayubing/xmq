@@ -32,10 +32,10 @@ function photoFrame(photo, lazy = false) {
 function flip(card, state = !card.classList.contains('is-flipped')) {
   card.classList.toggle('is-flipped', state);
   card.setAttribute('aria-pressed', String(state));
-  card.querySelector('.polaroid-front, .note-front').setAttribute('aria-hidden', String(state));
-  card.querySelector('.polaroid-back, .note-back').setAttribute('aria-hidden', String(!state));
-  const front = card.querySelector('.photo-caption, .note-front > span:last-child');
-  const back = card.querySelector('.photo-note, .note-back > span:last-child');
+  card.querySelector('.polaroid-front').setAttribute('aria-hidden', String(state));
+  card.querySelector('.polaroid-back').setAttribute('aria-hidden', String(!state));
+  const front = card.querySelector('.photo-caption');
+  const back = card.querySelector('.photo-note');
   card.setAttribute('aria-label', (state ? back : front).innerText.replace(/\n/g, '，'));
 }
 
@@ -277,11 +277,6 @@ scatter.addEventListener('click', () => {
   sound('paper');
 });
 
-const gift = $('.gift-note');
-gift.addEventListener('click', () => {
-  flip(gift);
-  sound('paper');
-});
 new ResizeObserver(() => requestAnimationFrame(layoutDesk)).observe(stage);
 renderDesk();
 
