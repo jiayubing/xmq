@@ -283,12 +283,7 @@
         'is already on its way.'
       ],
       wishEasterEggCount: 3,
-      wishEasterEggLines: [
-        '心里一直惦记着的那些愿望，',
-        '今夜就悄悄替你接住吧。',
-        '愿你天天开心，事事顺心，',
-        '所有想要的，都会慢慢如愿。'
-      ]
+      wishMessage: '愿你天天开心，事事顺心'
     };
 
     const canvas = document.getElementById('stage');
@@ -311,14 +306,15 @@
     const FOLDED_ROTATION = Math.PI - 0.12;
     const ENAMEL = '#7A56C4';
     const HARDWARE_GLINT = 'rgba(191,166,246,.38)';
-    const STAR_PINK = '#F9A8D4';
-    const STAR_PALE_PINK = '#FBCFE8';
-    const STAR_COLORS = ['#FDE68A', '#F6CB61', '#F5F3FF', '#DDD6FE', STAR_PINK, STAR_PALE_PINK];
+    const STAR_PINK = '#DCA0C1';
+    const STAR_PALE_PINK = '#E7BBD4';
+    const STAR_COLORS = ['#BCA8E3', '#C7B9EA', '#ABC4E8', '#D0C5EF', STAR_PINK, '#DEBA78'];
+    const SPARK_COLORS = ['#F3D083', '#D9CCFA', '#C2E0F4', '#E7B8D4'];
     const WISH_COLOR = '#FFE39A';
     const OPEN_WATER_RY = 23.1;
-    const RAIN_DUST = { size: [1.35, 1.80], duration: [1.77, 2.12], tail: [10, 15], brightness: 0.62 };
-    const RAIN_STAR = { size: [2.10, 3.20], duration: [1.60, 1.96], tail: [16, 25], brightness: 0.88 };
-    const RAIN_SPARK = { size: [3.40, 4.90], duration: [1.45, 1.80], tail: [23, 34], brightness: 1 };
+    const RAIN_DUST = { size: [1.15, 1.55], duration: [1.77, 2.12], tail: [10, 15], brightness: [0.34, 0.53] };
+    const RAIN_STAR = { size: [2.10, 3.20], duration: [1.60, 1.96], tail: [16, 25], brightness: [0.63, 0.81] };
+    const RAIN_SPARK = { size: [3.40, 4.90], duration: [1.45, 1.80], tail: [23, 34], brightness: [0.86, 1] };
     const INTRO = {
       openStart: 0.6, spinStart: 1.4, peakStart: 2.7, coastStart: 3.5,
       rainTaperStart: 4.5, rainEnd: 5.55, lastLanding: 6.94, closeStart: 7, end: 7.9, peakSpeed: 5.9
@@ -723,7 +719,7 @@
         (waterLine - baseApexY - poemHeight) / sceneHeight,
         (dockCeiling - dockGap - baseApexY - poemHeight) / (sceneHeight + OPEN_WATER_RY)
       );
-      // 矮屏把诗放到侧边，居中时在钩底与水面之间给四行诗预留高度。
+      // 矮屏把祝福放到侧边，居中时在钩底与水面之间保留文字空间。
       const heightUnit = sidePoetry ? fitHeight(280) : Math.min(fitHeight(315), fitHeight(272, 48));
       const unit = Math.min(W / lerp(366, 398, portrait), H / 432, Math.max(0.08, heightUnit));
       const e = clamp(openVal, 0, 1);
@@ -1010,18 +1006,23 @@
       ctx.save();
       for (const { tip, bend, end, size, kind, color, rotation, front: near, fade } of ornaments) {
         if (front !== near) continue;
-        ctx.globalAlpha = fade;
+        const opacity = fade * (near ? 0.73 : 0.50);
+        ctx.globalAlpha = opacity;
         if (tip) {
           const thread = ctx.createLinearGradient(tip.x, tip.y, end.x, end.y);
           thread.addColorStop(0, 'rgba(229,203,255,.17)');
-          thread.addColorStop(1, color + 'A0');
+          thread.addColorStop(1, color + '82');
           const path = new Path2D();
           path.moveTo(tip.x, tip.y);
           path.quadraticCurveTo(bend.x, bend.y, end.x, end.y);
           strokePath(path, 0.48 * P.unit, thread);
         } else {
           const radius = size * starUnit;
-          if (size >= 2) drawStarGlow(end.x, end.y, radius, color);
+          if (kind === 8) {
+            ctx.globalAlpha = opacity * 0.35;
+            drawStarGlow(end.x, end.y, radius, color);
+            ctx.globalAlpha = opacity;
+          }
           drawStarShape(end.x, end.y, radius, kind, rotation, color);
         }
       }
@@ -1050,28 +1051,28 @@
     }
 
     function posePoetry(P, hardware) {
-      const fs = clamp(8.5 * P.unit, P.sidePoetry ? 9 : 10, 19);
-      const english = fs + 'px "Courier New", monospace';
-      const chinese = fs + 'px "Songti SC", "SimSun", "Microsoft YaHei", serif';
+      const fs = clamp(8.5 * P.unit, P.sidePoetry ? 9 : 11, 19);
+      const englishFont = fs + 'px "Courier New", monospace';
+      const chineseFont = fs + 'px "Songti SC", "SimSun", "Microsoft YaHei", serif';
       const lineHeight = fs * 1.24;
+      const textHeight = (CONFIG.poemLines.length - 1) * lineHeight;
       const spacing = Math.max(0.13, 0.28 * P.unit) + 'px';
       if (!P.sidePoetry) {
         const handleBottom = Math.max(...hardware.handle.map(point => point.y)) + 1.35 * P.unit;
         const top = handleBottom + 9 * P.unit + fs / 2;
-        const bottom = P.puddleY - P.waterRy - 6 * P.unit - fs / 2 - 3 * lineHeight;
+        const bottom = P.puddleY - P.waterRy - 6 * P.unit - fs / 2 - textHeight;
         const y = clamp(H * lerp(0.6775, 0.58, P.portrait), top, Math.max(top, bottom));
-        return { x: P.cx, y, lineHeight, spacing, english, chinese };
+        return { x: P.cx, y, lineHeight, spacing, englishFont, chineseFont };
       }
 
       ctx.save();
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.letterSpacing = spacing;
-      const metrics = [];
-      for (const [font, lines] of [[english, CONFIG.poemLines], [chinese, CONFIG.wishEasterEggLines]]) {
-        ctx.font = font;
-        for (const line of lines) metrics.push(ctx.measureText(line));
-      }
+      ctx.font = englishFont;
+      const metrics = CONFIG.poemLines.map(line => ctx.measureText(line));
+      ctx.font = chineseFont;
+      metrics.push(ctx.measureText(CONFIG.wishMessage));
       ctx.restore();
 
       const halfWidth = Math.max(...metrics.map(m => Math.max(m.actualBoundingBoxLeft, m.actualBoundingBoxRight)));
@@ -1080,25 +1081,29 @@
       const rightOfPuddle = P.cx + 158 * P.unit + 12;
       const top = Math.max(58, P.baseApexY + 106 * P.unit);
       const bottom = dockCeiling - 5;
-      const y = clamp(H * 0.48, top + ascent, bottom - descent - lineHeight * 3);
-      return { x: Math.min(rightOfPuddle + halfWidth, W - halfWidth - 12), y, lineHeight, spacing, english, chinese };
+      const y = clamp(H * 0.48, top + ascent, bottom - descent - textHeight);
+      const x = Math.min(rightOfPuddle + halfWidth, W - halfWidth - 12);
+      return { x, y, lineHeight, spacing, englishFont, chineseFont };
     }
 
     function drawPoetry(P, hardware) {
-      const { x, y, lineHeight, spacing, english, chinese } = posePoetry(P, hardware);
+      const { x, y, lineHeight, spacing, englishFont, chineseFont } = posePoetry(P, hardware);
       const presence = appState === 'intro' ? smoothstep(0.2, 1.65, introClock) : 1;
       ctx.save();
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.letterSpacing = spacing;
-      ctx.font = english;
-      ctx.globalAlpha = presence * (1 - smoothstep(0, 0.56, poemBlend)) * 0.51;
-      ctx.fillStyle = '#DCCAFF';
-      if (ctx.globalAlpha) CONFIG.poemLines.forEach((line, i) => ctx.fillText(line, x, y + i * lineHeight));
-      ctx.font = chinese;
-      ctx.globalAlpha = presence * smoothstep(0.44, 1, poemBlend) * 0.75;
-      ctx.fillStyle = '#F5DDB7';
-      if (ctx.globalAlpha) CONFIG.wishEasterEggLines.forEach((line, i) => ctx.fillText(line, x, y + i * lineHeight));
+      if (poemBlend < 0.5) {
+        ctx.font = englishFont;
+        ctx.globalAlpha = presence * (1 - smoothstep(0, 0.5, poemBlend)) * 0.51;
+        ctx.fillStyle = '#DCCAFF';
+        CONFIG.poemLines.forEach((line, i) => ctx.fillText(line, x, y + i * lineHeight));
+      } else {
+        ctx.font = chineseFont;
+        ctx.globalAlpha = presence * smoothstep(0.5, 1, poemBlend) * 0.75;
+        ctx.fillStyle = '#F5DDB7';
+        ctx.fillText(CONFIG.wishMessage, x, y + (CONFIG.poemLines.length - 1) * lineHeight / 2);
+      }
       ctx.restore();
     }
 
@@ -1214,11 +1219,16 @@
     function spawnStar(canopy, P, wish, xHint, random = Math.random) {
       const rimY = canopy ? Math.max(...canopy.ribs.map(rib => rib.tip.y)) : P.apexY + 70 * P.unit;
       const limit = Math.min(lerp(16, 147, P.e), 0.93 * P.waterRx / P.unit);
-      const x = xHint === undefined ? (random() * 2 - 1) * limit : clamp((xHint - P.cx) / P.unit, -limit, limit);
+      const offset = random() * 2 - 1;
+      const x = xHint === undefined
+        ? (wish ? offset : lerp(offset, random() * 2 - 1, 0.22)) * limit
+        : clamp((xHint - P.cx) / P.unit, -limit, limit);
       const u = x * P.unit / P.waterRx;
       const weight = random();
-      const profile = weight < 0.12 ? RAIN_DUST : weight < 0.70 ? RAIN_STAR : RAIN_SPARK;
-      const eightRayChance = profile === RAIN_SPARK ? 0.70 : 0.16;
+      const profile = weight < 0.05 ? RAIN_DUST : weight < 0.60 ? RAIN_STAR : RAIN_SPARK;
+      const spark = profile === RAIN_SPARK;
+      const colors = spark ? SPARK_COLORS : STAR_COLORS;
+      const eightRayChance = spark ? 0.70 : 0.16;
       const kind = wish ? 8 : profile === RAIN_DUST ? 0 : random() < eightRayChance ? 8 : 4;
       const duration = wish ? 0.96 : lerp(...profile.duration, random());
       const star = {
@@ -1229,11 +1239,12 @@
         duration: appState === 'intro' && !wish ? Math.min(duration, INTRO.lastLanding - introClock) : duration,
         size: wish ? 6.25 : lerp(...profile.size, random()),
         tail: wish ? 36 : lerp(...profile.tail, random()),
-        brightness: wish ? 1 : profile.brightness,
+        brightness: wish ? 1 : lerp(...profile.brightness, random()),
+        glow: wish ? 1 : spark ? 0.45 : 0,
         kind,
         phase: random() * TAU,
         flicker: 1.6 + random() * 2.8,
-        color: wish ? WISH_COLOR : STAR_COLORS[Math.floor(random() * STAR_COLORS.length)],
+        color: wish ? WISH_COLOR : colors[Math.floor(random() * colors.length)],
         wish
       };
       stars.push(star);
@@ -1242,10 +1253,11 @@
 
     function seedRain(canopy, P, spread = 1) {
       const random = seededRandom(2211);
-      const count = 19;
+      const count = 17;
       for (let i = 0; i < count; i++) {
         const star = spawnStar(canopy, P, false, undefined, random);
-        star.elapsed = star.duration * lerp(-(1 - spread) * 0.43, spread, (i + 0.7) / (count + 1));
+        const stagger = (i + 0.25 + random() * 0.8) / (count + 1);
+        star.elapsed = star.duration * lerp(-(1 - spread) * 0.43, spread, stagger);
       }
     }
 
@@ -1366,7 +1378,7 @@
         return;
       }
       const intro = appState === 'intro';
-      const rate = motionPreference.matches ? 10.2 : lerp(10.2, 13, phase(0, INTRO.peakSpeed, Math.abs(omega)));
+      const rate = motionPreference.matches ? 8.9 : lerp(8.9, 11.5, phase(0, INTRO.peakSpeed, Math.abs(omega)));
       const taper = intro ? 1 - smoothstep(INTRO.rainTaperStart, INTRO.rainEnd, introClock) : 1;
       if (intro && !introRainSeeded) {
         seedRain(canopy, P, 0.32);
@@ -1393,9 +1405,10 @@
         const size = star.size * starUnit;
         const ty = y - star.tail * tailUnit * smoothstep(0, 0.22, t);
         const pulse = 0.78 + 0.20 * Math.sin(time * star.flicker + star.phase);
-        ctx.globalAlpha = star.brightness * pulse * smoothstep(0, 0.08, t);
-        if (ctx.globalAlpha <= 0.01) continue;
+        const opacity = star.brightness * pulse * smoothstep(0, 0.08, t);
+        if (opacity <= 0.01) continue;
 
+        ctx.globalAlpha = opacity * (star.wish ? 1 : 0.63);
         const tail = ctx.createLinearGradient(x, y, x, ty);
         tail.addColorStop(0, star.color + 'D6');
         tail.addColorStop(0.34, star.color + '60');
@@ -1408,7 +1421,11 @@
         ctx.lineTo(x, ty);
         ctx.stroke();
 
-        drawStarGlow(x, y, size, star.color);
+        if (star.glow) {
+          ctx.globalAlpha = opacity * star.glow;
+          drawStarGlow(x, y, size, star.color);
+        }
+        ctx.globalAlpha = opacity;
         drawStarShape(x, y, size, star.kind, Math.sin(star.phase) * 0.16, star.color);
       }
       ctx.restore();
