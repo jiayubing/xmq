@@ -184,99 +184,6 @@
       background: linear-gradient(90deg, #7C3AED, #C4B5FD, #FDE68A);
     }
 
-    #entry-gate {
-      position: fixed;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      max-width: none;
-      max-height: none;
-      overflow: auto;
-      overscroll-behavior: contain;
-      margin: 0;
-      padding: 0;
-      border: 0;
-      background: rgba(27, 13, 48, 0.27);
-      color: inherit;
-      opacity: 0;
-      transition: opacity 420ms ease;
-    }
-
-    #entry-gate[open]:not([data-closing]) {
-      opacity: 1;
-      @starting-style { opacity: 0; }
-    }
-
-    #entry-gate::backdrop {
-      background: transparent;
-      overflow: hidden;
-      overscroll-behavior: contain;
-    }
-
-    .entry-actions {
-      position: absolute;
-      inset: clamp(132px, 68%, calc(100% - 130px)) 16px auto;
-      display: grid;
-      justify-items: center;
-      gap: 9px;
-      text-align: center;
-    }
-
-    #entry-prompt {
-      margin: 0 0 5px;
-      color: #d6c3e8;
-      font-size: 12px;
-      letter-spacing: 0.16em;
-    }
-
-    .entry-sound, .entry-quiet {
-      position: relative;
-      border-radius: 999px;
-      font: inherit;
-      letter-spacing: 0.09em;
-      cursor: pointer;
-    }
-
-    .entry-sound {
-      min-height: 42px;
-      padding: 0 21px;
-      border: 1px solid rgba(228, 200, 255, 0.4);
-      background: rgba(64, 33, 97, 0.72);
-      color: #f7edff;
-      font-size: 13px;
-    }
-
-    .entry-sound:hover { background: rgba(83, 47, 122, 0.88); }
-
-    .entry-quiet {
-      min-height: 28px;
-      padding: 0 10px;
-      border: 0;
-      background: transparent;
-      color: #b49acb;
-      font-size: 11px;
-    }
-
-    .entry-quiet:hover { color: #f3e8ff; }
-
-    @media (prefers-reduced-motion: no-preference) {
-      #entry-gate[open]:not([data-closing]) .entry-sound::after {
-        content: '';
-        position: absolute;
-        inset: -1px;
-        border: 1px solid #d6afff;
-        border-radius: inherit;
-        pointer-events: none;
-        animation: entry-breath 3.6s ease-in-out;
-        opacity: 0;
-      }
-
-      @keyframes entry-breath {
-        0%, 100% { opacity: 0; transform: scale(1); }
-        50% { opacity: 0.36; transform: scale(1.045, 1.12); }
-      }
-    }
-
     /* 纯净壁纸模式（隐藏按钮，仅留右上角一个半透明恢复按钮） */
     body.zen-mode #dock,
     body.zen-mode #btn-sound,
@@ -315,10 +222,6 @@
       outline: 2px solid #f8efff;
       outline-offset: 2px;
     }
-    #entry-gate button:focus-visible {
-      outline: 1px solid #d9bff8;
-      outline-offset: 3px;
-    }
     body.zen-mode .xmq-home { display: none; }
 
     @media (max-width: 420px) {
@@ -340,12 +243,11 @@
 
     @media (prefers-reduced-motion: reduce) {
       #top-controls, #dock, #intro-progress { transition: none; }
-      #entry-gate { transition-duration: 100ms; }
     }
   </style>
 </head>
 <body>
-  <a class="xmq-home" href="../" aria-label="返回作品首页"><span aria-hidden="true">‹</span> 作品</a>
+  <a class="xmq-home" href="../index.html" aria-label="返回作品首页"><span aria-hidden="true">‹</span> 作品</a>
   <canvas id="stage" role="img" aria-label="紫夜中一把落下星星的伞。点击开合，左右拖动转伞，可用下方按钮许愿。"></canvas>
 
   <!-- 顶部极简声音与纯净模式按钮 -->
@@ -371,19 +273,9 @@
     <div id="intro-progress-fill"></div>
   </div>
 
-  <dialog id="entry-gate" aria-labelledby="entry-prompt">
-    <div class="entry-actions">
-      <p id="entry-prompt">星雨在伞下等你。</p>
-      <button type="button" id="entry-sound" class="entry-sound" autofocus>轻触撑伞 · 开启琴音</button>
-      <button type="button" id="entry-quiet" class="entry-quiet">静音进入</button>
-    </div>
-  </dialog>
-
   <script src="./violetAudio.js"></script>
   <script>
     const CONFIG = {
-      introDuration: 6.5,
-      closedHold: 0.7,
       poemLines: [
         'Keep a quiet wish tonight,',
         'let the little stars fall slow —',
@@ -410,7 +302,6 @@
     const dockToggle = document.getElementById('dock-toggle');
     const introProgress = document.getElementById('intro-progress');
     const introProgressFill = document.getElementById('intro-progress-fill');
-    const entryGate = document.getElementById('entry-gate');
     const motionPreference = matchMedia('(prefers-reduced-motion: reduce)');
 
     const TAU = Math.PI * 2;
@@ -422,6 +313,10 @@
     const HARDWARE_GLINT = 'rgba(191,166,246,.38)';
     const STAR_COLORS = ['#FDE68A', '#F6CB61', '#F5F3FF', '#DDD6FE'];
     const WISH_COLOR = '#FFE39A';
+    const INTRO = {
+      openStart: 0.6, spinStart: 1.4, peakStart: 2.7, coastStart: 3.5,
+      rockStart: 6, rainEnd: 7.6, lastLanding: 8.30, closeStart: 8.36, end: 9.2, peakSpeed: 5.9
+    };
     const THREADS = [
       [11.5, 0.042, 0.68, 0, '#E6D4FF'], [15, -0.035, 2.05, 4, '#FFF0BA'],
       [19, -0.043, 2.55, 8, '#E6D4FF'], [8, 0.026, 1.38, 4, '#E6D4FF'],
@@ -430,7 +325,9 @@
       [18, 0.025, 2.25, 4, '#FDE68A'], [12, -0.035, 1.68, 4, '#E6D4FF'],
       [14.5, 0.032, 2.15, 8, '#E6D4FF'], [9, -0.040, 0.66, 0, '#FFF0BA']
     ].map(([length, slant, size, kind, color], i) => ({
-      length, slant, size, kind, color, frequency: 8.4 + (i * 7 % 12) * 0.26,
+      length, slant, size, kind, color,
+      frequency: 9.6 * Math.sqrt(14 / length),
+      windPhase: i * 2.39996, windStrength: 0.13 + (i * 7 % 12) * 0.012,
       flare: 0, flareVel: 0, lag: 0, lagVel: 0
     }));
     const background = document.createElement('canvas');
@@ -445,16 +342,18 @@
     let pointer = null;
 
     let userMuted = false, soundRequested = false, soundUnlocked = false;
-    let soundSuspension = null, pendingCanopySound = null, entryProbeTimer = 0;
+    let soundSuspension = null, pendingCanopySound = null;
 
     let starSpawnAcc = 0, wishCount = 0, poemBlend = 0;
+    let introRainSeeded = false, introRandom;
     const stars = [];
     const impacts = [];
 
     function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
     function lerp(a, b, t) { return a + (b - a) * t; }
+    function phase(lo, hi, v) { return clamp((v - lo) / (hi - lo), 0, 1); }
     function smoothstep(lo, hi, v) {
-      const t = clamp((v - lo) / (hi - lo), 0, 1);
+      const t = phase(lo, hi, v);
       return t * t * (3 - 2 * t);
     }
     function wrapAngle(angle) { return ((angle % TAU) + TAU) % TAU; }
@@ -539,13 +438,14 @@
     }
 
     function unlockSoundOnGesture(event) {
-      if (!active || appState === 'waiting' || userMuted || audio.enabled || !isActivatingGesture(event)) return;
+      if (!active || userMuted || soundIsPlaying() || !isActivatingGesture(event)) return;
       const keyboard = event.type === 'keydown';
       if (keyboard) {
         if (event.key === 'Escape' || event.repeat || event.isComposing
           || event.altKey || event.ctrlKey || event.metaKey
           || ['Alt', 'AltGraph', 'Control', 'Meta', 'Shift'].includes(event.key)) return;
-      } else if (event.button !== 0 || (event.type === 'pointerdown' && event.pointerType !== 'mouse')) {
+      } else if (event.button !== 0 || (event.type === 'pointerdown' && event.pointerType !== 'mouse')
+        || (event.type === 'pointerup' && event.pointerType === 'mouse')) {
         return;
       }
       if ((!keyboard || event.key === 'Enter' || event.key === ' ') && event.target.closest?.('#btn-sound')) return;
@@ -553,6 +453,7 @@
     }
 
     document.addEventListener('pointerdown', unlockSoundOnGesture, true);
+    document.addEventListener('pointerup', unlockSoundOnGesture, true);
     document.addEventListener('click', unlockSoundOnGesture, true);
     document.addEventListener('keydown', unlockSoundOnGesture, true);
     btnSound.addEventListener('click', event => {
@@ -606,6 +507,8 @@
       omega = previousOmega = angularAccel = 0;
       resetThreads();
       stars.length = impacts.length = 0;
+      introRainSeeded = false;
+      introRandom = seededRandom(4179);
       audio.resetPhrase();
 
       topControls.inert = false;
@@ -647,7 +550,7 @@
     document.getElementById('dock-replay').addEventListener('click', startIntro);
 
     canvas.addEventListener('pointerdown', event => {
-      if (!active || appState === 'waiting' || pointer || !event.isPrimary || event.button !== 0) return;
+      if (!active || pointer || !event.isPrimary || event.button !== 0) return;
       const tookOver = appState === 'intro';
       if (tookOver) {
         enterInteractive();
@@ -805,7 +708,8 @@
     }
 
     function getParams() {
-      const unit = Math.min(W / 366, H / 400);
+      const portrait = smoothstep(1, 1.6, H / W);
+      const unit = Math.min(W / lerp(366, 374, portrait), H / lerp(400, 455, portrait));
       const e = clamp(openVal, 0, 1);
       const lift = smoothstep(0, 0.9, e);
       const breathing = motionPreference.matches ? 0 : lift;
@@ -816,9 +720,9 @@
       const float = breathing * (2.4 * Math.sin(time * 0.94 + 0.45) + 0.8 * Math.sin(time * 1.68));
       const spread = Math.pow(e, 0.78);
       return {
-        unit, e, cx: W * 0.5, apexY: H * 0.1625 + float * unit,
+        unit, e, portrait, cx: W * 0.5, apexY: H * lerp(0.1625, 0.30, portrait) + float * unit,
         cinch: 1 - smoothstep(0, 0.37, e),
-        puddleY: H * 0.8175, waterRx: lerp(29, 158, spread) * unit,
+        puddleY: H * lerp(0.8175, 0.745, portrait), waterRx: lerp(29, 158, spread) * unit,
         waterRy: lerp(5.7, 23.1, spread) * unit,
         cosP: Math.cos(pitch), sinP: Math.sin(pitch),
         cosR: Math.cos(roll), sinR: Math.sin(roll)
@@ -1058,7 +962,7 @@
       const ornaments = [];
       if (!fade) return ornaments;
       for (const [i, thread] of THREADS.entries()) {
-        const { length, slant, size, kind, color, flare, lag } = thread;
+        const { length, slant, size, kind, color, flare, lag, flareVel, lagVel } = thread;
         const { angle, tip } = canopy.ribs[i];
         const world = canopyWorld(1, angle, 0, P);
         const radial = length * Math.sin(flare) * Math.cos(lag + slant);
@@ -1068,11 +972,16 @@
         const dx = radial * cos - tangential * sin;
         const dz = radial * sin + tangential * cos;
         const end = project(world.x + dx, world.y + hang, world.z + dz, P);
-        const bend = project(world.x + dx * 0.44, world.y + hang * 0.55, world.z + dz * 0.44, P);
+        // 丝线中段比星坠略早跟上风势，甩动和回摆时会出现柔和弧线。
+        const radialBend = clamp(flareVel * 0.045, -0.24, 0.24) * length;
+        const tangentBend = clamp(lagVel * 0.06, -0.29, 0.29) * length;
+        const bend = project(world.x + dx * 0.46 + radialBend * cos - tangentBend * sin,
+          world.y + hang * 0.56, world.z + dz * 0.46 + radialBend * sin + tangentBend * cos, P);
         const front = canopy.isFront(angle);
         const pulse = motionPreference.matches ? 0.86 : 0.83 + 0.15 * Math.sin(time * 2.4 + i * 2.6);
         ornaments.push({ tip, bend, end, color, depth: bend.depth, front, fade });
-        ornaments.push({ end, size, kind, color, rotation: lag * 0.30, depth: end.depth, front, fade: fade * pulse });
+        const rotation = lag * 0.62 + clamp(lagVel * 0.05, -0.25, 0.25);
+        ornaments.push({ end, size, kind, color, rotation, depth: end.depth, front, fade: fade * pulse });
       }
       return ornaments.sort((a, b) => a.depth - b.depth);
     }
@@ -1125,7 +1034,10 @@
       const chinese = fs + 'px "Songti SC", "SimSun", "Microsoft YaHei", serif';
       const lineHeight = fs * 1.24;
       const spacing = Math.max(0.13, 0.28 * P.unit) + 'px';
-      if (!compact) return { x: P.cx, y: H * 0.48, lineHeight, spacing, english, chinese };
+      if (!compact) {
+        const belowHandle = Math.min(P.apexY + 221 * P.unit, P.puddleY - P.waterRy - 4 * lineHeight);
+        return { x: P.cx, y: lerp(H * 0.48, belowHandle, P.portrait), lineHeight, spacing, english, chinese };
+      }
 
       ctx.save();
       ctx.textAlign = 'center';
@@ -1264,19 +1176,21 @@
       const tips = canopy?.ribs.map(rib => rib.tip);
       const rimY = tips ? tips.reduce((sum, tip) => sum + tip.y, 0) / NUM_RIBS : P.apexY + 70 * P.unit;
       const x = xHint === undefined ? (random() * 2 - 1) * 147 : clamp((xHint - P.cx) / P.unit, -147, 147);
-      const drift = clamp(omega * 2, -12, 12) + (random() - 0.5) * 9;
-      const u = clamp((x + drift) / 165, -0.9, 0.9);
+      const drift = clamp(omega * 6.4, -43, 43) + (random() - 0.5) * 14;
+      const u = clamp((x + drift * 0.70) / 165, -0.93, 0.93);
       const kind = wish ? 8 : [0, 4, 4, 4, 8][Math.floor(random() * 5)];
+      const duration = wish ? 0.96 : 1.62 + random() * 0.50;
       const star = {
         x, u, drift,
         y: (rimY - P.apexY) / P.unit + 12 + random() * 16,
         v: (random() - 0.50) * 1.5 * Math.sqrt(1 - u ** 2),
         elapsed: 0,
-        duration: wish ? 0.96 : 1.62 + random() * 0.50,
-        size: wish ? 6.8 : kind === 0 ? 0.75 + random() * 0.38 : 2.15 + random() * 1.8,
+        duration: appState === 'intro' && !wish ? Math.min(duration, INTRO.lastLanding - introClock) : duration,
+        size: wish ? 6.8 : kind === 0 ? 0.58 + random() * 0.54 : 1.65 + random() * 2.3,
         tail: wish ? 32 : 13 + random() * 10,
         kind,
         phase: random() * TAU,
+        flicker: 1.6 + random() * 2.8,
         color: wish ? WISH_COLOR : STAR_COLORS[Math.floor(random() * STAR_COLORS.length)],
         wish
       };
@@ -1284,11 +1198,12 @@
       return star;
     }
 
-    function seedRain(canopy, P) {
+    function seedRain(canopy, P, spread = 1) {
       const random = seededRandom(2211);
-      for (let i = 0; i < 18; i++) {
+      const count = 32;
+      for (let i = 0; i < count; i++) {
         const star = spawnStar(canopy, P, false, undefined, random);
-        star.elapsed = star.duration * (i + 0.7) / 19;
+        star.elapsed = star.duration * lerp(-(1 - spread) * 0.43, spread, (i + 0.7) / (count + 1));
       }
     }
 
@@ -1385,20 +1300,10 @@
       ctx.restore();
     }
 
-    function updateRain(dt, canopy, P) {
+    function updateRain(dt, canopy, P, raining) {
       for (let i = impacts.length - 1; i >= 0; i--) {
         impacts[i].elapsed += dt;
         if (impacts[i].elapsed >= 1) impacts.splice(i, 1);
-      }
-
-      if (targetOpen && P.e > 0.59) {
-        starSpawnAcc += dt * (motionPreference.matches ? 8 : 10.2 + Math.abs(omega) * 1.55);
-        while (starSpawnAcc >= 1) {
-          starSpawnAcc--;
-          spawnStar(canopy, P, false);
-        }
-      } else {
-        starSpawnAcc = 0;
       }
 
       for (let i = stars.length - 1; i >= 0; i--) {
@@ -1411,6 +1316,23 @@
         else audio.playStarSplash(pan);
         stars.splice(i, 1);
       }
+
+      if (!raining) {
+        starSpawnAcc = 0;
+        return;
+      }
+      const intro = appState === 'intro';
+      const rate = motionPreference.matches ? 14 : 18.4 + Math.abs(omega) * 2.65;
+      const taper = intro ? 1 - smoothstep(6.85, INTRO.rainEnd, introClock) : 1;
+      if (intro && !introRainSeeded) {
+        seedRain(canopy, P, 0.32);
+        introRainSeeded = true;
+      }
+      starSpawnAcc += dt * rate * taper;
+      while (starSpawnAcc >= 1) {
+        starSpawnAcc--;
+        spawnStar(canopy, P, false, undefined, intro ? introRandom : Math.random);
+      }
     }
 
     function drawRain(P) {
@@ -1419,11 +1341,12 @@
       ctx.lineCap = 'round';
       for (const star of stars) {
         const t = star.elapsed / star.duration;
+        if (t <= 0) continue;
         const x = P.cx + lerp(star.x * u, star.u * P.waterRx, t) + Math.sin(Math.PI * t) * star.drift * u;
         const y = lerp(P.apexY + star.y * u, P.puddleY + star.v * P.waterRy, t * (0.72 + 0.28 * t));
         const tx = x - star.drift * 0.32 * u;
         const ty = y - star.tail * u * smoothstep(0, 0.22, t);
-        const pulse = 0.80 + 0.15 * Math.sin(time * 2.4 + star.phase);
+        const pulse = 0.78 + 0.20 * Math.sin(time * star.flicker + star.phase);
         ctx.globalAlpha = pulse * smoothstep(0, 0.08, t);
         if (ctx.globalAlpha <= 0.01) continue;
 
@@ -1459,43 +1382,41 @@
     function updateThreads(dt) {
       if (!dt || motionPreference.matches) return;
       const flareTarget = Math.atan(0.037 * omega ** 2);
-      // 旋转时受到风阻，减速时惯性反向驱动垂丝。
       const lagTarget = clamp(-0.065 * omega - 0.095 * angularAccel, -1.10, 1.10);
+      const wind = 1 - 0.45 * smoothstep(0.4, 5.9, Math.abs(omega));
       const steps = Math.ceil(dt * 120);
       const step = dt / steps;
       for (const thread of THREADS) {
         const f = thread.frequency;
         const g = f * 0.86;
+        const breeze = wind * thread.windStrength;
+        const phase = thread.windPhase;
+        const radial = flareTarget + breeze * (0.44 + 0.57 * Math.sin(time * 2.1 + phase)
+          + 0.26 * Math.sin(time * 4.3 - phase * 1.3));
+        const tangent = lagTarget + breeze * (Math.sin(time * 2.8 + phase)
+          + 0.37 * Math.sin(time * 5.1 + phase * 0.7));
         for (let i = 0; i < steps; i++) {
-          thread.flareVel += (f ** 2 * (flareTarget - thread.flare) - 0.88 * f * thread.flareVel) * step;
-          thread.lagVel += (g ** 2 * (lagTarget - thread.lag) - 0.74 * g * thread.lagVel) * step;
+          thread.flareVel += (f ** 2 * (radial - thread.flare) - 0.93 * f * thread.flareVel) * step;
+          thread.lagVel += (g ** 2 * (tangent - thread.lag) - 0.78 * g * thread.lagVel) * step;
           thread.flare += thread.flareVel * step;
           thread.lag += thread.lagVel * step;
         }
       }
     }
 
-    function updateUmbrella(dt, elapsed, now) {
+    function updateUmbrella(dt, now) {
+      let sway = 0;
       if (appState === 'intro') {
-        updateIntro(elapsed);
-      } else if (!pointer) {
-        omega = lerp(omega, idleSpin(), 1 - Math.exp(-1.23 * dt));
-        const spin = targetOpen ? 1 : smoothstep(0.012, 0.26, openVal);
-        rot = wrapAngle(rot + omega * spin * dt);
-      } else if (now - pointer.spinAt > 46) {
-        omega *= Math.exp(-9 * dt);
-      }
-
-      // 临界阻尼弹簧的解析解，帧率变化时也保留连续的位移和速度。
-      const rate = targetOpen ? 6.4 : 7.4;
-      const offset = openVal - targetOpen;
-      const slope = openVel + rate * offset;
-      const decay = Math.exp(-rate * dt);
-      openVal = clamp(targetOpen + (offset + slope * dt) * decay, 0, 1);
-      openVel = (openVel - rate * slope * dt) * decay;
-      if (Math.abs(targetOpen - openVal) < 0.00005 && Math.abs(openVel) < 0.0004) {
-        openVal = targetOpen;
-        openVel = 0;
+        sway = updateIntro(dt);
+      } else {
+        if (!pointer) {
+          omega = lerp(omega, idleSpin(), 1 - Math.exp(-1.23 * dt));
+          const spin = targetOpen ? 1 : smoothstep(0.012, 0.26, openVal);
+          rot = wrapAngle(rot + omega * spin * dt);
+        } else if (now - pointer.spinAt > 46) {
+          omega *= Math.exp(-9 * dt);
+        }
+        settleCanopy(dt);
       }
       if (!dt) return;
 
@@ -1506,28 +1427,60 @@
 
       const turn = clamp(omega / 7.8, -1, 1);
       const pitchTarget = clamp(-0.044 * openVel, -0.086, 0.086)
-        - 0.046 * Math.abs(turn) + 0.026 * turn * Math.cos(rot);
+        - 0.046 * Math.abs(turn) + 0.026 * turn * Math.cos(rot) + 0.066 * sway;
       const rollTarget = clamp(-0.016 * openVel, -0.031, 0.031)
-        - 0.11 * turn + 0.035 * turn * Math.sin(rot);
+        - 0.11 * turn + 0.035 * turn * Math.sin(rot) + 0.18 * sway;
       pitchExtra = lerp(pitchExtra, pitchTarget, 1 - Math.exp(-5.2 * dt));
       rollExtra = lerp(rollExtra, rollTarget, 1 - Math.exp(-(pointer ? 7.8 : 4.8) * dt));
     }
 
-    function updateIntro(elapsed) {
-      introClock += elapsed;
-      introProgressFill.style.width = 100 * clamp(introClock / CONFIG.introDuration, 0, 1) + '%';
-      if (introClock >= CONFIG.closedHold) setTargetOpen(1);
-
-      const lift = smoothstep(CONFIG.closedHold, 2.8, introClock);
-      const coasting = Math.max(0, introClock - 2.8);
-      const azimuth = lerp(FOLDED_ROTATION, TAU, lift)
-        + 0.38 * (1 - Math.exp(-0.74 * coasting)) + idleSpin() * coasting;
-      if (elapsed > 0) {
-        const delta = wrapAngle(azimuth - rot + Math.PI) - Math.PI;
-        omega = delta / elapsed;
+    function settleCanopy(dt) {
+      // 交互时用临界阻尼弹簧接续开场结束或接管时的位移和速度。
+      const rate = targetOpen ? 6.4 : 7.4;
+      const offset = openVal - targetOpen;
+      const slope = openVel + rate * offset;
+      const decay = Math.exp(-rate * dt);
+      openVal = clamp(targetOpen + (offset + slope * dt) * decay, 0, 1);
+      openVel = (openVel - rate * slope * dt) * decay;
+      if (Math.abs(targetOpen - openVal) < 0.00005 && Math.abs(openVel) < 0.0004) {
+        openVal = targetOpen;
+        openVel = 0;
       }
-      rot = wrapAngle(azimuth);
-      if (introClock >= CONFIG.introDuration) enterInteractive();
+    }
+
+    function updateIntro(dt) {
+      const { openStart, spinStart, peakStart, coastStart, rockStart, rainEnd, closeStart, end, peakSpeed } = INTRO;
+      const t = introClock = Math.min(introClock + dt, end);
+      introProgressFill.style.width = 100 * t / end + '%';
+      if (t >= openStart) setTargetOpen(Number(t < closeStart));
+
+      const opening = phase(openStart, spinStart, t);
+      const closing = phase(closeStart, end, t);
+      openVal = opening ** 2 * (3 - 2 * opening) - closing ** 2 * (3 - 2 * closing);
+      openVel = 6 * (opening * (1 - opening) / (spinStart - openStart)
+        - closing * (1 - closing) / (end - closeStart));
+
+      // 对平滑升降速曲线积分，转角和角速度在每个阶段边界都连续。
+      const rampArea = p => p ** 3 * (1 - p * 0.5);
+      const accel = phase(spinStart, peakStart, t);
+      const coast = phase(coastStart, rockStart, t);
+      const spinAngle = peakSpeed * ((peakStart - spinStart) * rampArea(accel)
+        + clamp(t - peakStart, 0, coastStart - peakStart)
+        + (rockStart - coastStart) * (coast - rampArea(coast)));
+      const rocking = phase(rockStart, rainEnd, t);
+      const rockEdge = 0.17;
+      const fade = phase(0, rockEdge, Math.min(rocking, 1 - rocking));
+      const envelope = fade ** 2 * (3 - 2 * fade);
+      const envelopeRate = 6 * fade * (1 - fade) * Math.sign(0.5 - rocking) / rockEdge;
+      const wave = rocking * TAU * 2;
+      const sway = envelope * Math.sin(wave);
+      const rockSpeed = 0.22 / (rainEnd - rockStart) * (envelopeRate * Math.sin(wave)
+        + envelope * TAU * 2 * Math.cos(wave));
+      omega = peakSpeed * (smoothstep(spinStart, peakStart, t) - smoothstep(coastStart, rockStart, t)) + rockSpeed;
+      rot = wrapAngle(FOLDED_ROTATION + spinAngle + 0.22 * sway);
+
+      if (t >= end) enterInteractive();
+      return sway;
     }
 
     function loop(now) {
@@ -1538,26 +1491,27 @@
       last = now;
       time += dt;
 
-      const waiting = appState === 'waiting';
-      if (!waiting) updateUmbrella(dt, elapsed, now);
+      updateUmbrella(dt, now);
 
       const showWish = Number(wishCount >= CONFIG.wishEasterEggCount);
       poemBlend = lerp(poemBlend, showWish, 1 - Math.exp(-1.55 * dt));
-      audio.updateContinuous({ dt, openVal, omega, rainActive: targetOpen === 1 });
+      const raining = targetOpen === 1 && openVal > 0.59
+        && (appState !== 'intro' || introClock < INTRO.rainEnd);
+      audio.updateContinuous({ dt, openVal, omega, rainActive: raining });
 
       const P = getParams();
       const canopy = getCanopy(P);
       canopy.dew = getDew(canopy, P);
       const hardware = getHardware(P);
-      updateRain(dt, canopy, P);
+      updateRain(dt, canopy, P, raining);
       ctx.drawImage(background, 0, 0, W, H);
-      if (!waiting) drawPoetry(P);
+      drawPoetry(P);
       drawPuddle(P);
       drawUmbrella(canopy, hardware, P);
       drawRain(P);
       drawSplashes(P);
       ctx.drawImage(inkGrain, 0, 0, W, H);
-      if (!waiting) frameRequest = requestAnimationFrame(loop);
+      frameRequest = requestAnimationFrame(loop);
     }
 
     function resumeFrame() {
@@ -1573,63 +1527,13 @@
       pointer = null;
     }
 
-    function finishEntry(muted) {
-      if (appState !== 'waiting') return;
-      clearTimeout(entryProbeTimer);
-      if (muted) {
-        userMuted = true;
-        soundRequested = false;
-        pauseSound();
-      } else if (!soundIsPlaying()) {
-        void enableSound();
-      }
-      startIntro();
-      resumeFrame();
-      if (!entryGate.open) return;
-
-      entryGate.setAttribute('data-closing', '');
-      // 在原生模态层上淡出，再关闭，较早的浏览器也能完整播放过渡。
-      const closing = entryGate.getAnimations();
-      void Promise.allSettled(closing.map(animation => animation.finished)).then(() => {
-        entryGate.close();
-        entryGate.removeAttribute('data-closing');
-      });
-    }
-
-    document.getElementById('entry-sound').addEventListener('click', () => finishEntry(false));
-    document.getElementById('entry-quiet').addEventListener('click', () => finishEntry(true));
-    entryGate.addEventListener('cancel', event => {
-      event.preventDefault();
-      finishEntry(true);
-    });
-
-    function probeDirectEntry() {
-      if (document.hidden) return;
-      void enableSound().then(() => {
-        if (soundIsPlaying()) finishEntry(false);
-      });
-      // 自动播放拦截时 resume() 可能一直挂起，不能让入口等它完成。
-      entryProbeTimer = setTimeout(() => {
-        if (appState !== 'waiting' || document.hidden) return;
-        if (soundIsPlaying()) finishEntry(false);
-        else entryGate.showModal();
-      }, 180);
-    }
-
-    function showExperience(direct = false) {
+    function showExperience() {
       if (active) return;
       active = true;
-      if (!direct && !userMuted) void enableSound();
+      void enableSound();
       resize();
-      if (direct) {
-        appState = 'waiting';
-        resumeFrame();
-        probeDirectEntry();
-      } else {
-        startIntro();
-        resumeFrame();
-      }
-      syncAudioUI();
+      startIntro();
+      resumeFrame();
     }
 
     function stopExperience() {
@@ -1645,14 +1549,12 @@
       if (!active) return;
       if (document.hidden) {
         pauseFrame();
-        clearTimeout(entryProbeTimer);
         soundRequested = soundUnlocked;
         pendingCanopySound = null;
         pauseSound();
       } else {
         resumeFrame();
-        if (appState === 'waiting' && !entryGate.open) probeDirectEntry();
-        else if (soundUnlocked && !userMuted) void enableSound();
+        if (soundUnlocked || !audio.ctx) void enableSound();
       }
     });
 
@@ -1663,9 +1565,7 @@
     });
 
     window.addEventListener('resize', () => {
-      if (!active) return;
-      resize();
-      if (appState === 'waiting') resumeFrame();
+      if (active) resize();
     });
     if (window.parent !== window && new URLSearchParams(location.search).has('gallery')) {
       window.xmqRain = { start: showExperience, stop: stopExperience };
@@ -1675,7 +1575,7 @@
         window.parent.postMessage('xmq-rain-home', location.origin);
       });
     } else {
-      showExperience(true);
+      showExperience();
     }
 
   </script>
