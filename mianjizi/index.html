@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#f9f4e8">
   <meta name="description" content="把邪恶面剂子装进口袋。一桌拍立得和一张自己做的四格纪念卡。">
   <title>太阳口袋 · 邪恶面剂子</title>
@@ -37,19 +37,21 @@
     </div>
 
     <section id="desk" role="tabpanel" aria-labelledby="tab-desk">
-      <p id="desk-help" class="sr-only">点照片翻面，拖动照片自由摆放，也可以聚焦照片后用方向键微调。</p>
+      <p id="desk-help" class="sr-only">点照片翻面。触屏拖动顶部胶带，鼠标可拖动照片，聚焦后用方向键微调。</p>
       <div class="desk-stage">
         <div class="desk-photos"></div>
         <p class="desk-empty" hidden>照片放进相册后，就能在这里摆拍立得。</p>
+      </div>
+      <div class="desk-accessories">
         <button class="gift-note" type="button" aria-label="给拆开礼物的你，翻看便签" aria-pressed="false">
           <span class="note-inner">
             <span class="note-face note-front">
-              <span class="paper-cue" aria-hidden="true">翻面 ↻</span>
-              <span>给拆开礼物的你<br>今天也记得，给自己留一点甜。</span>
+              <span class="paper-cue" aria-hidden="true">翻面</span>
+              <span class="note-copy">给拆开礼物的你<br><span>今天也记得，</span><span>给自己留一点甜。</span></span>
             </span>
             <span class="note-face note-back" aria-hidden="true">
-              <span class="paper-cue" aria-hidden="true">翻回 ↻</span>
-              <span>如果今天有点忙<br>就把这张小纸条，当成口袋里的太阳。</span>
+              <span class="paper-cue" aria-hidden="true">翻回</span>
+              <span class="note-copy">如果今天有点忙<br><span>就把这张小纸条，</span><span>当成口袋里的太阳。</span></span>
             </span>
           </span>
         </button>
@@ -61,7 +63,13 @@
                 <span class="ball b4"></span><span class="ball b5"></span><span class="ball b6"></span>
                 <span class="ball b7"></span><span class="ball b8"></span>
               </span>
-              <span class="machine-base"><span class="machine-dial"></span><span class="machine-slot"></span></span>
+              <span class="machine-base">
+                <svg class="machine-flowers" viewBox="0 0 100 20" aria-hidden="true">
+                  <path id="machine-flower" d="M10 5C6 0 2 4 5 8 0 8 0 14 6 14 4 18 9 21 11 16 14 20 19 16 16 13 21 12 19 6 14 8 15 3 11 1 10 5Z M10.5 9a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z" fill-rule="evenodd"/>
+                  <use href="#machine-flower" x="80"/>
+                </svg>
+                <span class="machine-dial"></span><span class="machine-slot"></span>
+              </span>
             </span>
             <span class="machine-cta">摇一摇 · 抽今日份可爱</span>
           </button>
@@ -82,7 +90,9 @@
       </div>
       <div class="card-bench">
         <div class="postcard" aria-label="纪念卡预览">
-          <span class="postcard-sun" aria-hidden="true">☼</span>
+          <svg class="postcard-sun" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0ZM12 1.5v3m0 15v3M1.5 12h3m15 0h3M4.6 4.6l2.1 2.1m10.6 10.6 2.1 2.1M4.6 19.4l2.1-2.1M17.3 6.7l2.1-2.1"/>
+          </svg>
           <p class="postcard-line card-top"></p>
           <div class="postcard-photos"></div>
           <p class="postcard-line card-bottom"></p>
@@ -115,7 +125,7 @@
     <div class="dialog-photo"></div>
     <p class="capsule-fortune"></p>
     <div class="dialog-actions">
-      <button class="pill dialog-flip" type="button">看背面 ↻</button>
+      <button class="pill dialog-flip" type="button">看背面</button>
     </div>
   </dialog>
 

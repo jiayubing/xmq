@@ -48,21 +48,27 @@ function polaroid(photo, onDesk = false, index = 0) {
   front.append(photoFrame(photo), element('span', 'photo-caption', photo.title));
   if (onDesk) {
     const colors = ['#e4b17583', '#d98ca58f', '#9fb29099', '#b09bc892'];
-    const tape = element('span', 'tape');
-    tape.style.setProperty('--tape', colors[index % colors.length]);
-    front.append(tape);
+    card.style.setProperty('--tape', colors[index % colors.length]);
+    front.append(element('span', 'tape'));
     if (index === 1) {
-      const heart = element('span', 'heart-sticker', '♥');
+      const svg = 'http://www.w3.org/2000/svg';
+      const heart = document.createElementNS(svg, 'svg');
+      const shape = document.createElementNS(svg, 'path');
+      heart.setAttribute('class', 'heart-sticker');
+      heart.setAttribute('viewBox', '0 0 24 24');
       heart.setAttribute('aria-hidden', 'true');
+      shape.setAttribute('d', 'M12 21C10 19 2 14 2 8a5.25 5.25 0 0 1 10-2.25A5.25 5.25 0 0 1 22 8c0 6-8 11-10 13Z');
+      heart.append(shape);
       front.append(heart);
     }
     card.setAttribute('aria-describedby', 'desk-help');
   }
   const back = element('span', 'polaroid-face polaroid-back');
   back.setAttribute('aria-hidden', 'true');
-  back.append(element('span', 'photo-note', photo.note), element('span', 'flip-cue', '翻回 ↻'));
+  back.append(element('span', 'photo-note', photo.note), element('span', 'flip-cue', '翻回'));
   inner.append(front, back);
   card.append(inner);
+  if (onDesk) card.append(element('span', 'desk-grip'));
   return card;
 }
 
@@ -74,19 +80,17 @@ const desktopSlots = [
   [51.3, 58.3, 21.7, 22.4, -5], [76.5, 57.3, 19.3, 23.1, 8],
 ];
 const mobileSlots = [
-  [3, 3.8, 43.4, 48.5, -7], [51, 1.1, 44.5, 51.5, 5],
-  [2.6, 55.4, 43.4, 45.9, 4], [51.2, 54.1, 43.9, 45, -6],
-  [3, 174, 43.4, 48, -6], [51, 173, 44.5, 49, 5],
-  [3.3, 225, 43.7, 45, 4], [51.5, 225, 43.8, 48, -6],
+  [6, 7, 39, 44, -6], [55, 4, 39, 45, 5],
+  [6, 59, 39, 44, 4], [55, 57, 39, 45, -5],
 ];
-const batchSize = desktopSlots.length;
-const batchCount = Math.max(1, Math.ceil(photos.length / batchSize));
 const stage = $('.desk-stage');
 const deskPhotos = $('.desk-photos');
 const deskNumber = $('.desk-number');
 const deskNext = $('.next-desk');
 const deskReset = $('.reset-desk');
 const scatter = $('.scatter-desk');
+let batchSize = smallDesk.matches ? mobileSlots.length : desktopSlots.length;
+let batchCount = Math.max(1, Math.ceil(photos.length / batchSize));
 let batch = 0;
 let cards = [];
 let topCard = 1;
@@ -104,8 +108,9 @@ function bound(card, left, top) {
   const angle = Math.abs(card.angle * Math.PI / 180);
   const extraX = Math.max(0, (card.width * Math.cos(angle) + card.height * Math.sin(angle) - card.width) / 2);
   const extraY = Math.max(0, (card.height * Math.cos(angle) + card.width * Math.sin(angle) - card.height) / 2);
-  card.left = Math.min(Math.max(left, extraX), stageWidth - card.width - extraX);
-  card.top = Math.min(Math.max(top, extraY), stageHeight - card.height - extraY);
+  const inset = smallDesk.matches ? Math.min(12, stageWidth * .035) : 0;
+  card.left = Math.min(Math.max(left, extraX + inset), stageWidth - card.width - extraX - inset);
+  card.top = Math.min(Math.max(top, extraY + inset), stageHeight - card.height - extraY - inset);
   place(card);
 }
 
@@ -117,9 +122,11 @@ function layoutDesk() {
   const mobile = smallDesk.matches;
   const slots = mobile ? mobileSlots : desktopSlots;
   const unit = width / 100;
-  const lastSlot = slots[Math.max(0, cards.length - 1)];
-  const end = Math.max(mobile ? 169 : 52, lastSlot[1] + lastSlot[3] + (mobile ? 5 : 4));
-  stage.style.height = `${Math.ceil(end * unit)}px`;
+  const [, lastTop, , lastHeight] = slots[Math.max(0, cards.length - 1)];
+  const end = mobile
+    ? Math.max(...slots.slice(0, Math.max(1, cards.length)).map(([, top, , height]) => top + height + 6))
+    : Math.max(52, lastTop + lastHeight + 4);
+  stage.style.height = mobile && !cards.length ? '' : `${Math.ceil(end * unit)}px`;
   stageHeight = stage.clientHeight;
   cards.forEach((card, index) => {
     const [left, top, sizing, height, rotation] = slots[index];
@@ -157,6 +164,7 @@ function attachDrag(card) {
   node.addEventListener('pointerdown', (event) => {
     if (!event.isPrimary || event.button !== 0) return;
     ignoreClick = false;
+    if (smallDesk.matches && event.pointerType === 'touch' && !event.target.closest('.desk-grip')) return;
     drag = {
       id: event.pointerId, x: event.clientX, y: event.clientY, left: card.left, top: card.top,
       lastX: event.clientX, lastY: event.clientY, time: event.timeStamp, vx: 0, vy: 0,
@@ -222,6 +230,7 @@ function renderDesk() {
   topCard = cards.length;
   deskPhotos.replaceChildren(...cards.map(({ node }) => node));
   stageWidth = 0;
+  deskNext.hidden = deskNumber.hidden = batchCount === 1;
   deskNumber.textContent = batchCount > 1 ? `桌 ${batch + 1}·${batchCount}` : '';
   layoutDesk();
 }
@@ -239,19 +248,30 @@ function resetDesk() {
   sound('paper');
 }
 
-deskNext.hidden = deskNumber.hidden = batchCount === 1;
 scatter.disabled = deskReset.disabled = !photos.length;
 $('.desk-empty').hidden = photos.length > 0;
 deskReset.addEventListener('click', resetDesk);
-deskNext.addEventListener('click', () => {
+deskNext.addEventListener('click', (event) => {
   batch = (batch + 1) % batchCount;
   renderDesk();
+  if (smallDesk.matches && event.detail && stage.getBoundingClientRect().top < 0) {
+    stage.scrollIntoView({ block: 'start', behavior: motion.matches ? 'auto' : 'smooth' });
+  }
   sound('paper');
 });
+smallDesk.addEventListener('change', (event) => {
+  const anchor = batch * batchSize;
+  batchSize = event.matches ? mobileSlots.length : desktopSlots.length;
+  batchCount = Math.max(1, Math.ceil(photos.length / batchSize));
+  batch = Math.floor(anchor / batchSize);
+  renderDesk();
+});
 scatter.addEventListener('click', () => {
-  const distance = Math.min(110, stageWidth * .105);
+  const mobile = smallDesk.matches;
+  const distance = mobile ? stageWidth * .017 : Math.min(110, stageWidth * .105);
+  const turn = mobile ? 2 : 12;
   cards.forEach((card) => {
-    card.turn = Math.random() * 24 - 12;
+    card.turn = (Math.random() * 2 - 1) * turn;
     card.angle = card.homeAngle + card.turn;
     card.node.classList.add('is-settling');
     bound(card, card.homeX + (Math.random() - .5) * 2 * distance, card.homeY + (Math.random() - .5) * distance);
@@ -264,7 +284,7 @@ gift.addEventListener('click', () => {
   flip(gift);
   sound('paper');
 });
-new ResizeObserver(layoutDesk).observe(stage);
+new ResizeObserver(() => requestAnimationFrame(layoutDesk)).observe(stage);
 renderDesk();
 
 const photoDialog = $('.photo-dialog');
@@ -275,7 +295,7 @@ const fortune = $('.capsule-fortune');
 function toggleDialogPhoto() {
   const card = dialogPhoto.firstElementChild;
   flip(card);
-  dialogFlip.textContent = card.classList.contains('is-flipped') ? '看正面 ↻' : '看背面 ↻';
+  dialogFlip.textContent = card.classList.contains('is-flipped') ? '看正面' : '看背面';
   sound('paper');
 }
 
@@ -287,7 +307,7 @@ function showCapsulePhoto(photo, message) {
   const card = polaroid(photo);
   card.addEventListener('click', toggleDialogPhoto);
   dialogPhoto.replaceChildren(card);
-  dialogFlip.textContent = '看背面 ↻';
+  dialogFlip.textContent = '看背面';
   fortune.textContent = message;
   photoDialog.showModal();
 }
@@ -416,6 +436,7 @@ function showPicker(slot) {
   });
   pickDialog.scrollTop = 0;
   pickDialog.showModal();
+  pickPhotos.scrollTop = 0;
 }
 
 randomCard.addEventListener('click', () => {
@@ -434,8 +455,12 @@ $('.palette').addEventListener('change', (event) => {
   postcard.style.setProperty('--card-rule', rule);
 });
 
+const phraseMetrics = document.createElement('canvas').getContext('2d');
+
 function phraseSize(text) {
-  return Math.min(4.6, 81 / Math.max(1, Array.from(text).length));
+  phraseMetrics.font = `100px ${getComputedStyle(postcard).getPropertyValue('--hand')}`;
+  const widthInEm = phraseMetrics.measureText(text).width / 100;
+  return Math.min(4.6, 81 / Math.max(1, widthInEm, Array.from(text).length));
 }
 
 function updatePhrases() {
@@ -483,13 +508,19 @@ exportCard.addEventListener('click', async () => {
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     const hand = getComputedStyle(document.documentElement).getPropertyValue('--hand');
-    context.fillStyle = rule;
-    context.font = `140px ${hand}`;
-    context.fillText('☼', 960, 146);
+    const sun = new Path2D(postcard.querySelector('.postcard-sun path').getAttribute('d'));
+    const sunSize = canvas.width * .053;
+    context.save();
+    context.translate((canvas.width - sunSize) / 2, canvas.height * .041);
+    context.scale(sunSize / 24, sunSize / 24);
+    context.lineWidth = 1.2;
+    context.lineCap = 'round';
+    context.stroke(sun);
+    context.restore();
     context.fillStyle = ink;
     phrases.forEach((text, index) => {
       context.font = `${canvas.width * phraseSize(text) / 100}px ${hand}`;
-      context.fillText(text, 960, index ? 2184 : 240, 1570);
+      context.fillText(text, 960, canvas.height * (index ? .91 : .115), 1570);
     });
     images.forEach((image, index) => {
       drawCrop(context, image, chosen[index], 140 + (index % 2) * 844, 380 + Math.floor(index / 2) * 808, 796, 760);
