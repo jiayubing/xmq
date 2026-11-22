@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f9f4e8">
+  <meta name="description" content="把邪恶面剂子装进口袋。一桌拍立得和一张自己做的四格纪念卡。">
+  <title>太阳口袋 · 邪恶面剂子</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="photos.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body data-view="desk">
+  <header class="topbar">
+    <a class="pill back-link" href="../">
+      <svg viewBox="0 0 24 24" width="19" height="19" aria-hidden="true"><circle cx="12" cy="12" r="5.3"/><path d="M12 1v3m0 16v3M1 12h3m16 0h3M4.2 4.2l2 2m11.6 11.6 2 2m0-15.6-2 2M6.2 17.8l-2 2"/></svg>
+      <span>‹ 作品</span>
+    </a>
+    <div class="tabs" role="tablist" aria-label="照片玩法">
+      <button id="tab-desk" type="button" role="tab" aria-selected="true" aria-controls="desk">桌面自由摆</button>
+      <button id="tab-card" type="button" role="tab" aria-selected="false" aria-controls="card" tabindex="-1">四格纪念卡</button>
+    </div>
+    <div class="top-actions">
+      <button class="pill sound-toggle" type="button" aria-pressed="false" aria-label="声音" title="声音">
+        <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="muted-icon" d="m17 10 4 4m0-4-4 4"/><path class="playing-icon" d="M16 9a4 4 0 0 1 0 6m2-9a8 8 0 0 1 0 12"/></svg>
+        <span>声音</span>
+      </button>
+      <button class="pill reset-desk" type="button">归位</button>
+    </div>
+  </header>
+
+  <main class="studio">
+    <div class="masthead">
+      <h1>太阳口袋<span class="sun-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span></h1>
+      <p>把邪恶面剂子装进口袋</p>
+    </div>
+
+    <section id="desk" role="tabpanel" aria-labelledby="tab-desk">
+      <p id="desk-help" class="sr-only">点照片翻面，拖动照片自由摆放，也可以聚焦照片后用方向键微调。</p>
+      <div class="desk-stage">
+        <div class="desk-photos"></div>
+        <p class="desk-empty" hidden>照片放进相册后，就能在这里摆拍立得。</p>
+        <button class="gift-note" type="button" aria-label="给拆开礼物的你，翻看便签" aria-pressed="false">
+          <span class="note-inner">
+            <span class="note-face note-front">
+              <span class="paper-cue" aria-hidden="true">翻面 ↻</span>
+              <span>给拆开礼物的你<br>今天也记得，给自己留一点甜。</span>
+            </span>
+            <span class="note-face note-back" aria-hidden="true">
+              <span class="paper-cue" aria-hidden="true">翻回 ↻</span>
+              <span>如果今天有点忙<br>就把这张小纸条，当成口袋里的太阳。</span>
+            </span>
+          </span>
+        </button>
+        <aside class="machine">
+          <button class="machine-button" type="button">
+            <span class="machine-art" aria-hidden="true">
+              <span class="machine-globe">
+                <span class="ball b1"></span><span class="ball b2"></span><span class="ball b3"></span>
+                <span class="ball b4"></span><span class="ball b5"></span><span class="ball b6"></span>
+                <span class="ball b7"></span><span class="ball b8"></span>
+              </span>
+              <span class="machine-base"><span class="machine-dial"></span><span class="machine-slot"></span></span>
+            </span>
+            <span class="machine-cta">摇一摇 · 抽今日份可爱</span>
+          </button>
+          <p class="draw-count" hidden>已抽 <span>0</span> 次</p>
+        </aside>
+        <div class="desk-tools">
+          <button class="pill scatter-desk" type="button">重新散开</button>
+          <button class="pill next-desk" type="button" hidden>换一批摆摆</button>
+          <span class="desk-number" aria-live="polite" hidden></span>
+        </div>
+      </div>
+    </section>
+
+    <section id="card" class="alternate" role="tabpanel" aria-labelledby="tab-card" hidden>
+      <div class="section-heading">
+        <h2>四格纪念卡</h2>
+        <p>选四张照片，留两句想说的话。</p>
+      </div>
+      <div class="card-bench">
+        <div class="postcard" aria-label="纪念卡预览">
+          <span class="postcard-sun" aria-hidden="true">☼</span>
+          <p class="postcard-line card-top"></p>
+          <div class="postcard-photos"></div>
+          <p class="postcard-line card-bottom"></p>
+        </div>
+        <div class="card-tools">
+          <fieldset class="palette">
+            <legend>相框配色</legend>
+            <label><input type="radio" name="palette" value="cream" checked><span>麦芽奶油</span></label>
+            <label><input type="radio" name="palette" value="berry"><span>莓果粉</span></label>
+            <label><input type="radio" name="palette" value="sage"><span>鼠尾草绿</span></label>
+            <label><input type="radio" name="palette" value="dusk"><span>暮光紫</span></label>
+          </fieldset>
+          <label class="phrase">顶部短句<input id="top-line" type="text" maxlength="32" value="把邪恶面剂子装进口袋"></label>
+          <label class="phrase">底部短句<input id="bottom-line" type="text" maxlength="32" value="今天也记得，给自己留一点甜。"></label>
+          <div class="card-actions">
+            <button class="pill random-card" type="button">随机四连拍</button>
+            <button class="pill primary export-card" type="button">下载 PNG</button>
+          </div>
+          <p class="card-status" role="status"></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <dialog class="photo-dialog" aria-labelledby="photo-heading" closedby="any">
+    <div class="dialog-heading">
+      <h2 id="photo-heading">今日份邪恶面剂子</h2>
+      <form method="dialog"><button class="pill icon-button" type="submit" aria-label="关闭大图" autofocus>×</button></form>
+    </div>
+    <div class="dialog-photo"></div>
+    <p class="capsule-fortune"></p>
+    <div class="dialog-actions">
+      <button class="pill dialog-flip" type="button">看背面 ↻</button>
+    </div>
+  </dialog>
+
+  <dialog class="pick-dialog" aria-labelledby="pick-heading" closedby="any">
+    <div class="dialog-heading">
+      <h2 id="pick-heading">从相册选照片</h2>
+      <form method="dialog"><button class="pill icon-button" type="submit" aria-label="关闭相册" autofocus>×</button></form>
+    </div>
+    <div class="pick-photos"></div>
+  </dialog>
+</body>
+</html>
