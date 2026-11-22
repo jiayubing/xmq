@@ -314,20 +314,20 @@
     const STAR_COLORS = ['#FDE68A', '#F6CB61', '#F5F3FF', '#DDD6FE'];
     const WISH_COLOR = '#FFE39A';
     const OPEN_WATER_RY = 23.1;
-    const RAIN_DUST = { size: [0.55, 1.0], duration: [1.77, 2.12], tail: [7, 12], brightness: 0.56 };
-    const RAIN_STAR = { size: [1.5, 2.7], duration: [1.60, 1.96], tail: [13, 22], brightness: 0.82 };
-    const RAIN_SPARK = { size: [3.2, 4.9], duration: [1.45, 1.80], tail: [22, 32], brightness: 1 };
+    const RAIN_DUST = { size: [1.05, 1.40], duration: [1.77, 2.12], tail: [10, 15], brightness: 0.62 };
+    const RAIN_STAR = { size: [1.65, 2.68], duration: [1.60, 1.96], tail: [16, 25], brightness: 0.88 };
+    const RAIN_SPARK = { size: [2.70, 3.90], duration: [1.45, 1.80], tail: [23, 34], brightness: 1 };
     const INTRO = {
       openStart: 0.6, spinStart: 1.4, peakStart: 2.7, coastStart: 3.5,
       rainTaperStart: 4.5, rainEnd: 5.55, lastLanding: 6.94, closeStart: 7, end: 7.9, peakSpeed: 5.9
     };
     const THREADS = [
-      [11.5, 0.042, 0.68, 0, '#E6D4FF'], [15, -0.035, 2.05, 4, '#FFF0BA'],
+      [11.5, 0.042, 1.02, 0, '#E6D4FF'], [15, -0.035, 2.05, 4, '#FFF0BA'],
       [19, -0.043, 2.55, 8, '#E6D4FF'], [8, 0.026, 1.38, 4, '#E6D4FF'],
       [13, 0.037, 1.75, 4, '#FDE68A'], [21, -0.028, 2.65, 8, '#FFF0BA'],
-      [16, 0.040, 2.10, 4, '#E6D4FF'], [10.5, -0.047, 0.70, 0, '#E6D4FF'],
+      [16, 0.040, 2.10, 4, '#E6D4FF'], [10.5, -0.047, 1.12, 0, '#E6D4FF'],
       [18, 0.025, 2.25, 4, '#FDE68A'], [12, -0.035, 1.68, 4, '#E6D4FF'],
-      [14.5, 0.032, 2.15, 8, '#E6D4FF'], [9, -0.040, 0.66, 0, '#FFF0BA']
+      [14.5, 0.032, 2.15, 8, '#E6D4FF'], [9, -0.040, 1.00, 0, '#FFF0BA']
     ].map(([length, slant, size, kind, color], i) => ({
       length, slant, size, kind, color,
       frequency: 9.6 * Math.sqrt(14 / length),
@@ -735,6 +735,7 @@
       const spread = Math.pow(waterOpen, 0.78);
       return {
         unit, e, portrait, sidePoetry, baseApexY, cx: W * 0.5, apexY: baseApexY + float * unit,
+        starScale: lerp(1.28, 1.48, portrait),
         cinch: 1 - smoothstep(0, 0.37, e),
         puddleY: Math.min(waterLine, dockCeiling - dockGap - OPEN_WATER_RY * unit),
         waterRx: lerp(29, 158, spread) * unit, waterRy: lerp(5.7, OPEN_WATER_RY, spread) * unit,
@@ -1003,6 +1004,7 @@
     }
 
     function drawDew(ornaments, front, P) {
+      const starUnit = P.unit * P.starScale;
       ctx.save();
       for (const { tip, bend, end, size, kind, color, rotation, front: near, fade } of ornaments) {
         if (front !== near) continue;
@@ -1016,7 +1018,9 @@
           path.quadraticCurveTo(bend.x, bend.y, end.x, end.y);
           strokePath(path, 0.48 * P.unit, thread);
         } else {
-          drawStarShape(end.x, end.y, size * P.unit, kind, rotation, color);
+          const radius = size * starUnit;
+          if (size >= 2) drawStarGlow(end.x, end.y, radius, color);
+          drawStarShape(end.x, end.y, radius, kind, rotation, color);
         }
       }
       ctx.restore();
@@ -1096,9 +1100,25 @@
       ctx.restore();
     }
 
+    function drawStarGlow(x, y, size, color) {
+      const mistRadius = size * 3.2;
+      const mist = ctx.createRadialGradient(x, y, 0, x, y, mistRadius);
+      mist.addColorStop(0, color + '5C');
+      mist.addColorStop(0.34, color + '26');
+      mist.addColorStop(0.68, color + '0A');
+      mist.addColorStop(1, color + '00');
+      drawEllipse(x, y, mistRadius, mistRadius, mist);
+
+      const light = ctx.createRadialGradient(x, y, 0, x, y, size);
+      light.addColorStop(0, '#FFF7E4C0');
+      light.addColorStop(0.38, '#FFF7E454');
+      light.addColorStop(1, '#FFF7E400');
+      drawEllipse(x, y, size, size, light);
+    }
+
     function drawStarShape(x, y, size, kind, rotation, color) {
       if (kind === 0) {
-        drawEllipse(x, y, size * 0.76, size, color);
+        drawEllipse(x, y, size * 0.76, size * 0.92, color);
         return;
       }
       ctx.save();
@@ -1107,20 +1127,22 @@
       ctx.beginPath();
       if (kind === 4) {
         ctx.moveTo(0, -size);
-        ctx.quadraticCurveTo(size * 0.17, -size * 0.19, size * 0.74, 0);
-        ctx.quadraticCurveTo(size * 0.18, size * 0.18, 0, size);
-        ctx.quadraticCurveTo(-size * 0.17, size * 0.18, -size * 0.74, 0);
-        ctx.quadraticCurveTo(-size * 0.17, -size * 0.19, 0, -size);
+        ctx.bezierCurveTo(size * 0.10, -size * 0.18, size * 0.11, -size * 0.09, size * 0.80, 0);
+        ctx.bezierCurveTo(size * 0.11, size * 0.09, size * 0.10, size * 0.18, 0, size);
+        ctx.bezierCurveTo(-size * 0.10, size * 0.18, -size * 0.11, size * 0.09, -size * 0.80, 0);
+        ctx.bezierCurveTo(-size * 0.11, -size * 0.09, -size * 0.10, -size * 0.18, 0, -size);
       } else {
         ctx.moveTo(0, -size);
         for (let i = 1; i < 16; i++) {
           const a = i * TAU / 16;
-          const radius = size * (i % 2 ? 0.23 : i % 4 ? 0.62 : 1);
-          ctx.lineTo(Math.sin(a) * radius * 0.83, -Math.cos(a) * radius);
+          const radius = size * (i % 2 ? 0.21 : i % 4 ? 0.69 : 1);
+          ctx.lineTo(Math.sin(a) * radius * 0.88, -Math.cos(a) * radius);
         }
       }
       ctx.fillStyle = color;
       ctx.fill();
+      const core = size * 0.24;
+      drawEllipse(0, 0, core, core, '#FFFBF3');
       ctx.restore();
     }
 
@@ -1193,8 +1215,9 @@
       const x = xHint === undefined ? (random() * 2 - 1) * limit : clamp((xHint - P.cx) / P.unit, -limit, limit);
       const u = x * P.unit / P.waterRx;
       const weight = random();
-      const profile = weight < 0.40 ? RAIN_DUST : weight < 0.84 ? RAIN_STAR : RAIN_SPARK;
-      const kind = wish ? 8 : profile === RAIN_DUST ? 0 : profile === RAIN_SPARK && random() < 0.52 ? 8 : 4;
+      const profile = weight < 0.12 ? RAIN_DUST : weight < 0.70 ? RAIN_STAR : RAIN_SPARK;
+      const eightRayChance = profile === RAIN_SPARK ? 0.70 : 0.16;
+      const kind = wish ? 8 : profile === RAIN_DUST ? 0 : random() < eightRayChance ? 8 : 4;
       const duration = wish ? 0.96 : lerp(...profile.duration, random());
       const star = {
         x,
@@ -1202,8 +1225,8 @@
         v: (random() - 0.50) * 1.5 * Math.sqrt(1 - u ** 2),
         elapsed: 0,
         duration: appState === 'intro' && !wish ? Math.min(duration, INTRO.lastLanding - introClock) : duration,
-        size: wish ? 6.8 : lerp(...profile.size, random()),
-        tail: wish ? 32 : lerp(...profile.tail, random()),
+        size: wish ? 6.25 : lerp(...profile.size, random()),
+        tail: wish ? 36 : lerp(...profile.tail, random()),
         brightness: wish ? 1 : profile.brightness,
         kind,
         phase: random() * TAU,
@@ -1217,7 +1240,7 @@
 
     function seedRain(canopy, P, spread = 1) {
       const random = seededRandom(2211);
-      const count = 32;
+      const count = 19;
       for (let i = 0; i < count; i++) {
         const star = spawnStar(canopy, P, false, undefined, random);
         star.elapsed = star.duration * lerp(-(1 - spread) * 0.43, spread, (i + 0.7) / (count + 1));
@@ -1339,7 +1362,7 @@
         return;
       }
       const intro = appState === 'intro';
-      const rate = motionPreference.matches ? 14 : 18.4 + Math.abs(omega) * 2.65;
+      const rate = motionPreference.matches ? 10.2 : lerp(10.2, 13, phase(0, INTRO.peakSpeed, Math.abs(omega)));
       const taper = intro ? 1 - smoothstep(INTRO.rainTaperStart, INTRO.rainEnd, introClock) : 1;
       if (intro && !introRainSeeded) {
         seedRain(canopy, P, 0.32);
@@ -1354,6 +1377,8 @@
 
     function drawRain(P) {
       const u = P.unit;
+      const starUnit = u * P.starScale;
+      const tailUnit = u * Math.sqrt(P.starScale);
       ctx.save();
       ctx.lineCap = 'round';
       for (const star of stars) {
@@ -1361,29 +1386,26 @@
         if (t <= 0) continue;
         const x = P.cx + star.x * u;
         const y = lerp(P.baseApexY + star.y * u, P.puddleY + star.v * P.waterRy, t * (0.72 + 0.28 * t));
-        const tx = x;
-        const ty = y - star.tail * u * smoothstep(0, 0.22, t);
+        const size = star.size * starUnit;
+        const ty = y - star.tail * tailUnit * smoothstep(0, 0.22, t);
         const pulse = 0.78 + 0.20 * Math.sin(time * star.flicker + star.phase);
         ctx.globalAlpha = star.brightness * pulse * smoothstep(0, 0.08, t);
         if (ctx.globalAlpha <= 0.01) continue;
 
-        const tail = ctx.createLinearGradient(x, y, tx, ty);
-        tail.addColorStop(0, star.color + 'A6');
-        tail.addColorStop(0.42, star.color + '26');
+        const tail = ctx.createLinearGradient(x, y, x, ty);
+        tail.addColorStop(0, star.color + 'D6');
+        tail.addColorStop(0.34, star.color + '60');
+        tail.addColorStop(0.72, star.color + '1A');
         tail.addColorStop(1, star.color + '00');
         ctx.strokeStyle = tail;
-        ctx.lineWidth = (star.wish ? 0.93 : 0.37 + 0.09 * star.size) * u;
+        ctx.lineWidth = 0.46 * u + 0.15 * size;
         ctx.beginPath();
         ctx.moveTo(x, y);
-        ctx.lineTo(tx, ty);
+        ctx.lineTo(x, ty);
         ctx.stroke();
 
-        const radius = Math.max(1.45, star.size * (star.wish ? 2 : 1.62)) * u;
-        const halo = ctx.createRadialGradient(x, y, 0, x, y, radius);
-        halo.addColorStop(0, star.color + (star.wish ? '66' : '38'));
-        halo.addColorStop(1, star.color + '00');
-        drawEllipse(x, y, radius, radius, halo);
-        drawStarShape(x, y, star.size * u, star.kind, Math.sin(star.phase) * 0.16, star.color);
+        drawStarGlow(x, y, size, star.color);
+        drawStarShape(x, y, size, star.kind, Math.sin(star.phase) * 0.16, star.color);
       }
       ctx.restore();
     }
