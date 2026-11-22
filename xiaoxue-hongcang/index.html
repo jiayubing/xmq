@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#e9edee">
   <title>小雪 · 虹藏</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
   <script defer src="art/layers.js"></script>
-  <script defer src="sound.js"></script>
-  <script defer src="weather.js"></script>
-  <script defer src="painting.js"></script>
-  <script defer src="scene.js"></script>
+  <script defer src="weather.js?v=2"></script>
+  <script defer src="sound.js?v=2"></script>
+  <script defer src="painting.js?v=2"></script>
+  <script defer src="scene.js?v=2"></script>
 </head>
 <body>
   <main id="scene" class="scene" data-mode="loading">
@@ -40,11 +40,13 @@
       </div>
     </section>
 
-    <p id="legend" class="legend" aria-hidden="true">
-      初候 虹藏不见 · 二候 天气上升 地气下降<span class="legend-break" aria-hidden="true"> · </span><span class="legend-last">三候 闭塞而成冬</span>
-    </p>
-    <p id="hint" class="hint" aria-hidden="true">暖光之下 雪里有虹</p>
-    <ul id="tray" class="tray" aria-label="七色托盘" aria-hidden="true"></ul>
+    <div class="keepsakes">
+      <p id="legend" class="legend" aria-hidden="true">
+        初候 虹藏不见 · 二候 天气上升 地气下降<span class="legend-break" aria-hidden="true"> · </span><span class="legend-last">三候 闭塞而成冬</span>
+      </p>
+      <p id="hint" class="hint" aria-hidden="true"><span class="pointer-hint">暖光之下 雪里有虹</span><span class="touch-hint">轻触雪花，收集七色</span></p>
+      <ul id="tray" class="tray" aria-label="七色托盘" aria-hidden="true"></ul>
+    </div>
 
     <p id="lake-help" class="offscreen">用鼠标或手指移动暖光，点亮雪花后轻触收色。也可以用方向键移动暖光，按回车收色或敲冰。</p>
     <p id="announcement" class="offscreen" role="status" aria-live="polite"></p>

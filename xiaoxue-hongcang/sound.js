@@ -1,91 +1,100 @@
 (() => {
-  const NOTES = [523.25, 587.33, 659.25, 783.99, 880, 1046.50, 1174.66];
+  const NOTES = [261.63, 293.66, 329.63, 392, 440, 523.25, 587.33];
+  const VOLUME = .56;
+  const SILENCE = .0001;
 
   class Soundscape {
     enabled = true;
     context = null;
-    lastWeather = -1;
+    visible = true;
+    acknowledged = false;
+    nextDrop = 0;
+    nextGust = 0;
 
     toggle() {
       this.enabled = !this.enabled;
-      if (this.context) {
-        this.master.gain.setTargetAtTime(this.enabled ? .53 : 0, this.context.currentTime, .055);
-      }
+      if (!this.enabled) this.acknowledged = false;
+      this.updateVolume();
       return this.enabled;
+    }
+
+    updateVolume() {
+      if (this.context) this.master.gain.setTargetAtTime(
+        this.enabled && this.visible ? VOLUME : 0, this.context.currentTime, .034,
+      );
     }
 
     async play(fromGesture) {
       if (!this.enabled) return;
       if (!this.context) this.create();
-      // Autoplay may leave the context suspended until a trusted interaction.
-      if (fromGesture && this.context.state !== "running") await this.context.resume();
+      if (!fromGesture) return;
+      // Resume directly within the trusted gesture, before any asynchronous work.
+      if (this.context.state !== "running") await this.context.resume();
+      if (this.enabled && !this.acknowledged && this.context.state === "running") {
+        this.acknowledged = true;
+        this.chime(0, .012, .52);
+      }
     }
 
     create() {
-      const context = new AudioContext();
-      this.context = context;
+      const Context = globalThis.AudioContext || globalThis.webkitAudioContext;
+      const context = new Context();
       this.master = context.createGain();
-      this.master.gain.value = .53;
+      this.master.gain.value = this.visible ? VOLUME : 0;
       this.master.connect(context.destination);
+      this.context = context;
+    }
 
-      const buffer = context.createBuffer(1, context.sampleRate * 4, context.sampleRate);
-      const samples = buffer.getChannelData(0);
-      const noise = context.createBufferSource();
-      let pink = 0;
-      for (let index = 0; index < samples.length; index++) {
-        const white = Math.random() * 2 - 1;
-        pink = .86 * pink + .14 * white;
-        samples[index] = .68 * white + .32 * pink;
+    voice(frequency, time, { volume, duration, attack = .02, glide = 1 }) {
+      const tone = this.context.createOscillator();
+      const envelope = this.context.createGain();
+      tone.type = "sine";
+      tone.frequency.setValueAtTime(frequency, time);
+      tone.frequency.exponentialRampToValueAtTime(frequency * glide, time + duration);
+      envelope.gain.setValueAtTime(SILENCE, time);
+      envelope.gain.exponentialRampToValueAtTime(volume, time + attack);
+      envelope.gain.exponentialRampToValueAtTime(SILENCE, time + duration);
+      tone.connect(envelope).connect(this.master);
+      tone.start(time);
+      tone.stop(time + duration + .015);
+      tone.onended = () => { tone.disconnect(); envelope.disconnect(); };
+    }
+
+    weather(film, visible = true) {
+      if (this.visible !== visible) {
+        this.visible = visible;
+        this.updateVolume();
       }
-      noise.buffer = buffer;
-      noise.loop = true;
-      this.rain = this.ambience(noise, "bandpass", 2250, .48);
-      this.wind = this.ambience(noise, "lowpass", 410, .61);
-      noise.start();
-    }
-
-    ambience(source, type, frequency, q) {
-      const filter = this.context.createBiquadFilter();
-      filter.type = type;
-      filter.frequency.value = frequency;
-      filter.Q.value = q;
-      const gain = this.context.createGain();
-      gain.gain.value = 0;
-      source.connect(filter).connect(gain).connect(this.master);
-      return gain;
-    }
-
-    weather(time, visible = true) {
-      if (!this.context) return;
-      const frost = Math.round(Math.max(0, Math.min(1, (time - 2.5) / 5)) * 32) / 32;
-      const key = visible ? frost : -2;
-      if (key === this.lastWeather) return;
-      this.lastWeather = key;
+      if (!visible || !this.enabled || this.context?.state !== "running") return;
+      const { smooth } = globalThis.HongcangWeather;
       const now = this.context.currentTime;
-      this.rain.gain.setTargetAtTime(visible ? .25 * (1 - frost) : 0, now, .18);
-      this.wind.gain.setTargetAtTime(visible ? .16 * frost : 0, now, .23);
+      const rain = 1 - smooth(2.65, 5.4, film);
+      if (rain > .035 && now >= this.nextDrop) {
+        this.nextDrop = now + .10 + Math.random() * .29;
+        const frequency = 570 + Math.random() * 580;
+        const volume = rain * (.018 + Math.random() * .024);
+        this.voice(frequency, now + .012, { volume, duration: .09, attack: .006, glide: .81 });
+        this.voice(frequency * 1.67, now + .012, { volume: volume * .24, duration: .056, attack: .004, glide: .92 });
+      }
+      const wind = smooth(4.1, 6.9, film) * (1 - smooth(9.5, 13, film));
+      if (wind > .035 && now >= this.nextGust) {
+        this.nextGust = now + 1.65 + Math.random() * 1.15;
+        const volume = wind * .039;
+        this.voice(196, now + .02, { volume, duration: 1.65, attack: .40, glide: .97 });
+        this.voice(293.66, now + .13, { volume: volume * .48, duration: 1.35, attack: .52, glide: .97 });
+      }
     }
 
     chime(index, offset = 0, strength = 1) {
-      if (!this.context || !this.enabled) return;
+      if (!this.enabled || !this.visible || this.context?.state !== "running") return;
       const time = this.context.currentTime + offset;
-      for (const [ratio, volume, duration] of [[1, .17, .61], [2.74, .024, .26]]) {
-        const tone = this.context.createOscillator();
-        const envelope = this.context.createGain();
-        tone.type = "sine";
-        tone.frequency.value = NOTES[index] * ratio;
-        envelope.gain.setValueAtTime(.0001, time);
-        envelope.gain.exponentialRampToValueAtTime(volume * strength, time + .012);
-        envelope.gain.exponentialRampToValueAtTime(.0001, time + duration);
-        tone.connect(envelope).connect(this.master);
-        tone.start(time);
-        tone.stop(time + duration + .018);
-        tone.onended = () => { tone.disconnect(); envelope.disconnect(); };
-      }
+      const note = NOTES[index];
+      this.voice(note, time, { volume: .132 * strength, duration: .75, attack: .024 });
+      this.voice(note * 2.012, time, { volume: .021 * strength, duration: .31, attack: .016 });
     }
 
     rainbow() {
-      NOTES.forEach((_, index) => this.chime(index, .11 + index * .091, .78));
+      NOTES.forEach((_, index) => this.chime(index, .07 + index * .118, .72));
     }
   }
 

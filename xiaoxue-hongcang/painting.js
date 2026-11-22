@@ -2,6 +2,9 @@
   const { Weather, MINERALS, TAU, clamp, lerp, smooth, sparkle } = globalThis.HongcangWeather;
   const art = globalThis.hongcangArt;
   const images = new Map();
+  const OPENING = ["wet", "bank", "trees", "boat"];
+  const WINTER = ["snowLight", "snowHalf", "snowDeep", "partial"];
+  const ENDING = ["ice", "trees", "frost", "snowBank", "icedBoat", "raisedBoat", "iceRainbow"];
   const unravelAt = time => clamp((time - 2.5) / 3.5) ** .87;
 
   function loadImage(spec) {
@@ -9,15 +12,18 @@
     if (!images.has(url)) {
       const image = new Image();
       image.src = url;
-      images.set(url, image.decode().then(() => ({ image, x, y, width, height })));
+      images.set(url, image.decode().then(() => ({ image, x, y, width, height })).catch(error => {
+        images.delete(url);
+        throw error;
+      }));
     }
     return images.get(url);
   }
 
-  async function loadSet(specs) {
-    return Object.fromEntries(await Promise.all(
-      Object.entries(specs).map(async ([key, spec]) => [key, await loadImage(spec)]),
-    ));
+  function loadSet(specs, assets, keys = Object.keys(specs)) {
+    return Promise.all(keys.map(async key => {
+      assets[key] = await loadImage(specs[key]);
+    }));
   }
 
   function strokeOutline([points, root, tip, [r, g, b, alpha]]) {
@@ -54,10 +60,32 @@
       this.layout = null;
     }
 
-    async useLayout(portrait) {
+    useLayout(portrait, time) {
       const layout = portrait ? art.portrait : art.wide;
-      const [layers, bow] = await Promise.all([loadSet(layout.images), loadSet(art.bow.images)]);
-      return { layout, layers, bow, portrait };
+      const layers = {}, bow = {};
+      const available = { film: 0, ending: false };
+      const loadLayers = keys => loadSet(layout.images, layers, keys);
+      const loadEnding = async () => {
+        await loadLayers(ENDING);
+        available.ending = true;
+      };
+      const endFirst = time >= 16;
+      const earlyEnding = endFirst ? loadEnding() : Promise.resolve();
+      const opening = earlyEnding.then(async () => {
+        await loadLayers(OPENING);
+        available.film = .6;
+      });
+      const rainbow = opening.then(async () => {
+        await Promise.all([loadLayers(["waterRainbow"]), loadSet(art.bow.images, bow)]);
+        available.film = 6;
+      });
+      const complete = rainbow.then(async () => {
+        await Promise.all([loadLayers(WINTER), endFirst ? earlyEnding : loadEnding()]);
+        available.film = 16;
+      });
+      // On a slow connection, open on the first complete layer group, or the still for reduced motion.
+      const initial = endFirst ? earlyEnding : time > 6 ? complete : time > .6 ? rainbow : opening;
+      return { config: { layout, layers, bow, portrait, available }, initial, complete };
     }
 
     setLayout(config) {
@@ -73,10 +101,13 @@
 
     resize(width, height) {
       const dpr = Math.min(2, window.devicePixelRatio || 1);
-      this.canvas.width = Math.max(1, Math.round(width * dpr));
-      this.canvas.height = Math.max(1, Math.round(height * dpr));
+      const pixelsWide = Math.max(1, Math.round(width * dpr));
+      const pixelsHigh = Math.max(1, Math.round(height * dpr));
+      if (this.canvas.width !== pixelsWide) this.canvas.width = pixelsWide;
+      if (this.canvas.height !== pixelsHigh) this.canvas.height = pixelsHigh;
       this.scaleX = width / this.layout.width;
       this.scaleY = height / this.layout.height;
+      this.weather.setScale(this.scaleX, this.scaleY);
     }
 
     draw(asset, alpha = 1, offsetX = 0, offsetY = 0) {
@@ -332,8 +363,9 @@
       for (const fly of game.flights) {
         const t = clamp(fly.age / fly.duration);
         const arc = Math.sin(Math.PI * t) * fly.arc;
+        const size = lerp(15, 8, t) * this.weather.revealScale;
         this.weather.paintCrystal(ctx, this.weather.mineralSprites[fly.band],
-          lerp(fly.x, fly.endX, t), lerp(fly.y, fly.endY, t) - arc, lerp(15, 8, t), fly.angle + 2.2 * t);
+          lerp(fly.x, fly.endX, t), lerp(fly.y, fly.endY, t) - arc, size, fly.angle + 2.2 * t);
       }
     }
 

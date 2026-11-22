@@ -55,6 +55,7 @@
   let film = 0;
   let playing = false;
   let ready = false;
+  let skipRequested = false;
   let rect, pointer = null, target = null, touchLinger = 0;
   let animation = 0, previous = null, held = capture;
   let requestedLayout = null, layoutRevision = 0;
@@ -146,6 +147,11 @@
   }
 
   function enterPlay(focus = false) {
+    if (!painting.available.ending) {
+      skipRequested ||= focus;
+      return;
+    }
+    skipRequested = false;
     film = FILM_END;
     if (!playing) {
       playing = true;
@@ -169,6 +175,7 @@
   function start() {
     if (!ready) return;
     resetGame();
+    skipRequested = false;
     previous = null;
     if (game.reduced) {
       enterPlay();
@@ -189,7 +196,6 @@
     game.collected.add(band);
     wells[band].dataset.collected = "true";
     wells[band].setAttribute("aria-label", MINERALS[band][0] + "，已收集");
-    sound.chime(band);
     if (game.collected.size === MINERALS.length) {
       game.reunionAt = game.age;
       game.returning = false;
@@ -197,6 +203,7 @@
       announce("七色归来，春在心间。");
       sound.rainbow();
     } else {
+      sound.chime(band);
       announce("已收集" + MINERALS[band][0] + "，共" + game.collected.size + "色。");
     }
   }
@@ -296,13 +303,16 @@
     previous = now;
     if (!held) {
       if (!playing) {
-        film = Math.min(FILM_END, film + elapsed);
-        if (film >= FILM_END) enterPlay();
+        if ((skipRequested || game.reduced) && painting.available.ending) enterPlay(skipRequested);
+        else if (!game.reduced) {
+          film = Math.min(painting.available.film, film + elapsed);
+          if (film >= FILM_END) enterPlay();
+        }
       }
       if (playing) advanceGame(Math.min(.1, elapsed));
     }
     draw();
-    const animated = !game.reduced || game.cracks.length || game.stars.length
+    const animated = !playing || !game.reduced || game.cracks.length || game.stars.length
       || game.reunionAt !== null || Boolean(touchLinger);
     if (!held && animated) requestFrame();
     else previous = null;
@@ -315,7 +325,7 @@
   function updateSize() {
     rect = scene.getBoundingClientRect();
     painting.resize(rect.width, rect.height);
-    const reach = Math.max(painting.portrait ? 38 : 46, rect.width * (90 / 1440));
+    const reach = painting.portrait ? clamp(rect.width * .135, 45, 68) : Math.max(46, rect.width * (90 / 1440));
     game.light.rx = reach / painting.scaleX;
     game.light.ry = reach / painting.scaleY;
   }
@@ -323,10 +333,11 @@
   async function resize() {
     const size = scene.getBoundingClientRect();
     if (!size.width || !size.height) return;
-    const portrait = size.width / size.height < 1.05;
+    const portrait = size.width / size.height <= 1.05;
     if (requestedLayout === portrait) {
       if (ready && painting.portrait === portrait) {
         updateSize();
+        draw();
         requestFrame();
       }
       return;
@@ -336,7 +347,11 @@
     if (animation) cancelAnimationFrame(animation);
     animation = 0;
     previous = null;
-    const config = await painting.useLayout(portrait);
+    const { config, initial, complete } = painting.useLayout(portrait, game.reduced ? FILM_END : film);
+    complete.catch(() => {
+      if (revision === layoutRevision) showLoadError();
+    });
+    await initial;
     if (revision !== layoutRevision) return;
     const first = !ready;
     painting.setLayout(config);
@@ -356,6 +371,7 @@
       start();
       playSound();
     } else requestFrame();
+    draw();
   }
 
   function fromClient(x, y) {
@@ -392,10 +408,12 @@
     requestFrame();
   }
 
-  const observer = new ResizeObserver(() => resize().catch(() => {
+  function showLoadError() {
     document.getElementById("load-error").hidden = false;
     announce("画卷暂未展开，请刷新重试。");
-  }));
+  }
+
+  const observer = new ResizeObserver(() => resize().catch(showLoadError));
   observer.observe(scene);
 
   lake.addEventListener("pointerdown", event => {
@@ -432,7 +450,7 @@
       actionAt(point, touch);
     }
     pointer = null;
-    if (touch) touchLinger = game.age + .40;
+    if (touch) touchLinger = game.age + 1.05;
     requestFrame();
   });
   function cancelPointer(event) {
@@ -443,7 +461,9 @@
 
   lake.addEventListener("pointercancel", cancelPointer);
   lake.addEventListener("lostpointercapture", cancelPointer);
-  lake.addEventListener("pointerleave", removeLight);
+  lake.addEventListener("pointerleave", event => {
+    if (event.pointerType !== "touch") removeLight();
+  });
 
   lake.addEventListener("keydown", event => {
     if (!playing) return;
@@ -477,14 +497,13 @@
 
   function playSound(fromGesture = false) {
     if (!sound.enabled) return;
-    sound.play(fromGesture).catch(() => {
+    sound.play(fromGesture).then(() => sound.weather(film, !document.hidden)).catch(() => {
       if (fromGesture && sound.enabled) announce("声音暂时不可用。");
     });
-    sound.weather(film, !document.hidden);
   }
 
   function resumeSound(event) {
-    if (event.isTrusted && sound.context?.state !== "running" && !soundButton.contains(event.target)) {
+    if (event.isTrusted && !soundButton.contains(event.target)) {
       playSound(true);
     }
   }
@@ -521,7 +540,7 @@
 
   if (capture) {
     globalThis.hongcangQA = {
-      get ready() { return ready; },
+      get ready() { return ready && painting.available.film === FILM_END; },
       seek(time) {
         held = true;
         resetGame();

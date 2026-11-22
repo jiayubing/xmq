@@ -130,6 +130,12 @@
       this.time = 0;
     }
 
+    setScale(x, y) {
+      const scale = Math.min(x, y);
+      this.snowScale = this.portrait ? clamp(.76 / scale, 1, 2.6) : 1;
+      this.revealScale = this.portrait ? clamp(.95 / scale, 1, 3.3) : 1;
+    }
+
     reserved(x, y) {
       const { width, height } = this.layout;
       if (y < .11 * height && x < .19 * width) return true;
@@ -175,7 +181,7 @@
       ctx.save();
       ctx.fillStyle = "#fff";
       ctx.strokeStyle = "rgba(184,194,199,.4)";
-      ctx.lineWidth = this.grain;
+      ctx.lineWidth = this.grain * this.snowScale;
       ctx.beginPath();
       for (const [x, y, diameter] of flakes) {
         ctx.moveTo(x + diameter / 2, y);
@@ -198,7 +204,7 @@
         const x = wrap(seed.startX + sway, width);
         const y = wrap(seed.startY + elapsed * seed.fall * .53, height * SNOW_BOTTOM);
         if (this.reserved(x, y)) continue;
-        flakes.push([x, y, seed.diameter]);
+        flakes.push([x, y, seed.diameter * this.snowScale]);
       }
       ctx.save();
       ctx.globalAlpha = alpha;
@@ -228,7 +234,7 @@
           const ink = [242, 246, 245].map((base, i) => Math.round(lerp(base, pigment[i], shade)));
           this.introSprites.set(key, crystalSprite("rgb(" + ink.join(",") + ")"));
         }
-        const size = diameter * lerp(.56, 1, tint) * (this.portrait ? 1.12 : 1);
+        const size = diameter * lerp(.56, 1, tint) * this.snowScale;
         ctx.globalAlpha = alpha;
         this.paintCrystal(ctx, this.introSprites.get(key), xx, yy, size, angle + delta * side * .32);
       });
@@ -292,13 +298,14 @@
       for (const seed of this.snow) {
         if (!seed.visible) continue;
         if (seed.alpha < .035) {
-          ordinary.push([seed.x, seed.y, seed.diameter]);
+          ordinary.push([seed.x, seed.y, seed.diameter * this.snowScale]);
           continue;
         }
         ctx.save();
         ctx.globalAlpha = seed.alpha;
-        this.paintCrystal(ctx, this.mineralSprites[seed.band], seed.x, seed.y, seed.revealed, seed.phase + this.time * .20);
-        sparkle(ctx, seed.x + .69 * seed.revealed, seed.y - .57 * seed.revealed, 3.7 * this.grain, seed.alpha, .25);
+        const size = seed.revealed * this.revealScale;
+        this.paintCrystal(ctx, this.mineralSprites[seed.band], seed.x, seed.y, size, seed.phase + this.time * .20);
+        sparkle(ctx, seed.x + .69 * size, seed.y - .57 * size, 3.7 * this.grain * this.snowScale, seed.alpha, .25);
         ctx.restore();
       }
       this.whiteDrops(ctx, ordinary);
@@ -306,7 +313,7 @@
 
     hit(x, y, xScale, yScale, touch) {
       let result = null;
-      let nearest = touch ? 14 : 11;
+      let nearest = touch ? 22 : 11;
       for (const seed of this.snow) {
         if (!seed.visible || (!seed.inside && seed.alpha < .27)) continue;
         const distance = Math.hypot((seed.x - x) * xScale, (seed.y - y) * yScale);
