@@ -68,7 +68,6 @@ function polaroid(photo, onDesk = false, index = 0) {
   back.append(element('span', 'photo-note', photo.note), element('span', 'flip-cue', '翻回'));
   inner.append(front, back);
   card.append(inner);
-  if (onDesk) card.append(element('span', 'desk-grip'));
   return card;
 }
 
@@ -80,8 +79,8 @@ const desktopSlots = [
   [51.3, 58.3, 21.7, 22.4, -5], [76.5, 57.3, 19.3, 23.1, 8],
 ];
 const mobileSlots = [
-  [6, 7, 39, 44, -6], [55, 4, 39, 45, 5],
-  [6, 59, 39, 44, 4], [55, 57, 39, 45, -5],
+  [4.5, 7, 38, 44, -6], [57.5, 4, 38, 45, 5],
+  [4.5, 59, 38, 44, 4], [57.5, 57, 38, 45, -5],
 ];
 const stage = $('.desk-stage');
 const deskPhotos = $('.desk-photos');
@@ -164,7 +163,6 @@ function attachDrag(card) {
   node.addEventListener('pointerdown', (event) => {
     if (!event.isPrimary || event.button !== 0) return;
     ignoreClick = false;
-    if (smallDesk.matches && event.pointerType === 'touch' && !event.target.closest('.desk-grip')) return;
     drag = {
       id: event.pointerId, x: event.clientX, y: event.clientY, left: card.left, top: card.top,
       lastX: event.clientX, lastY: event.clientY, time: event.timeStamp, vx: 0, vy: 0,
@@ -437,6 +435,7 @@ function showPicker(slot) {
   pickDialog.scrollTop = 0;
   pickDialog.showModal();
   pickPhotos.scrollTop = 0;
+  sound('tap');
 }
 
 randomCard.addEventListener('click', () => {
@@ -453,6 +452,7 @@ $('.palette').addEventListener('change', (event) => {
   postcard.style.setProperty('--card-paper', paper);
   postcard.style.setProperty('--card-ink', ink);
   postcard.style.setProperty('--card-rule', rule);
+  sound('tap');
 });
 
 const phraseMetrics = document.createElement('canvas').getContext('2d');
@@ -551,6 +551,7 @@ exportCard.addEventListener('click', async () => {
 
 function selectView(tab) {
   const view = tab.getAttribute('aria-controls');
+  const changed = view !== document.body.dataset.view;
   tabs.forEach((other) => {
     const active = other === tab;
     other.setAttribute('aria-selected', String(active));
@@ -561,6 +562,7 @@ function selectView(tab) {
   deskReset.hidden = view !== 'desk';
   if (view === 'card') renderCard();
   if (view === 'desk') layoutDesk();
+  if (changed) sound('tap');
 }
 
 tabs.forEach((tab, index) => {
@@ -587,68 +589,60 @@ if (location.protocol === 'file:') {
 }
 
 const soundToggle = $('.sound-toggle');
+const pentatonic = [523.25, 587.33, 659.25, 783.99, 880, 1046.5]; // C5, D5, E5, G5, A5, C6
+const capsuleTiming = [0, .058, .122, .198, .262, .345];
 let audio;
-let volume;
-let noise;
+let lowpass;
+let master;
 let audible = false;
 let startingAudio = false;
 
-function bell(note, delay, duration, gain) {
-  const start = audio.currentTime + delay;
+function tone(start, pitch, duration, level, { type = 'sine', attack = .004, endPitch = pitch } = {}) {
   const oscillator = audio.createOscillator();
   const envelope = audio.createGain();
-  oscillator.type = 'sine';
-  oscillator.frequency.value = note;
+  const end = start + duration;
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(pitch, start);
+  if (endPitch !== pitch) oscillator.frequency.exponentialRampToValueAtTime(endPitch, end);
   envelope.gain.setValueAtTime(.0001, start);
-  envelope.gain.exponentialRampToValueAtTime(gain, start + .008);
-  envelope.gain.exponentialRampToValueAtTime(.0001, start + duration);
-  oscillator.connect(envelope).connect(volume);
+  envelope.gain.linearRampToValueAtTime(level, start + attack);
+  envelope.gain.exponentialRampToValueAtTime(.0001, end);
+  oscillator.connect(envelope).connect(lowpass);
   oscillator.start(start);
-  oscillator.stop(start + duration);
+  oscillator.stop(end);
 }
 
-function rustle(delay, duration, frequency, gain) {
-  if (!noise) {
-    noise = audio.createBuffer(1, Math.ceil(audio.sampleRate * .2), audio.sampleRate);
-    const samples = noise.getChannelData(0);
-    for (let index = 0; index < samples.length; index++) samples[index] = Math.random() * 2 - 1;
-  }
-  const start = audio.currentTime + delay;
-  const source = audio.createBufferSource();
-  const filter = audio.createBiquadFilter();
-  const envelope = audio.createGain();
-  source.buffer = noise;
-  filter.type = 'bandpass';
-  filter.frequency.value = frequency;
-  envelope.gain.setValueAtTime(.0001, start);
-  envelope.gain.exponentialRampToValueAtTime(gain, start + .008);
-  envelope.gain.exponentialRampToValueAtTime(.0001, start + duration);
-  source.connect(filter).connect(envelope).connect(volume);
-  source.start(start, 0, duration);
+function mallet(start, pitch, duration, level, attack = .004) {
+  tone(start, pitch, duration, level, { attack });
+  tone(start, pitch * 2, duration * .55, level * .12, { attack });
 }
 
 function sound(kind) {
   if (!audible || audio.state !== 'running') return;
+  const start = audio.currentTime + .005;
   switch (kind) {
     case 'paper':
-      rustle(0, .13, 1350, .27);
+      tone(start, 280, .045, .25, { type: 'triangle', endPitch: 150 });
+      tone(start, 280, .045, .15, { endPitch: 150 });
+      tone(start, 560, .027, .025, { endPitch: 300 });
+      break;
+    case 'tap':
+      mallet(start, pentatonic[1], .04, .18);
       break;
     case 'shutter':
-      rustle(0, .047, 850, .45);
-      rustle(.046, .07, 1820, .35);
+      tone(start, 740, .016, .23, { type: 'triangle', attack: .002, endPitch: 300 });
+      tone(start + .03, 890, .016, .17, { type: 'triangle', attack: .002, endPitch: 420 });
+      mallet(start + .052, pentatonic[5], .16, .15);
       break;
     case 'capsule':
-      [510, 420, 540, 395].forEach((pitch, index) => {
-        rustle(index * .07, .064, pitch, .52);
-        bell(pitch, index * .07, .09, .19);
+      pentatonic.forEach((pitch, index) => {
+        const duration = index === pentatonic.length - 1 ? .32 : .15 + index * .012;
+        mallet(start + capsuleTiming[index], pitch, duration, index % 2 ? .18 : .22);
       });
-      bell(784, .35, .26, .25);
-      bell(1174.66, .41, .35, .17);
       break;
     case 'music':
-      [523.25, 659.25, 783.99, 1046.5].forEach((pitch, index) => {
-        bell(pitch, index * .1, .65, .24);
-        bell(pitch * 2, index * .1, .21, .06);
+      [261.63, 392, 493.88, 587.33, 659.25].forEach((pitch, index) => { // Cmaj9
+        mallet(start + index * .026, pitch, .58 + index * .028, index === 0 ? .20 : .14, .025);
       });
       break;
   }
@@ -658,7 +652,7 @@ soundToggle.addEventListener('click', async () => {
   if (startingAudio) return;
   if (audible) {
     audible = false;
-    volume.gain.setTargetAtTime(0, audio.currentTime, .015);
+    master.gain.setTargetAtTime(0, audio.currentTime, .015);
     soundToggle.setAttribute('aria-pressed', 'false');
     return;
   }
@@ -666,13 +660,17 @@ soundToggle.addEventListener('click', async () => {
   try {
     if (!audio) {
       audio = new AudioContext();
-      volume = audio.createGain();
-      volume.gain.value = 0;
-      volume.connect(audio.destination);
+      lowpass = audio.createBiquadFilter();
+      lowpass.type = 'lowpass';
+      lowpass.frequency.value = 2600;
+      lowpass.Q.value = -3;
+      master = audio.createGain();
+      master.gain.value = 0;
+      lowpass.connect(master).connect(audio.destination);
     }
     await audio.resume();
     audible = true;
-    volume.gain.setTargetAtTime(.2, audio.currentTime, .015);
+    master.gain.setTargetAtTime(.14, audio.currentTime, .015);
     soundToggle.setAttribute('aria-pressed', 'true');
     sound('music');
   } catch {

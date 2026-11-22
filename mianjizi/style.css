@@ -120,8 +120,8 @@ button:disabled { cursor: default; opacity: .54; }
   transform: translate(var(--x), var(--y)) rotate(var(--angle));
   pointer-events: auto;
   touch-action: none;
-  user-select: none;
   -webkit-user-select: none;
+  user-select: none;
   cursor: grab;
 }
 .desk-photo.is-dragging { cursor: grabbing; }
@@ -185,6 +185,7 @@ button:disabled { cursor: default; opacity: .54; }
   font: 400 var(--caption-size, 1.25rem)/1.38 var(--hand);
 }
 .photo-note { min-height: 0; overflow: auto; overflow-wrap: anywhere; }
+.desk-photo .photo-note { touch-action: none; }
 .flip-cue { flex: none; align-self: flex-end; color: var(--jam); font: .76em/1.4 var(--body); }
 .paper-cue::after, .flip-cue::after, .dialog-flip::after {
   --turn-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M13.5 6a5.7 5.7 0 1 0 .2 3M13.5 2.5V6H10' fill='none' stroke='black' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
@@ -200,8 +201,7 @@ button:disabled { cursor: default; opacity: .54; }
 }
 .dialog-flip::after { margin-inline-start: 0; }
 .desk-photo { --caption-size: clamp(.9rem, 1.75cqi, 1.33rem); --paper-edge: clamp(.36rem, .8cqi, .72rem); }
-.desk-grip { display: none; }
-.tape, .desk-grip::before {
+.tape {
   position: absolute;
   z-index: 1;
   top: -.6em;
@@ -462,23 +462,12 @@ dialog::backdrop { overflow: hidden; overscroll-behavior: contain; background: #
   #desk { width: min(100%, 28rem); margin: .7rem auto 0; }
   .desk-stage { min-height: 0; scroll-margin-top: max(.5rem, var(--safe-top)); }
   .desk-photo {
-    touch-action: auto;
     --caption-size: clamp(.8rem, .5rem + 1.55cqi, 1.05rem);
     --paper-edge: clamp(.35rem, 1.7cqi, .6rem);
   }
   .photo-caption { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
   .polaroid-back { padding: 9%; font-size: var(--back-size, var(--caption-size)); line-height: 1.45; }
   .photo-note { line-break: strict; }
-  .desk-grip {
-    position: absolute;
-    z-index: 1;
-    inset: -.56rem 26% auto;
-    display: block;
-    height: 2rem;
-    touch-action: none;
-  }
-  .desk-grip::before { top: 0; width: 75%; content: ""; }
-  .desk-photo .tape { display: none; }
   .desk-accessories {
     display: flex;
     flex-wrap: wrap;
