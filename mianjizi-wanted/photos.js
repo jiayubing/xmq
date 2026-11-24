@@ -20,7 +20,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "笑声超标",
     "pos": "50% 40%",
-    "thumb": "photos/_thumbs/blue-coat.webp",
+    "thumb": "photos/thumbnails/blue-coat.webp",
     "total": "当场被逗笑"
   },
   {
@@ -43,7 +43,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "惊讶成立",
     "pos": "50% 30%",
-    "thumb": "photos/_thumbs/plush-hat.webp",
+    "thumb": "photos/thumbnails/plush-hat.webp",
     "total": "愣了一下"
   },
   {
@@ -66,7 +66,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "加餐成立",
     "pos": "49% 39%",
-    "thumb": "photos/_thumbs/lunch-break.webp",
+    "thumb": "photos/thumbnails/lunch-break.webp",
     "total": "继续加餐"
   },
   {
@@ -89,7 +89,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "手势收到",
     "pos": "50% 36%",
-    "thumb": "photos/_thumbs/lunch-signal.webp",
+    "thumb": "photos/thumbnails/lunch-signal.webp",
     "total": "这一口先等"
   },
   {
@@ -112,7 +112,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "嘟嘴成立",
     "pos": "69% 51%",
-    "thumb": "photos/_thumbs/puckered-greeting.webp",
+    "thumb": "photos/thumbnails/puckered-greeting.webp",
     "total": "招呼收到"
   },
   {
@@ -135,7 +135,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "发呆成立",
     "pos": "70% 59%",
-    "thumb": "photos/_thumbs/looking-up.webp",
+    "thumb": "photos/thumbnails/looking-up.webp",
     "total": "再看一眼"
   },
   {
@@ -158,7 +158,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "仰头成立",
     "pos": "59% 44%",
-    "thumb": "photos/_thumbs/chin-up.webp",
+    "thumb": "photos/thumbnails/chin-up.webp",
     "total": "粉包抱好"
   },
   {
@@ -181,7 +181,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "笑容超标",
     "pos": "53% 36%",
-    "thumb": "photos/_thumbs/squinty-grin.webp",
+    "thumb": "photos/thumbnails/squinty-grin.webp",
     "total": "笑到眯眼"
   },
   {
@@ -204,7 +204,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "靠近成立",
     "pos": "71% 34%",
-    "thumb": "photos/_thumbs/pink-closeup.webp",
+    "thumb": "photos/thumbnails/pink-closeup.webp",
     "total": "镜头让位"
   },
   {
@@ -227,7 +227,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "巡逻成立",
     "pos": "49% 31%",
-    "thumb": "photos/_thumbs/red-hood.webp",
+    "thumb": "photos/thumbnails/red-hood.webp",
     "total": "影子跟上"
   },
   {
@@ -250,7 +250,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "鬼脸成立",
     "pos": "51% 38%",
-    "thumb": "photos/_thumbs/funny-face.webp",
+    "thumb": "photos/thumbnails/funny-face.webp",
     "total": "抓拍成功"
   },
   {
@@ -273,7 +273,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "鼓嘴成立",
     "pos": "50% 29%",
-    "thumb": "photos/_thumbs/puffed-cheeks.webp",
+    "thumb": "photos/thumbnails/puffed-cheeks.webp",
     "total": "认真盯着"
   },
   {
@@ -296,7 +296,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "可爱成立",
     "pos": "50% 42%",
-    "thumb": "photos/_thumbs/pink-hood.webp",
+    "thumb": "photos/thumbnails/pink-hood.webp",
     "total": "镜头收到"
   },
   {
@@ -319,7 +319,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "探头成立",
     "pos": "62% 62%",
-    "thumb": "photos/_thumbs/seaside-peek.webp",
+    "thumb": "photos/thumbnails/seaside-peek.webp",
     "total": "再看一会"
   },
   {
@@ -342,7 +342,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "对视成立",
     "pos": "60% 37%",
-    "thumb": "photos/_thumbs/pink-stare.webp",
+    "thumb": "photos/thumbnails/pink-stare.webp",
     "total": "被盯住了"
   },
   {
@@ -365,7 +365,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "晚霞留档",
     "pos": "51% 66%",
-    "thumb": "photos/_thumbs/window-sunset.webp",
+    "thumb": "photos/thumbnails/window-sunset.webp",
     "total": "多看一会"
   },
   {
@@ -388,7 +388,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "飞机待飞",
     "pos": "61% 46%",
-    "thumb": "photos/_thumbs/toy-plane.webp",
+    "thumb": "photos/thumbnails/toy-plane.webp",
     "total": "准备起飞"
   },
   {
@@ -411,7 +411,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "比耶成立",
     "pos": "37% 60%",
-    "thumb": "photos/_thumbs/peace-sign.webp",
+    "thumb": "photos/thumbnails/peace-sign.webp",
     "total": "笑容留档"
   },
   {
@@ -434,7 +434,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "小睡进行",
     "pos": "52% 46%",
-    "thumb": "photos/_thumbs/stroller-nap.webp",
+    "thumb": "photos/thumbnails/stroller-nap.webp",
     "total": "轻声路过"
   },
   {
@@ -457,7 +457,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "喝水成立",
     "pos": "53% 37%",
-    "thumb": "photos/_thumbs/cup-sip.webp",
+    "thumb": "photos/thumbnails/cup-sip.webp",
     "total": "还要一口"
   },
   {
@@ -480,7 +480,7 @@ window.MIANJIZI_PHOTOS = [
     ],
     "stamp": "伸手成立",
     "pos": "50% 38%",
-    "thumb": "photos/_thumbs/plush-reaching.webp",
+    "thumb": "photos/thumbnails/plush-reaching.webp",
     "total": "差一点碰到"
   }
 ];

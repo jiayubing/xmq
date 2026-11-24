@@ -23,7 +23,7 @@ async function listImages(dir, { skipThumbs = false, optional = false } = {}) {
       throw error;
     }
     for (const entry of entries) {
-      if (entry.name.startsWith('.') || (skipThumbs && entry.name === '_thumbs')) continue;
+      if (entry.name.startsWith('.') || (skipThumbs && entry.name === 'thumbnails')) continue;
       const relativePath = relativeDir ? relativeDir + '/' + entry.name : entry.name;
       if (entry.isDirectory()) await visit(join(directory, entry.name), relativePath);
       else if (entry.isFile() && imageExt.test(entry.name)) result.push(relativePath);
@@ -44,7 +44,7 @@ function readPhotoPath(src) {
       return segment;
     }
   });
-  if (parts.some(segment => !segment || segment.startsWith('.') || segment === '_thumbs' || /[\\/\u0000]/u.test(segment))) return null;
+  if (parts.some(segment => !segment || segment.startsWith('.') || segment === 'thumbnails' || /[\\/\u0000]/u.test(segment))) return null;
   const decoded = parts.join('/');
   return imageExt.test(decoded) ? decoded : null;
 }
@@ -78,7 +78,7 @@ async function sync() {
   const [{ original, entries }, files, thumbs] = await Promise.all([
     readManifest(),
     listImages(photoDir, { skipThumbs: true }),
-    listImages(join(photoDir, '_thumbs'), { optional: true })
+    listImages(join(photoDir, 'thumbnails'), { optional: true })
   ]);
   const available = new Set(files);
   const previous = new Set(entries.map(entry => readPhotoPath(entry.src)));
@@ -110,7 +110,7 @@ async function sync() {
     if (Object.hasOwn(entry, 'thumb')) return entry;
     const path = readPhotoPath(entry.src);
     const thumb = thumbFiles.has(path) ? path : thumbByStem.get(withoutExtension(path));
-    return thumb ? { ...entry, thumb: photoUrl('_thumbs/' + thumb) } : entry;
+    return thumb ? { ...entry, thumb: photoUrl('thumbnails/' + thumb) } : entry;
   });
 
   const removed = entries.length - retained.length;
