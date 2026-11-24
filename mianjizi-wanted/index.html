@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#F5F6F0">
+<title>可爱通缉令 | 邪恶面剂子出没档案</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="mast page-width">
+  <div class="mast-title"><svg viewBox="0 0 22 22" aria-hidden="true"><path d="M8 3H3v5m11-5h5v5M3 14v5h5m11-5v5h-5"/><circle cx="11" cy="11" r="2.5"/></svg>邪恶面剂子出没档案</div>
+  <div class="mast-right"><span class="onair"><i></i>仍在出没</span><button id="sound" type="button" aria-pressed="false" aria-label="开启音效"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4zM16 9c1.8 1.2 1.8 4.8 0 6m3-8c2.8 2.4 2.8 7.6 0 10"/></svg><span data-sound-label>音效关</span></button></div>
+</header>
+<main class="poster page-width">
+  <h1 class="headline"><span>可爱</span><span>通缉中</span></h1>
+  <div class="hero-wrap">
+    <button id="hero" class="hero" type="button" aria-label="放大当前通缉照片">
+      <span class="hero-window"><img id="hero-image" alt="" decoding="async" fetchpriority="high"></span>
+      <span class="hero-label">邪恶面剂子</span>
+      <span id="ink" class="ink" aria-hidden="true"></span>
+      <span id="flash" class="flash" aria-hidden="true"></span>
+    </button>
+  </div>
+  <section class="evidence" aria-label="目击小票和盖章">
+    <div class="paper-holder">
+      <article id="receiptnote" class="receipt" aria-labelledby="receipt-title">
+        <span class="tape" aria-hidden="true"></span>
+        <h2 id="receipt-title">可爱罪证</h2><p class="receipt-sub">目击小票</p>
+        <ul id="crimes" class="crimes"></ul>
+        <p class="receipt-total"><span>合计</span><strong id="total">当场心软</strong></p>
+        <div class="barcode" aria-hidden="true"></div>
+      </article>
+    </div>
+    <div class="stamp-base">
+      <button id="stamp" class="stamp" type="button"><span>盖章</span><strong id="stamp-opinion">可爱成立</strong></button>
+      <span id="stamp-count" class="stamp-count" aria-live="polite">0</span>
+    </div>
+  </section>
+  <button type="button" id="witness" class="witness" title="切换到这张目击照">
+    <span class="witness-window"><img id="witness-image" alt="" decoding="async"></span>
+    <span class="witness-title">其他目击记录 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9h14v10H5zm3-4h10m-10 2h11m-9 8 2 2 4-5"/></svg></span>
+  </button>
+</main>
+<footer class="band">
+  <div class="band-inner page-width">
+    <strong class="band-title">可爱通缉令</strong>
+    <nav aria-label="照片浏览">
+      <button id="previous" type="button">上一条</button>
+      <button id="random" type="button">随机抓拍</button>
+      <button id="archives" type="button">全部档案</button>
+      <button id="export" type="button">导出通缉海报<span> PNG</span></button>
+    </nav>
+    <span class="last">最后目击：<strong id="last-seen" aria-live="polite">蓝帽出动</strong></span>
+  </div>
+</footer>
+<p id="status" class="status" role="status"></p>
+<dialog id="archive" class="archive" aria-labelledby="archive-title">
+  <div class="dialog-head"><h2 id="archive-title">全部档案</h2><form method="dialog"><button type="submit" aria-label="关闭档案">×</button></form></div>
+  <div class="archive-filter"><label for="archive-search">找一条目击记录</label><input id="archive-search" type="search" placeholder="输入照片标题" autocomplete="off"><output id="archive-count" aria-live="polite"></output></div>
+  <div id="archive-list" class="archive-list"></div>
+</dialog>
+<dialog id="detail" class="detail" aria-labelledby="detail-title">
+  <div class="dialog-head"><h2 id="detail-title">通缉瞬间</h2><form method="dialog"><button type="submit" aria-label="关闭精览">×</button></form></div>
+  <div class="detail-viewport"><img id="detail-image" alt="" decoding="async"></div>
+  <div class="inspect-nav"><button id="detail-previous" type="button">上一张</button><button id="detail-next" type="button">下一张</button></div>
+</dialog>
+<script src="photos.js" defer></script>
+<script src="export.js" defer></script>
+<script src="app.js" defer></script>
+</body>
+</html>
